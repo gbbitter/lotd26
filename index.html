@@ -7,6 +7,15 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="Left of the Dial 2026 – timetable, venues and favorites for Rotterdam's new music festival.">
+<meta property="og:title" content="Left of the Dial 2026 – Timetable">
+<meta property="og:description" content="Discover the timetable for Left of the Dial 2026 in Rotterdam.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="icon-512.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Left of the Dial 2026 – Timetable">
+<meta name="twitter:description" content="Discover the timetable for Left of the Dial 2026 in Rotterdam.">
+<meta name="twitter:image" content="icon-512.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-512.png">
 <title>Left of the Dial 2026 – Timetable</title>
@@ -61,6 +70,7 @@ nav button.on{color:var(--accent)}
 .search{padding:0 16px 12px}
 .search input{width:100%;padding:13px 14px;font-size:16px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--text);outline:none}
 .search input:focus{border-color:var(--accent)}
+.tt-tools{display:flex;gap:8px;padding:0 16px 10px;align-items:center}.tt-tools button{border:1px solid var(--line);border-radius:999px;padding:8px 12px;font:700 11px var(--mono);background:var(--panel);min-height:38px}.tt-tools button.on{background:var(--accent);color:#fff;border-color:var(--accent)}.tt-tools .venue-btn{margin-left:auto}.share-btn{width:100%;margin:0 0 16px;padding:13px;border:2px solid var(--accent);color:var(--accent);font-weight:700;border-radius:12px;min-height:48px}.share-banner{margin:0 16px 12px;padding:14px;background:var(--accent);color:#fff;border:2px solid var(--line);box-shadow:4px 4px 0 var(--line)}.share-banner b{display:block;font-size:17px;margin-bottom:8px}.share-banner button{background:#fff;color:var(--accent);padding:9px 12px;border-radius:8px;margin-right:6px;font-family:var(--mono);font-size:11px;font-weight:700}.share-banner button:last-child{background:transparent;color:#fff;border:1px solid #fff}.checkrow{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid color-mix(in srgb,var(--line) 25%,transparent);font-family:var(--mono);font-size:13px}.checkrow input{accent-color:var(--accent);width:18px;height:18px}.sheet-actions{display:flex;gap:8px;margin:8px 0 12px}.sheet-actions button{flex:1;border:1px solid var(--line);border-radius:8px;padding:9px;font:700 11px var(--mono)}
 .grp{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin:14px 0 8px}
 .empty{padding:40px 24px;text-align:center;color:var(--muted)}
 .det{padding:8px 16px 24px}
@@ -240,7 +250,13 @@ const sub=a=>"<br>"+[info(a)[0],a.country?countryCode(a.country)+" · "+cname(a.
 const others=a=>{const o=ACTS.filter(x=>x.name===a.name&&x.id!==a.id).sort((x,y)=>DAYS.findIndex(d=>d.id===x.day)-DAYS.findIndex(d=>d.id===y.day)||byTime(x,y));return o.length?`<div class="grp">Ook te zien</div>`+o.map(x=>`<button class="oth" data-open="${x.id}">${dayOf(x.day).label} · ${x.start} · ${venue(x.venueId).name}</button>`).join(""):""};
 // ===== STATE =====
 let favs=[];try{const stored=JSON.parse(localStorage.getItem("lotd-favs")||"[]");favs=Array.isArray(stored)?stored.filter(id=>ACTS.some(a=>a.id===id)):[]}catch(e){}
+let hiddenVenues=[];try{const stored=JSON.parse(localStorage.getItem("lotd-hidden-venues")||"[]");hiddenVenues=Array.isArray(stored)?stored.filter(id=>VENUES.some(v=>v.id===id)):[]}catch(e){}
+let favOnly=false, sharedIds=null, sharedReadOnly=false;
 const saveFavs=()=>{try{localStorage.setItem("lotd-favs",JSON.stringify(favs))}catch(e){} };
+const saveVenues=()=>{try{localStorage.setItem("lotd-hidden-venues",JSON.stringify(hiddenVenues))}catch(e){}};
+const sharedFromHash=()=>{const m=location.hash.match(/^#f=([^&]*)/);return m?m[1].split(",").filter(id=>ACTS.some(a=>a.id===id)):null};
+const parseShared=()=>{const ids=sharedFromHash();if(ids)sharedIds=ids};
+parseShared();
 const overlaps=(a,b)=>a.day===b.day&&mins(a.start)<mins(b.end)&&mins(b.start)<mins(a.end);
 const clashWith=a=>ACTS.find(x=>x.id!==a.id&&isFav(x.id)&&overlaps(a,x));
 const nowPlaying=a=>{const n=new Date();return dayOf(a.day).date===n.toISOString().slice(0,10)&&mins(a.start)<=n.getHours()*60+n.getMinutes()&&mins(a.end)>n.getHours()*60+n.getMinutes()};
@@ -259,7 +275,7 @@ fa:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
 const heart=on=>on?"♥":"♡";
 
 // ===== ROUTER =====
-const route=()=>{const h=location.hash.slice(1)||"/";const m=h.match(/^\/act\/(.+)$/);return m?{p:"act",id:m[1]}:{p:h==="/"?"tt":h.slice(1)}};
+const route=()=>{const h=location.hash.slice(1)||"/";const m=h.match(/^\/act\/(.+)$/);return m?{p:"act",id:m[1]}:{p:h==="/"?"tt":h.startsWith("f=")?"favorites":h.slice(1)}};
 const go=h=>{location.hash=h};
 
 function toggleFav(id){favs=isFav(id)?favs.filter(x=>x!==id):[...favs,id];saveFavs();render(true)}
@@ -268,9 +284,9 @@ function row(a,showVenue=true){const d=dayOf(a.day),v=venue(a.venueId),clash=cla
 return `<div class="item"><button class="t" data-open="${a.id}"><b>${a.name}</b><span><i class="dot" style="background:${v.color}"></i>${v.name} · ${d.label} ${a.start}–${a.end}${sub(a)}${clash?`<em class="clash">⚠ Overlapt met ${clash.name}</em>`:""}</span></button><button class="hb ${isFav(a.id)?"on":""}" data-fav="${a.id}" aria-label="Favoriet">${heart(isFav(a.id))}</button></div>`}
 
 function vTimetable(onlyFavs){
-const list=ACTS.filter(a=>a.day===day&&(!onlyFavs||isFav(a.id)));const today=dayOf(day).date===tdy;
+const ids=sharedReadOnly&&sharedIds?sharedIds:null;const list=ACTS.filter(a=>a.day===day&&(!onlyFavs||isFav(a.id))&&(!ids||ids.includes(a.id))&&!hiddenVenues.includes(a.venueId));const today=dayOf(day).date===tdy;
 const jump=today?`<button class="now-btn" data-now>Nu</button>`:"";
-const segHtml=`<div class="seg" role="tablist" aria-label="Kies een festivaldag">${DAYS.map(x=>`<button class="${x.id===day?"on":""}" data-day="${x.id}" role="tab" aria-selected="${x.id===day}">${x.label}</button>`).join("")}</div>`;
+const segHtml=`<div class="seg" role="tablist" aria-label="Kies een festivaldag">${DAYS.map(x=>`<button class="${x.id===day?"on":""}" data-day="${x.id}" role="tab" aria-selected="${x.id===day}">${x.label}</button>`).join("")}</div><div class="tt-tools"><button class="${favOnly||sharedReadOnly?"on":""}" data-fav-only>${sharedReadOnly?"Gedeelde lijst":"♡ Alleen favorieten"}</button><button class="venue-btn" data-venues>Locaties${hiddenVenues.length?` · ${VENUES.length-hiddenVenues.length}`:""}</button></div>`;
 if(!list.length)return segHtml+`<div class="empty">${onlyFavs?(favs.length?"Geen favorieten op deze dag.":"Nog geen favorieten.<br>Tik op het hartje bij een act om hem hier te zien."):"Geen acts."}</div>`;
 const start=Math.floor(Math.min(...list.map(a=>mins(a.start)))/60)*60-0;
 const end=Math.ceil(Math.max(...list.map(a=>mins(a.end)))/60)*60;
@@ -293,9 +309,8 @@ return `<div class="search"><input id="q" type="search" placeholder="Zoek act of
 function resHtml(s,res){return !s?`<div class="empty">Typ de naam van een act of locatie.</div>`:res.length?res.sort((a,b)=>DAYS.findIndex(d=>d.id===a.day)-DAYS.findIndex(d=>d.id===b.day)||byTime(a,b)).map(a=>row(a)).join(""):`<div class="empty">Niets gevonden voor “${s}”.</div>`}
 
 function vFavs(){
-const f=ACTS.filter(a=>isFav(a.id));
-if(!f.length)return `<div class="empty">Nog geen favorieten.<br>Tik op het hartje bij een act om hem hier te bewaren.</div>`;
-return `<div class="list">${DAYS.map(d=>{const l=f.filter(a=>a.day===d.id).sort(byTime);return l.length?`<div class="grp">${d.label}</div>${l.map(a=>row(a)).join("")}`:""}).join("")}</div>`}
+const banner=sharedIds&&!sharedReadOnly?`<div class="share-banner"><b>Favorieten van een vriend</b><button data-view-shared>Bekijk</button><button data-add-shared>Toevoegen aan mijn favorieten</button></div>`:"";
+return banner+`<div class="list"><button class="share-btn" data-share>Deel mijn favorieten</button></div>`+vTimetable(true)}
 
 function vAct(id){const a=act(id);if(!a)return `<div class="empty">Act niet gevonden.</div>`;
 const v=venue(a.venueId),d=dayOf(a.day);
@@ -303,8 +318,9 @@ return `<button class="back" data-back>← Terug</button><div class="det">${pill
 <h2>${a.name}</h2><div class="meta"><i class="dot" style="background:${v.color}"></i>${v.name}<br>${d.label} · ${a.start}–${a.end}<br>Herkomst: ${a.country?countryCode(a.country)+" · "+cname(a.country):"Internationale act"}</div><p class="bio">${info(a)[1]}</p>${others(a)}
 <button class="big ${isFav(a.id)?"on":""}" data-fav="${a.id}">${isFav(a.id)?"♥ In favorieten":"♡ Toevoegen aan favorieten"}</button></div>`}
 
-let openId=null;
-function renderModal(){const m=document.getElementById("modal"),a=openId&&act(openId);
+let openId=null, venueOpen=false;
+function renderVenueSheet(){const m=document.getElementById("modal");if(!venueOpen)return; m.innerHTML=`<div class="ov" data-venue-overlay><div class="sheet" role="dialog" aria-modal="true" aria-label="Locaties"><div class="grab"></div><button class="x" data-close-venues aria-label="Sluiten">✕</button><h2>Locaties</h2><p>Kies welke locaties je in het tijdschema wilt zien.</p><div class="sheet-actions"><button data-all-venues>Alles</button><button data-no-venues>Geen</button></div>${VENUES.map(v=>`<label class="checkrow"><input type="checkbox" data-venue="${v.id}" ${hiddenVenues.includes(v.id)?"":"checked"}>${v.name}</label>`).join("")}</div></div>`}
+function renderModal(){const m=document.getElementById("modal");if(venueOpen){renderVenueSheet();return}const a=openId&&act(openId);
 if(!a){m.innerHTML="";return}
 const v=venue(a.venueId),d=dayOf(a.day);
 m.innerHTML=`<div class="ov"><div class="sheet" role="dialog" aria-modal="true" aria-label="${a.name}"><div class="grab"></div><button class="x" data-close aria-label="Sluiten">✕</button>
@@ -317,7 +333,7 @@ function render(keep){renderModal();
 const r=route(),main=document.getElementById("main"),scroll=keep?[main.scrollTop,(main.querySelector(".tt")||{}).scrollLeft,(main.querySelector(".tt")||{}).scrollTop]:[0,0,0];
 const titles={tt:"Timetable",search:"Zoeken",favorites:"Favorieten",act:"Act"};
 document.getElementById("title").textContent=titles[r.p]||"Timetable";
-main.innerHTML=r.p==="search"?vSearch():r.p==="favorites"?vTimetable(true):r.p==="act"?vAct(r.id):vTimetable();
+main.innerHTML=r.p==="search"?vSearch():r.p==="favorites"?vFavs():r.p==="act"?vAct(r.id):vTimetable(favOnly);
 const tab=r.p==="act"?(sessionStorage.getItem("from")||"tt"):r.p;
 document.getElementById("nav").innerHTML=[["tt","Timetable","/"],["search","Zoeken","/search"],["favorites","Favorieten","/favorites"]].map(([k,l,h])=>`<button class="${tab===k?"on":""}" data-go="${h}" aria-current="${tab===k?"page":"false"}">${ico[k==="tt"?"tt":k==="search"?"se":"fa"]}${l}</button>`).join("");
 if(keep){main.scrollTop=scroll[0];const t=main.querySelector(".tt");if(t){t.scrollLeft=scroll[1];t.scrollTop=scroll[2]}}
@@ -325,7 +341,16 @@ if(r.p==="search"&&!keep){const i=document.getElementById("q");if(i&&q)i.focus()
 }
 
 document.addEventListener("click",e=>{
-if(e.target.classList.contains("ov")){closeAct();return}
+if(e.target.classList.contains("ov")){if(venueOpen){venueOpen=false;renderModal()}else closeAct();return}
+const share=e.target.closest("[data-share]");if(share){const url=location.href.split("#")[0]+"#f="+favs.join(",");if(navigator.share)navigator.share({title:"Mijn favorieten · Left of the Dial 2026",url});else navigator.clipboard?.writeText(url).then(()=>{share.textContent="Link gekopieerd";setTimeout(()=>share.textContent="Deel mijn favorieten",1800)});return}
+const venue=e.target.closest("[data-venues]");if(venue){venueOpen=true;renderModal();return}
+if(e.target.closest("[data-close-venues]")){venueOpen=false;renderModal();return}
+if(e.target.closest("[data-all-venues]")){hiddenVenues=[];saveVenues();renderModal();render(true);return}
+if(e.target.closest("[data-no-venues]")){hiddenVenues=VENUES.map(v=>v.id);saveVenues();renderModal();render(true);return}
+const viewShared=e.target.closest("[data-view-shared]");if(viewShared){sharedReadOnly=true;go("/favorites");return}
+const addShared=e.target.closest("[data-add-shared]");if(addShared){favs=[...new Set([...favs,...(sharedIds||[])])];saveFavs();sharedIds=null;sharedReadOnly=false;history.replaceState(null,"",location.pathname+location.search+"#/favorites");render();return}
+const favToggle=e.target.closest("[data-fav-only]");if(favToggle){if(sharedReadOnly){go("/favorites")}else{favOnly=!favOnly;render(true)}return}
+const venueCheck=e.target.closest("[data-venue]");if(venueCheck){const id=venueCheck.dataset.venue;hiddenVenues=venueCheck.checked?hiddenVenues.filter(x=>x!==id):[...hiddenVenues,id];saveVenues();render(true);return}
 const t=e.target.closest("[data-open],[data-close],[data-go],[data-fav],[data-day],[data-back]");if(!t)return;
 if(t.dataset.open){openAct(t.dataset.open);return}
 if(t.hasAttribute("data-close")){closeAct();return}
@@ -335,7 +360,7 @@ if(t.hasAttribute("data-now")){const tt=document.getElementById("main").querySel
 if(t.hasAttribute("data-back")){history.length>1?history.back():go("/");return}
 const h=t.dataset.go;const cur=route().p;if(h.startsWith("/act/")&&cur!=="act")sessionStorage.setItem("from",cur);go(h)});
 document.addEventListener("input",e=>{if(e.target.id==="q"){q=e.target.value;const s=q.trim().toLowerCase();const res=s?ACTS.filter(a=>a.name.toLowerCase().includes(s)||venue(a.venueId).name.toLowerCase().includes(s)):[];document.getElementById("res").innerHTML=resHtml(s,res)}});
-window.addEventListener("hashchange",()=>render());
+window.addEventListener("hashchange",()=>{const ids=sharedFromHash();if(ids){sharedIds=ids;sharedReadOnly=false}render()});
 window.addEventListener("popstate",()=>{if(openId!==null){openId=null;renderModal()}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeAct()});
 render();
