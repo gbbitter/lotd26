@@ -295,13 +295,15 @@ const saveVenues=()=>{try{localStorage.setItem("lotd-hidden-venues",JSON.stringi
 const sharedFromHash=()=>{const m=location.hash.match(/^#f=([^&]*)/);return m?m[1].split(",").filter(id=>ACTS.some(a=>a.id===id)):null};
 const parseShared=()=>{const ids=sharedFromHash();if(ids)sharedIds=ids};
 parseShared();
-const overlaps=(a,b)=>a.day===b.day&&mins(a.start)<mins(b.end)&&mins(b.start)<mins(a.end);
-const clashWith=a=>ACTS.find(x=>x.id!==a.id&&isFav(x.id)&&overlaps(a,x));
-const nowPlaying=a=>{const n=new Date();return dayOf(a.day).date===n.toISOString().slice(0,10)&&mins(a.start)<=n.getHours()*60+n.getMinutes()&&mins(a.end)>n.getHours()*60+n.getMinutes()};
 const isFav=id=>favs.includes(id);
 const tdy=new Date().toISOString().slice(0,10);let day=(DAYS.find(d=>d.date===tdy)||DAYS[0]).id,q="";
 const venue=id=>VENUES.find(v=>v.id===id),act=id=>ACTS.find(a=>a.id===id),dayOf=id=>DAYS.find(d=>d.id===id);
 const mins=t=>{const[h,m]=t.split(":").map(Number),n=h*60+m;return n<360?n+1440:n};
+const clashTime=t=>mins(t);
+const clashInterval=a=>{const start=clashTime(a.start);let end=clashTime(a.end);if(end<start)end+=1440;return {start,end}};
+const getClashes=(a,favorites=favs)=>{const range=clashInterval(a);return ACTS.filter(x=>x.id!==a.id&&favorites.includes(x.id)&&x.day===a.day).map(x=>{const other=clashInterval(x),start=Math.max(range.start,other.start),end=Math.min(range.end,other.end);return end>start&&range.start<other.end&&other.start<range.end?{act:x,minutes:end-start}:null}).filter(Boolean).sort((a,b)=>clashTime(a.act.start)-clashTime(b.act.start))};
+const clashText=a=>getClashes(a).map(({act:other,minutes})=>`${other.name} (${minutes} min)`).join(", ").replace(/, ([^,]*)$/, " en $1");
+const nowPlaying=a=>{const n=new Date();return dayOf(a.day).date===tdy&&mins(a.start)<=n.getHours()*60+n.getMinutes()&&mins(a.end)>n.getHours()*60+n.getMinutes()};
 const byTime=(a,b)=>mins(a.start)-mins(b.start);
 const PPH=window.innerWidth>=900?Math.max(120,Math.min(220,(window.innerWidth-92)/10)):160;
 
@@ -318,8 +320,8 @@ const go=h=>{location.hash=h};
 
 function toggleFav(id){favs=isFav(id)?favs.filter(x=>x!==id):[...favs,id];saveFavs();render(true)}
 
-function row(a,showVenue=true){const d=dayOf(a.day),v=venue(a.venueId),clash=clashWith(a);
-return `<div class="item"><button class="t" data-open="${a.id}"><b>${a.name}</b><span><i class="dot" style="background:${v.color}"></i>${v.name} · ${d.label} ${a.start}–${a.end}${sub(a)}${clash?`<em class="clash">⚠ Overlapt met ${clash.name}</em>`:""}</span></button><button class="hb ${isFav(a.id)?"on":""}" data-fav="${a.id}" aria-label="Favoriet">${heart(isFav(a.id))}</button></div>`}
+function row(a,showVenue=true){const d=dayOf(a.day),v=venue(a.venueId),clashes=getClashes(a),clash=clashText(a);
+return `<div class="item"><button class="t" data-open="${a.id}"><b>${a.name}</b><span><i class="dot" style="background:${v.color}"></i>${v.name} · ${d.label} ${a.start}–${a.end}${sub(a)}${clashes.length?`<em class="clash">⚠ Overlapt met ${clash}</em>`:""}</span></button><button class="hb ${isFav(a.id)?"on":""}" data-fav="${a.id}" aria-label="Favoriet">${heart(isFav(a.id))}</button></div>`}
 
 function vTimetable(onlyFavs){
 const ids=sharedReadOnly&&sharedIds?sharedIds:null;const list=ACTS.filter(a=>a.day===day&&(!onlyFavs||isFav(a.id))&&(!ids||ids.includes(a.id))&&!hiddenVenues.includes(a.venueId));const today=dayOf(day).date===tdy;
@@ -332,7 +334,7 @@ const hours=(end-start)/60,W=hours*PPH;
 let ticks="";for(let i=0;i<=hours;i++)ticks+=`<div class="tick" style="left:${i*PPH}px">${String((start/60+i)%24).padStart(2,"0")}:00</div>`;
 const rows=VENUES.filter(v=>list.some(a=>a.venueId===v.id)).map(v=>{const acts=list.filter(a=>a.venueId===v.id).map(a=>{
 const l=(mins(a.start)-start)/60*PPH,w=(mins(a.end)-mins(a.start))/60*PPH;
-return `<button class="act ${isFav(a.id)?"fav":""}" style="left:${l}px;width:${w-3}px;background:${v.color}" data-open="${a.id}">${isFav(a.id)?'<i class="h">♥</i>':""}${nowPlaying(a)?'<em class="live">NU</em>':""}<b>${a.name}</b><span>${a.start}–${a.end}</span><span class="g">${a.country?countryCode(a.country):info(a)[0]}</span></button>`}).join("");
+return `<button class="act ${isFav(a.id)?"fav":""}" style="left:${l}px;width:${w-3}px;background:${v.color}" data-open="${a.id}"${getClashes(a).length?' aria-label="Overlapt met favorieten"':''}>${isFav(a.id)?'<i class="h">♥</i>':""}${getClashes(a).length?'<i class="h clash-marker">⚠</i>':""}${nowPlaying(a)?'<em class="live">NU</em>':""}<b>${a.name}</b><span>${a.start}–${a.end}</span><span class="g">${a.country?countryCode(a.country):info(a)[0]}</span></button>`}).join("");
 return `<div class="row"><div class="lab"><i class="dot" style="background:${v.color}"></i>${v.name}</div><div class="track" style="width:${W}px;background-size:${PPH}px 100%">${acts}</div></div>`}).join("");
 let now="";const d=dayOf(day),n=new Date();
 if(d.date===n.toISOString().slice(0,10)){const nm=n.getHours()*60+n.getMinutes();if(nm>=start&&nm<=end)now=`<div class="now" style="left:${92+(nm-start)/60*PPH}px"></div>`}
@@ -363,7 +365,7 @@ if(!a){m.innerHTML="";return}
 const v=venue(a.venueId),d=dayOf(a.day);
 m.innerHTML=`<div class="ov"><div class="sheet" role="dialog" aria-modal="true" aria-label="${a.name}"><div class="grab"></div><button class="x" data-close aria-label="Sluiten">✕</button>
 ${pills(a)}
-<h2>${a.name}</h2><div class="meta"><i class="dot" style="background:${v.color}"></i>${v.name}<br>${d.label} · ${a.start}–${a.end}${clashWith(a)?`<br><em class="clash">⚠ Overlapt met ${clashWith(a).name}</em>`:""}</div>${others(a)}
+<h2>${a.name}</h2><div class="meta"><i class="dot" style="background:${v.color}"></i>${v.name}<br>${d.label} · ${a.start}–${a.end}${getClashes(a).length?`<br><em class="clash">⚠ Overlapt met ${clashText(a)}</em>`:""}</div>${others(a)}
 <button class="big ${isFav(a.id)?"on":""}" data-fav="${a.id}">${isFav(a.id)?"�� In favorieten":"♡ Toevoegen aan favorieten"}</button></div></div>`}
 function openAct(id){if(openId===null)history.pushState({m:1},"");openId=id;renderModal()}
 function closeAct(){if(openId===null)return;openId=null;renderModal();if(history.state&&history.state.m)history.back()}
