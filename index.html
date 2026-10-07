@@ -100,7 +100,7 @@ main{scrollbar-width:thin;scrollbar-color:var(--line) transparent;padding-bottom
 .seg button:active,.hb:active,.big:active,.back:active,.oth:active{transform:scale(.98)}
 .seg button:focus-visible,.act:focus-visible,.item button:focus-visible,.hb:focus-visible,.big:focus-visible,.back:focus-visible,.oth:focus-visible,.search input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .tt{border-top:0;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
-.tt:after{content:"Swipe horizontally to see later times";display:block;position:sticky;left:10px;width:max-content;margin:10px 0 0 102px;padding:4px 8px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--muted);font-family:var(--mono);font-size:10px;pointer-events:none;opacity:.85}
+.tt:after{content:"Swipe horizontally to see later times";display:block;position:sticky;left:10px;width:max-content;margin:10px 0 0 102px;padding:4px 8px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--muted);font-family:var(--mono);font-size:10px;pointer-events:none;opacity:.85}.tt-wrap{position:relative}.now-btn{position:absolute;right:16px;top:8px;z-index:8;background:var(--accent);color:#fff;border:2px solid var(--line);padding:7px 12px;border-radius:999px;font:700 11px var(--mono);box-shadow:3px 3px 0 var(--line)}.live{position:absolute;top:3px;left:5px;background:#fff;color:var(--accent);padding:1px 4px;border-radius:3px;font:700 9px var(--mono);font-style:normal}.clash{display:block;color:#c2185b;font:500 10px var(--mono);font-style:normal;margin-top:3px}
 .row{min-height:76px}
 .lab{font-size:11px;padding:0 7px}
 .act{min-width:54px;transition:filter .15s ease,transform .15s ease;box-shadow:0 4px 12px color-mix(in srgb,#000 18%,transparent)}
@@ -121,6 +121,8 @@ nav button.on{font-weight:700}
   .sheet{max-height:92%;padding-left:16px;padding-right:16px}
   .det{padding-left:16px;padding-right:16px}
 }
+@media (max-width:599px){header{padding-top:calc(8px + env(safe-area-inset-top,0px));padding-bottom:10px}.brandbar{min-height:48px;margin-top:18px;gap:9px}.lotd-mark{width:46px;height:46px;font-size:11px}.lotd-mark span{font-size:7px}.brandstamp{width:40px;height:40px;font-size:8px}.brandstamp b{font-size:16px}.brandcopy p{font-size:8px}.brandcopy h1{font-size:12px}header h2{font-size:34px;margin-top:14px}}
+@media (min-width:900px){.tt:after{display:none}}
 @media (min-width:600px){
   header{padding-left:24px;padding-right:24px}
   .seg{padding-left:24px;padding-right:24px}
@@ -220,8 +222,9 @@ Remastered|z|1750-1830 Paulie Swan;1920-2000 Noonzy;2050-2130 Bathing Suits;2220
 const CSRC=`UK:al cologne,alice costelloe,arkayla,ashnymph,atticomatic,bathing suits,benchwarmer,ben kidson,bert,bloodworm,bramwell,casual smart,cherryholt,compost compost compost,cosign,curiosity shop,wyatt,zilcho hamblin,cordelia gartside,corin v,ferguson hi-fi,lots of,nico & linus,part-time model,the north,the paris match,toast club,girlfriend.;US:alien boy,babe haven,flowers for the dead;IE:black nylon,bog band,brooki,burglar,child of prague,echo northstar,esmeralda road;CA:yoo doo right;JP:bed;NL:beige,doom fever,ebby,fellatio;NO:daufødt;DK:date camp;AT:gardens`;
 const CO={};CSRC.split(";").forEach(g=>{const[c,l]=g.split(":");l.split(",").forEach(n=>CO[n]=c)});
 const VENUES=[],ACTS=[];
+const slug=s=>s.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
 RAW.split("\n").forEach(l=>{const[vn,d,r]=l.split("|");let v=VENUES.find(x=>x.name===vn);if(!v){v={id:"v"+VENUES.length,name:vn};VENUES.push(v)}
-r.split(";").forEach(t=>{const m=t.match(/^(\d\d)(\d\d)-(\d\d)(\d\d) (.+)$/);ACTS.push({id:"a"+ACTS.length,name:m[5],venueId:v.id,day:d,start:m[1]+":"+m[2],end:m[3]+":"+m[4],country:CO[m[5].toLowerCase()],genre:/Workshop|Crash Course/.test(m[5])?"Extra":""})})});
+r.split(";").forEach(t=>{const m=t.match(/^(\d\d)(\d\d)-(\d\d)(\d\d) (.+)$/);const name=m[5],start=m[1]+":"+m[2];ACTS.push({id:`${slug(name)}-${slug(vn)}-${d}-${m[1]}${m[2]}`,name,venueId:v.id,day:d,start,end:m[3]+":"+m[4],country:CO[name.toLowerCase()],genre:/Workshop|Crash Course/.test(name)?"Extra":""})})});
 VENUES.forEach((v,i)=>v.color="hsl("+Math.round(i*137.5)%360+" 45% 38%)");
 const CTRY={NL:["Nederland","NL"],UK:["Verenigd Koninkrijk","GB"],US:["Verenigde Staten","US"],IE:["Ierland","IE"],CA:["Canada","CA"],JP:["Japan","JP"],NO:["Noorwegen","NO"],DK:["Denemarken","DK"],AT:["Oostenrijk","AT"]};
 const INFO={
@@ -230,20 +233,23 @@ const INFO={
 const GENRE_POOL=["Post-punk","Indie rock","Noise rock","Dream pop","Electronic","Experimental","Alt-pop","Shoegaze","Garage punk","Art pop","Indie folk","Psych rock"];
 const genreFor=a=>{if(a.genre)return a.genre;const n=a.name.toLowerCase();if(/workshop|crash course/.test(n))return "Extra";let h=0;for(const c of n)h=(h*31+c.charCodeAt(0))%GENRE_POOL.length;return GENRE_POOL[h]};
 const info=a=>INFO[a.name.toLowerCase()]||[genreFor(a),"Ontdek deze act live op Left of the Dial. Verwacht eigenzinnige songs, sterke persoonlijkheid en een set die nergens anders klinkt."];
-const flag=c=>{if(!c)return"";const x=(CTRY[c]||[c,c])[1];return String.fromCodePoint(...[...x].map(ch=>127397+ch.charCodeAt(0)))};
 const cname=c=>c?(CTRY[c]||[c])[0]:"";
-const pills=a=>`<span class="pill">${info(a)[0]}</span>`+(a.country?`<span class="pill">${flag(a.country)} ${cname(a.country)}</span>`:`<span class="pill">Internationale act</span>`);
-const sub=a=>"<br>"+[info(a)[0],a.country?flag(a.country)+" "+cname(a.country):"Internationale act"].join(" · ");
+const countryCode=c=>c?(CTRY[c]||[c,c])[1]:"";
+const pills=a=>`<span class="pill">${info(a)[0]}</span>`+(a.country?`<span class="pill">${countryCode(a.country)} · ${cname(a.country)}</span>`:`<span class="pill">Internationale act</span>`);
+const sub=a=>"<br>"+[info(a)[0],a.country?countryCode(a.country)+" · "+cname(a.country):"Internationale act"].join(" · ");
 const others=a=>{const o=ACTS.filter(x=>x.name===a.name&&x.id!==a.id).sort((x,y)=>DAYS.findIndex(d=>d.id===x.day)-DAYS.findIndex(d=>d.id===y.day)||byTime(x,y));return o.length?`<div class="grp">Ook te zien</div>`+o.map(x=>`<button class="oth" data-open="${x.id}">${dayOf(x.day).label} · ${x.start} · ${venue(x.venueId).name}</button>`).join(""):""};
 // ===== STATE =====
-let favs=[];try{favs=JSON.parse(localStorage.getItem("lotd-favs")||"[]")}catch(e){}
-const saveFavs=()=>{try{localStorage.setItem("lotd-favs",JSON.stringify(favs))}catch(e){}};
+let favs=[];try{const stored=JSON.parse(localStorage.getItem("lotd-favs")||"[]");favs=Array.isArray(stored)?stored.filter(id=>ACTS.some(a=>a.id===id)):[]}catch(e){}
+const saveFavs=()=>{try{localStorage.setItem("lotd-favs",JSON.stringify(favs))}catch(e){} };
+const overlaps=(a,b)=>a.day===b.day&&mins(a.start)<mins(b.end)&&mins(b.start)<mins(a.end);
+const clashWith=a=>ACTS.find(x=>x.id!==a.id&&isFav(x.id)&&overlaps(a,x));
+const nowPlaying=a=>{const n=new Date();return dayOf(a.day).date===n.toISOString().slice(0,10)&&mins(a.start)<=n.getHours()*60+n.getMinutes()&&mins(a.end)>n.getHours()*60+n.getMinutes()};
 const isFav=id=>favs.includes(id);
 const tdy=new Date().toISOString().slice(0,10);let day=(DAYS.find(d=>d.date===tdy)||DAYS[0]).id,q="";
 const venue=id=>VENUES.find(v=>v.id===id),act=id=>ACTS.find(a=>a.id===id),dayOf=id=>DAYS.find(d=>d.id===id);
 const mins=t=>{const[h,m]=t.split(":").map(Number),n=h*60+m;return n<360?n+1440:n};
 const byTime=(a,b)=>mins(a.start)-mins(b.start);
-const PPH=160;
+const PPH=window.innerWidth>=900?Math.max(120,Math.min(220,(window.innerWidth-92)/10)):160;
 
 // ===== ICONS =====
 const ico={
@@ -258,11 +264,12 @@ const go=h=>{location.hash=h};
 
 function toggleFav(id){favs=isFav(id)?favs.filter(x=>x!==id):[...favs,id];saveFavs();render(true)}
 
-function row(a,showVenue=true){const d=dayOf(a.day),v=venue(a.venueId);
-return `<div class="item"><button class="t" data-open="${a.id}"><b>${a.name}</b><span><i class="dot" style="background:${v.color}"></i>${v.name} · ${d.label} ${a.start}–${a.end}${sub(a)}</span></button><button class="hb ${isFav(a.id)?"on":""}" data-fav="${a.id}" aria-label="Favoriet">${heart(isFav(a.id))}</button></div>`}
+function row(a,showVenue=true){const d=dayOf(a.day),v=venue(a.venueId),clash=clashWith(a);
+return `<div class="item"><button class="t" data-open="${a.id}"><b>${a.name}</b><span><i class="dot" style="background:${v.color}"></i>${v.name} · ${d.label} ${a.start}–${a.end}${sub(a)}${clash?`<em class="clash">⚠ Overlapt met ${clash.name}</em>`:""}</span></button><button class="hb ${isFav(a.id)?"on":""}" data-fav="${a.id}" aria-label="Favoriet">${heart(isFav(a.id))}</button></div>`}
 
 function vTimetable(onlyFavs){
-const list=ACTS.filter(a=>a.day===day&&(!onlyFavs||isFav(a.id)));
+const list=ACTS.filter(a=>a.day===day&&(!onlyFavs||isFav(a.id)));const today=dayOf(day).date===tdy;
+const jump=today?`<button class="now-btn" data-now>Nu</button>`:"";
 const segHtml=`<div class="seg" role="tablist" aria-label="Kies een festivaldag">${DAYS.map(x=>`<button class="${x.id===day?"on":""}" data-day="${x.id}" role="tab" aria-selected="${x.id===day}">${x.label}</button>`).join("")}</div>`;
 if(!list.length)return segHtml+`<div class="empty">${onlyFavs?(favs.length?"Geen favorieten op deze dag.":"Nog geen favorieten.<br>Tik op het hartje bij een act om hem hier te zien."):"Geen acts."}</div>`;
 const start=Math.floor(Math.min(...list.map(a=>mins(a.start)))/60)*60-0;
@@ -271,11 +278,11 @@ const hours=(end-start)/60,W=hours*PPH;
 let ticks="";for(let i=0;i<=hours;i++)ticks+=`<div class="tick" style="left:${i*PPH}px">${String((start/60+i)%24).padStart(2,"0")}:00</div>`;
 const rows=VENUES.filter(v=>list.some(a=>a.venueId===v.id)).map(v=>{const acts=list.filter(a=>a.venueId===v.id).map(a=>{
 const l=(mins(a.start)-start)/60*PPH,w=(mins(a.end)-mins(a.start))/60*PPH;
-return `<button class="act ${isFav(a.id)?"fav":""}" style="left:${l}px;width:${w-3}px;background:${v.color}" data-open="${a.id}">${isFav(a.id)?'<i class="h">♥</i>':""}<b>${a.name}</b><span>${a.start}–${a.end}</span><span class="g">${a.country?flag(a.country)+" "+a.country:info(a)[0]}</span></button>`}).join("");
+return `<button class="act ${isFav(a.id)?"fav":""}" style="left:${l}px;width:${w-3}px;background:${v.color}" data-open="${a.id}">${isFav(a.id)?'<i class="h">♥</i>':""}${nowPlaying(a)?'<em class="live">NU</em>':""}<b>${a.name}</b><span>${a.start}–${a.end}</span><span class="g">${a.country?countryCode(a.country):info(a)[0]}</span></button>`}).join("");
 return `<div class="row"><div class="lab"><i class="dot" style="background:${v.color}"></i>${v.name}</div><div class="track" style="width:${W}px;background-size:${PPH}px 100%">${acts}</div></div>`}).join("");
 let now="";const d=dayOf(day),n=new Date();
 if(d.date===n.toISOString().slice(0,10)){const nm=n.getHours()*60+n.getMinutes();if(nm>=start&&nm<=end)now=`<div class="now" style="left:${92+(nm-start)/60*PPH}px"></div>`}
-return segHtml+`
+return segHtml+`<div class="tt-wrap">${jump}
 <div class="tt"><div class="tt-in" style="width:${92+W}px"><div class="hrow"><div class="lab"></div><div class="trackh" style="width:${W}px">${ticks}</div></div>${rows}${now}</div></div>`}
 
 function vSearch(){
@@ -293,7 +300,7 @@ return `<div class="list">${DAYS.map(d=>{const l=f.filter(a=>a.day===d.id).sort(
 function vAct(id){const a=act(id);if(!a)return `<div class="empty">Act niet gevonden.</div>`;
 const v=venue(a.venueId),d=dayOf(a.day);
 return `<button class="back" data-back>← Terug</button><div class="det">${pills(a)}
-<h2>${a.name}</h2><div class="meta"><i class="dot" style="background:${v.color}"></i>${v.name}<br>${d.label} · ${a.start}–${a.end}<br>Herkomst: ${a.country?flag(a.country)+" "+cname(a.country):"Internationale act"}</div><p class="bio">${info(a)[1]}</p>${others(a)}
+<h2>${a.name}</h2><div class="meta"><i class="dot" style="background:${v.color}"></i>${v.name}<br>${d.label} · ${a.start}–${a.end}<br>Herkomst: ${a.country?countryCode(a.country)+" · "+cname(a.country):"Internationale act"}</div><p class="bio">${info(a)[1]}</p>${others(a)}
 <button class="big ${isFav(a.id)?"on":""}" data-fav="${a.id}">${isFav(a.id)?"♥ In favorieten":"♡ Toevoegen aan favorieten"}</button></div>`}
 
 let openId=null;
@@ -302,7 +309,7 @@ if(!a){m.innerHTML="";return}
 const v=venue(a.venueId),d=dayOf(a.day);
 m.innerHTML=`<div class="ov"><div class="sheet" role="dialog" aria-modal="true" aria-label="${a.name}"><div class="grab"></div><button class="x" data-close aria-label="Sluiten">✕</button>
 ${pills(a)}
-<h2>${a.name}</h2><div class="meta"><i class="dot" style="background:${v.color}"></i>${v.name}<br>${d.label} · ${a.start}–${a.end}</div>${others(a)}
+<h2>${a.name}</h2><div class="meta"><i class="dot" style="background:${v.color}"></i>${v.name}<br>${d.label} · ${a.start}–${a.end}${clashWith(a)?`<br><em class="clash">⚠ Overlapt met ${clashWith(a).name}</em>`:""}</div>${others(a)}
 <button class="big ${isFav(a.id)?"on":""}" data-fav="${a.id}">${isFav(a.id)?"�� In favorieten":"♡ Toevoegen aan favorieten"}</button></div></div>`}
 function openAct(id){if(openId===null)history.pushState({m:1},"");openId=id;renderModal()}
 function closeAct(){if(openId===null)return;openId=null;renderModal();if(history.state&&history.state.m)history.back()}
@@ -324,6 +331,7 @@ if(t.dataset.open){openAct(t.dataset.open);return}
 if(t.hasAttribute("data-close")){closeAct();return}
 if(t.dataset.fav){toggleFav(t.dataset.fav);return}
 if(t.dataset.day){day=t.dataset.day;render();return}
+if(t.hasAttribute("data-now")){const tt=document.getElementById("main").querySelector(".tt");if(tt){const n=new Date(),start=Math.floor(Math.min(...ACTS.filter(a=>a.day===day).map(a=>mins(a.start)))/60)*60;tt.scrollLeft=Math.max(0,((n.getHours()*60+n.getMinutes()-start)/60)*PPH-100)}return}
 if(t.hasAttribute("data-back")){history.length>1?history.back():go("/");return}
 const h=t.dataset.go;const cur=route().p;if(h.startsWith("/act/")&&cur!=="act")sessionStorage.setItem("from",cur);go(h)});
 document.addEventListener("input",e=>{if(e.target.id==="q"){q=e.target.value;const s=q.trim().toLowerCase();const res=s?ACTS.filter(a=>a.name.toLowerCase().includes(s)||venue(a.venueId).name.toLowerCase().includes(s)):[];document.getElementById("res").innerHTML=resHtml(s,res)}});
