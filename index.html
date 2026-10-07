@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Left of the Dial 2026 – Timetable</title>
 <style>
-:root{--bg:#1b1a19;--panel:#262422;--line:#3a3733;--text:#f2ede6;--muted:#a39b90;--accent:#ff9a2e;--accent-ink:#1b1a19;
---mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;--sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+:root{--bg:#161515;--panel:#211f1e;--panel-2:#2b2826;--line:#403b36;--text:#f7f0e7;--muted:#aaa096;--accent:#f4a261;--hot:#e76f51;--accent-ink:#171515;
+--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;--sans:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);color-scheme:dark}
 @media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f4efe7;--panel:#fffaf2;--line:#d9d0c2;--text:#25221e;--muted:#6f675c;--accent:#d96a00;--accent-ink:#fff;color-scheme:light}}
 :root[data-theme="dark"]{--bg:#1b1a19;--panel:#262422;--line:#3a3733;--text:#f2ede6;--muted:#a39b90;--accent:#ff9a2e;--accent-ink:#1b1a19}
@@ -63,7 +63,7 @@ nav button.on{color:var(--accent)}
 .det p{font-size:16px;line-height:1.55;margin:16px 0}
 .big{width:100%;padding:16px;border-radius:12px;font-weight:700;font-size:16px;border:2px solid var(--accent);color:var(--accent);min-height:52px}
 .big.on{background:var(--accent);color:var(--accent-ink)}
-.pill{display:inline-block;padding:3px 10px;border-radius:99px;border:1px solid var(--line);font-size:12px;margin:0 6px 6px 0;font-family:var(--mono)}
+.pill{display:inline-block;padding:5px 10px;border-radius:999px;border:1px solid color-mix(in srgb,var(--accent) 45%,var(--line));background:color-mix(in srgb,var(--accent) 8%,transparent);font-size:11px;margin:0 6px 6px 0;font-family:var(--mono);letter-spacing:.02em}.bio{max-width:58ch;color:var(--text);font-size:17px!important;line-height:1.5!important;border-left:3px solid var(--accent);padding-left:14px}.det .meta{margin-top:10px}
 
 .act span{white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
 .act .g{opacity:.8;font-style:italic}
@@ -79,8 +79,10 @@ nav button.on{color:var(--accent)}
 .seg button{padding:10px 4px}
 
 /* Responsive polish: keep the dense timetable readable without changing its data. */
-header{flex:none;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 10px;background:var(--bg)}
-header h2{font-weight:750;letter-spacing:-.02em}
+header{flex:none;padding:calc(18px + env(safe-area-inset-top,0px)) 16px 14px;background:radial-gradient(circle at 88% 0%,color-mix(in srgb,var(--hot) 18%,transparent),transparent 42%),var(--bg);position:relative}
+header:after{content:"ROTTERDAM · 21—24 OCT 2026";display:block;margin-top:10px;color:var(--muted);font:10px var(--mono);letter-spacing:.12em}
+header h1{font-size:11px;letter-spacing:.2em}
+header h2{font-size:clamp(24px,5vw,34px);font-weight:850;letter-spacing:-.055em;line-height:1.05}
 main{scrollbar-width:thin;scrollbar-color:var(--line) transparent;padding-bottom:8px}
 .seg{position:sticky;top:0;z-index:6;padding:10px 16px 12px;background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(14px);border-bottom:1px solid color-mix(in srgb,var(--line) 65%,transparent)}
 .seg button{transition:background .15s ease,border-color .15s ease,transform .15s ease}
@@ -90,7 +92,9 @@ main{scrollbar-width:thin;scrollbar-color:var(--line) transparent;padding-bottom
 .tt:after{content:"Swipe horizontally to see later times";display:block;position:sticky;left:10px;width:max-content;margin:10px 0 0 102px;padding:4px 8px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--muted);font-family:var(--mono);font-size:10px;pointer-events:none;opacity:.85}
 .row{min-height:76px}
 .lab{font-size:11px;padding:0 7px}
-.act{min-width:54px;transition:filter .15s ease,transform .15s ease}
+.act{min-width:54px;transition:filter .15s ease,transform .15s ease;box-shadow:0 4px 12px color-mix(in srgb,#000 18%,transparent)}
+.act b{letter-spacing:-.015em}
+.act .g{font-size:10px;letter-spacing:.01em}
 .act:active{filter:brightness(1.12);transform:scale(.99)}
 .item{min-height:68px;margin-bottom:10px;box-shadow:0 1px 0 color-mix(in srgb,var(--line) 55%,transparent)}
 .item .t{min-height:44px;display:flex;flex-direction:column;justify-content:center}
@@ -209,10 +213,14 @@ RAW.split("\n").forEach(l=>{const[vn,d,r]=l.split("|");let v=VENUES.find(x=>x.na
 r.split(";").forEach(t=>{const m=t.match(/^(\d\d)(\d\d)-(\d\d)(\d\d) (.+)$/);ACTS.push({id:"a"+ACTS.length,name:m[5],venueId:v.id,day:d,start:m[1]+":"+m[2],end:m[3]+":"+m[4],country:CO[m[5].toLowerCase()],genre:/Workshop|Crash Course/.test(m[5])?"Extra":""})})});
 VENUES.forEach((v,i)=>v.color="hsl("+Math.round(i*137.5)%360+" 45% 38%)");
 const CTRY={NL:["Nederland","NL"],UK:["Verenigd Koninkrijk","GB"],US:["Verenigde Staten","US"],IE:["Ierland","IE"],CA:["Canada","CA"],JP:["Japan","JP"],NO:["Noorwegen","NO"],DK:["Denemarken","DK"],AT:["Oostenrijk","AT"]};
+const INFO={
+"alice costelloe":["Indie rock","Londense songwriter met rafelige gitaren, scherpe melodieën en een stem die blijft hangen."],"daufødt":["Noise punk","Noorse post-punk die hoekig, luid en compromisloos door de nacht snijdt."],"gordi":["Alternative pop","Intieme elektronica en grote, filmische popmomenten uit Australië."],"juni habel":["Art pop","Dromerige, eigenzinnige songs met een sterke Scandinavische onderstroom."],"mf tomlinson":["Indie folk","Psychedelische folk met warme harmonieën en een heerlijk onvoorspelbare vorm."],"the paris match":["Post-punk","Donkere, melodieuze post-punk met precies genoeg spanning op de baslijn."],"yoo doo right":["Psych rock","Hypnotiserende grooves en noisy gitaren uit Montréal."],"ashnymph":["Alt-pop","Glitchy pop, zachte chaos en hooks die langzaam onder je huid kruipen."],"bed":["Dream pop","Japanse shoegaze met zachte ruis, heldere melodieën en veel ruimte."],"doom fever":["Indie rock","Rotterdamse indie met een donkere rand en een onweerstaanbare live-drive."],"fellatio":["Post-punk","Strakke drums, nerveuze gitaren en een flinke dosis Rotterdamse eigenheid."],"the north":["Indie rock","Melancholische indie met brede refreinen en een sterke Britse signatuur."],"gwen":["Alternative","Een eigenzinnige mix van intimiteit, groove en onverwachte wendingen."],"neve cariad":["Indie pop","Lichtvoetige, emotionele songs met een sterke melodische kern."],"painkiller":["Post-punk","Rauw, urgent en precies op de grens van dansbaar en ongemakkelijk."],"pales":["Indie rock","Gelaagde gitaren en een nachtelijke sfeer voor liefhebbers van het onverwachte."]
+};
+const info=a=>INFO[a.name.toLowerCase()]||[(a.genre||"Alternative / indie"),"Ontdek deze act live op Left of the Dial. Verwacht eigenzinnige songs, sterke persoonlijkheid en een set die nergens anders klinkt."];
 const flag=c=>{if(!c)return"";const x=(CTRY[c]||[c,c])[1];return String.fromCodePoint(...[...x].map(ch=>127397+ch.charCodeAt(0)))};
 const cname=c=>c?(CTRY[c]||[c])[0]:"";
-const pills=a=>(a.genre?`<span class="pill">${a.genre}</span>`:"")+(a.country?`<span class="pill">${flag(a.country)} ${cname(a.country)}</span>`:"");
-const sub=a=>(a.country||a.genre)?"<br>"+[a.genre,a.country?flag(a.country)+" "+cname(a.country):""].filter(Boolean).join(" · "):"";
+const pills=a=>`<span class="pill">${info(a)[0]}</span>`+(a.country?`<span class="pill">${flag(a.country)} ${cname(a.country)}</span>`:`<span class="pill">Internationale act</span>`);
+const sub=a=>"<br>"+[info(a)[0],a.country?flag(a.country)+" "+cname(a.country):"Internationale act"].join(" · ");
 const others=a=>{const o=ACTS.filter(x=>x.name===a.name&&x.id!==a.id).sort((x,y)=>DAYS.findIndex(d=>d.id===x.day)-DAYS.findIndex(d=>d.id===y.day)||byTime(x,y));return o.length?`<div class="grp">Ook te zien</div>`+o.map(x=>`<button class="oth" data-open="${x.id}">${dayOf(x.day).label} · ${x.start} · ${venue(x.venueId).name}</button>`).join(""):""};
 // ===== STATE =====
 let favs=[];try{favs=JSON.parse(localStorage.getItem("lotd-favs")||"[]")}catch(e){}
@@ -272,7 +280,7 @@ return `<div class="list">${DAYS.map(d=>{const l=f.filter(a=>a.day===d.id).sort(
 function vAct(id){const a=act(id);if(!a)return `<div class="empty">Act niet gevonden.</div>`;
 const v=venue(a.venueId),d=dayOf(a.day);
 return `<button class="back" data-back>← Terug</button><div class="det">${pills(a)}
-<h2>${a.name}</h2><div class="meta"><i class="dot" style="background:${v.color}"></i>${v.name}<br>${d.label} · ${a.start}–${a.end}<br>Herkomst: ${flag(a.country)} ${cname(a.country)}</div>${others(a)}
+<h2>${a.name}</h2><div class="meta"><i class="dot" style="background:${v.color}"></i>${v.name}<br>${d.label} · ${a.start}–${a.end}<br>Herkomst: ${a.country?flag(a.country)+" "+cname(a.country):"Internationale act"}</div><p class="bio">${info(a)[1]}</p>${others(a)}
 <button class="big ${isFav(a.id)?"on":""}" data-fav="${a.id}">${isFav(a.id)?"♥ In favorieten":"♡ Toevoegen aan favorieten"}</button></div>`}
 
 let openId=null;
