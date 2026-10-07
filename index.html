@@ -75,6 +75,8 @@ nav button.on{color:var(--accent)}
 .sheet h2{font-size:26px;margin:6px 44px 8px 0}
 .sheet p{font-size:16px;line-height:1.55;margin:14px 0 18px}
 @media (min-width:600px){.ov{align-items:center}.sheet{border-radius:20px;max-height:80%}}
+.oth{display:block;width:100%;text-align:left;padding:12px;margin-bottom:6px;border:1px solid var(--line);border-radius:10px;font-family:var(--mono);font-size:13px;min-height:44px}
+.seg button{padding:10px 4px}
 </style>
 </head>
 <body>
@@ -83,39 +85,110 @@ nav button.on{color:var(--accent)}
 <nav id="nav"></nav>
 <div id="modal"></div>
 <script>
-// ===== DATA (placeholder – vervang door echte line-up) =====
-const DAYS=[{id:"vr",label:"Vrijdag",date:"2026-10-09"},{id:"za",label:"Zaterdag",date:"2026-10-10"},{id:"zo",label:"Zondag",date:"2026-10-11"}];
-const VENUES=[{id:"main",name:"Hoofdzaal",color:"#b4452f"},{id:"club",name:"Clubzaal",color:"#2f7f86"},{id:"cafe",name:"Café",color:"#7a5aa6"},{id:"out",name:"Buitenpodium",color:"#4f7d3a"}];
-const A=(id,name,venueId,day,start,end,genre,country,bio)=>({id,name,venueId,day,start,end,genre,country,bio});
-const ACTS=[
-A("a1","Velvet Static","main","vr","19:00","20:00","Shoegaze","NL","Een muur van galm met zachte zang. Hun debuut kwam uit op een kleine Rotterdamse label."),
-A("a2","Paper Lanterns","club","vr","19:30","20:15","Indie folk","UK","Intieme liedjes met banjo en harmonie. Live nog beter dan op plaat."),
-A("a3","Nine Wires","main","vr","21:00","22:15","Post-punk","DE","Strakke bas en scherpe gitaren. Een van de meest besproken liveacts van het seizoen."),
-A("a4","Mira Okafor","cafe","vr","20:00","20:45","Singer-songwriter","NG","Fluisterstille liedjes met jazzakkoorden. Treedt solo op met alleen gitaar."),
-A("a5","Hollow Tides","out","vr","20:30","21:30","Dreampop","BE","Zwevende synths en dromerige melodieën. Ideaal voor het begin van de avond."),
-A("a6","Brutalist Garden","club","za","18:00","19:00","Noise rock","NL","Rauw, luid en onvoorspelbaar. Garantie op een zweterige zaal."),
-A("a7","Sunday Static","cafe","za","18:45","19:30","Lo-fi","US","Huiskamerliedjes opgenomen op cassette. Klein, warm en eigenzinnig."),
-A("a8","Lune","main","za","20:00","21:15","Art pop","FR","Theatraal en kleurrijk met veel elektronica. Een visuele show om niet te missen."),
-A("a9","The Ordinary Saints","out","za","19:30","20:30","Garage rock","AU","Snelle riffs en meezingrefreinen. Komen speciaal over voor dit festival."),
-A("a10","Kiko & The Static","club","za","21:30","22:30","Synth punk","JP","Hyperactief duo met drumcomputer. Nooit twee shows hetzelfde."),
-A("a11","Dust Bloom","cafe","zo","16:00","16:45","Slowcore","SE","Trage, melancholische nummers. Perfect voor een rustige zondagmiddag."),
-A("a12","Marlowe","main","zo","17:00","18:00","Indie rock","UK","Klassiek gitaarwerk met een moderne twist. Terug na een lange pauze."),
-A("a13","Oscillator Club","out","zo","16:30","17:30","Krautrock","DE","Lange, hypnotiserende jams. Analoge synths en motorische ritmes."),
-A("a14","Fenne Voss","club","zo","18:30","19:15","Dream folk","NL","Tere stem en subtiele arrangementen. Net uitgekomen met haar tweede album."),
-A("a15","Closing Hours","main","zo","20:00","21:30","Alt-rock","NL","Het afsluitende optreden van het festival. Groots, emotioneel en luid.")];
-
-const CTRY={NL:["Nederland","NL"],UK:["Verenigd Koninkrijk","GB"],DE:["Duitsland","DE"],NG:["Nigeria","NG"],BE:["België","BE"],US:["Verenigde Staten","US"],FR:["Frankrijk","FR"],AU:["Australië","AU"],JP:["Japan","JP"],SE:["Zweden","SE"]};
-const flag=c=>{const x=(CTRY[c]||[c,c])[1];return String.fromCodePoint(...[...x].map(ch=>127397+ch.charCodeAt(0)))};
-const cname=c=>(CTRY[c]||[c])[0];
+// ===== DATA (bron: Clashfinder lotd2026, 27 sep 2026) =====
+const DAYS=[{id:"w",label:"Wo 21",date:"2026-10-21"},{id:"d",label:"Do 22",date:"2026-10-22"},{id:"v",label:"Vr 23",date:"2026-10-23"},{id:"z",label:"Za 24",date:"2026-10-24"}];
+const RAW=`Reijngoud|v|1230-1315 Rockpool Dramas;1345-1430 Zo Lief;1500-1600 Fellatio;1730-1810 Atticomatic;1900-1940 Pyncher;2030-2110 Date Camp;2200-2240 Bramwell;2320-0000 The Jump Cuts
+Reijngoud|z|1230-1300 Maicín;1315-1345 Omertà;1400-1430 Child Of Prague;1445-1515 Burglar;1530-1600 Telekura;1730-1810 Twenty One Children;1900-1940 Babe Haven;2030-2110 JJ Bull;2200-2240 Mindsigh
+Mono|v|1650-1730 Insider Trading;1820-1900 Holly Head;1950-2030 Rampressure;2120-2200 Mek’Dr’Dr;2250-2330 LTTL Mort
+Mono|z|1650-1730 The Heavenly Bodes;1820-1900 Al Cologne;1950-2030 Flowers For The Dead;2120-2200 Lawn Chair;2250-2330 What Jen Wants
+Bird|d|1920-2000 Nadeem Din-Gabisi;2050-2130 Max Sloan;2220-2300 Brooki
+Bird|v|1600-1640 Ben Kidson;1730-1810 Telekura;1900-1940 Bert;2030-2110 Bog Band;2200-2240 Rian Brazil
+Bird|z|1600-1640 What Jen Wants;1730-1810 Rageflower;1900-1940 Yoo Doo Right;2030-2110 Curiosity Shop;2200-2240 Wing!
+Time is the New Space|z|1230-1300 Doom Fever;1330-1400 Her Loving Aftertaste;1430-1500 Barren Sea;1530-1600 Beige
+Barrio|d|1900-1940 Any Young Mechanic;2030-2110 Mek’Dr’Dr;2330-0010 Arkayla
+Barrio|v|1800-1840 Foot Foot;1920-2000 Mixed Waste;2050-2130 Hillsboro;2220-2300 Jawdropped;2350-0030 Thank
+Barrio|z|1620-1700 Sundayclub;1750-1830 Cherryholt;1920-2000 Bramwell;2050-2130 Imaginary Husband;2220-2300 Lots Of Hands
+Annabel Down|d|1900-1940 Arkayla;2030-2110 The Healing Power Of Horses;2200-2240 Kelly No Brakes;2330-0010 Turnspit
+Annabel Down|v|1810-1850 Melanie Baker;1940-2020 Latter;2110-2150 Bathing Suits;2240-2320 Hammok;0010-0050 The North
+Annabel Down|z|1630-1710 Part-Time Model;1810-1850 Tooth;1940-2020 Child Of Prague;2110-2150 Paulie Swan;2240-2320 Twenty One Children
+Annabel Up|d|1940-2020 Ugly Ozo;2110-2150 Esmeralda Road;2240-2320 Noonzy
+Annabel Up|v|1720-1800 Villagerrr;1850-1930 Pushbike;2020-2100 Hungry;2150-2230 Cordelia Gartside;2320-0000 State Of Grace
+Annabel Up|z|1720-1800 MF Tomlinson;1850-1930 Gardens;2020-2100 Monks;2150-2230 Telekura;2320-0000 Black Nylon
+Sahara|d|1950-2030 Maicín;2120-2200 Omertà;2250-2330 Ashnymph
+Sahara|v|1610-1650 Benchwarmer;1740-1820 Hyd;1910-1950 The Slow Country;2040-2120 Plainhead;2210-2250 My Purse;2340-0020 Shitkid
+Sahara|z|1610-1650 Normal Village;1740-1820 Gwen;1910-1950 Corin V;2040-2120 Norman D. Loco;2210-2250 Part-Time Model;2340-0020 The Heavenly Bodes
+Salsability|d|2000-2040 Foot Foot;2130-2210 Hamburger;2300-2340 Any Young Mechanic
+Salsability|v|1840-1920 Zilcho Hamblin;2020-2100 Studio20;2200-2240 Tracey Nelson;2330-0010 The Paris Match
+Salsability|z|1245-1330 Smudged;1400-1445 Canned Pineapple;1515-1600 PleasureInc.;1700-1740 Nico & Linus;1840-1920 Family Stereo;2020-2100 Hyd;2200-2240 Toast Club;2330-0010 Omertà
+De Doelen Up|d|1910-1950 Midscale;2050-2130 State Of Grace;2230-2310 Atticomatic
+De Doelen Up|v|1620-1700 Esmeralda Road;1750-1830 Ringlets;1920-2000 Compost Compost Compost;2050-2130 Jackson Roy;2220-2300 Mindsigh;2340-0020 Part-Time Model
+De Doelen Up|z|1620-1700 Stonks;1750-1830 Magasin;1920-2000 Newhvn;2050-2130 Girlfriend.;2220-2300 Maicín;2340-0020 Ferguson Hi-Fi
+De Doelen WBH|d|1940-2020 Mixed Waste;2330-0010 Alice Costelloe
+De Doelen WBH|v|1820-1900 Bloodworm;1950-2030 Newhvn;2200-2240 Rageflower;2330-0010 Babe Haven
+De Doelen WBH|z|1650-1730 The Paris Match;1820-1900 Juni Habel;1950-2030 Holly Head;2200-2240 Cherryholt;2330-0010 Maquina.
+TR Down|d|1950-2030 Stoop Kid;2120-2200 Benchwarmer;2250-2330 Wesley & The Boys
+TR Down|v|1640-1720 Monks;1820-1900 Leather.head;2000-2040 Painkiller;2140-2220 Cherryholt;2320-0000 Tooth
+TR Down|z|1400-1500 Electronic Music Workshop;1640-1720 Wyatt;1820-1900 Echo Northstar;2000-2040 The Sewing Club;2140-2220 Spanish Horses;2330-0010 Thank
+TR Foyer|d|1920-2000 Lacuna;2050-2130 Trip Westerns;2220-2300 Daufødt
+TR Foyer|v|1700-1740 La Flemme;1840-1920 Cosign;2020-2100 Alien Boy;2200-2240 Nico & Linus;2330-0010 Black Nylon
+TR Foyer|z|1500-1600 Line Dancing Crash Course;1700-1740 Charlie Noordewier;1840-1920 Hungry;2020-2100 Burglar;2200-2240 Cordelia Gartside
+TR Up|d|2010-2050 Villagerrr;2140-2220 Child Of Prague;2310-2350 Bed
+TR Up|v|1600-1640 Brooki;1740-1820 The North;1920-2000 Lacuna;2100-2140 August;2240-2320 Oslo Twins
+TR Up|z|1600-1640 Pales;1740-1820 The Guest List;1920-2000 Maquina.;2100-2140 Lemonsuckr;2240-2320 Compost Compost Compost
+Uniek|w|1930-2010 Poodle;2050-2130 Systeemfalen;2210-2250 Leela Rosa
+Uniek|d|1920-2000 Hillsboro;2050-2130 August;2220-2300 Ropeburn;2350-0030 LTTL Mort
+Uniek|v|1200-1230 Alice Costelloe;1300-1330 Mleko;1400-1430 Atticomatic;1500-1530 Smudged;1650-1730 Scotstown Dance Band;1820-1900 The Sewing Club;1950-2030 Stoop Kid;2120-2200 Ugly Ozo;2250-2330 Lots Of
+Uniek|z|1650-1730 Omertà;1820-1900 The Slow Country;1950-2030 Oslo Twins;2120-2200 Leather.head;2250-2330 Charlie Noordewier
+Stalles|w|1950-2030 Thrilled;2110-2150 Doom Fever;2230-2310 Ebby
+Stalles|d|1900-1940 Jawdropped;2030-2110 Toast Club;2200-2240 Alien Boy;2320-0000 The Jump Cuts
+Stalles|v|1215-1245 Midscale;1300-1330 LA FLEMME;1345-1415 Billy Bonbon;1430-1500 APR1L;1515-1545 Yoo Doo Right;1720-1800 Goodbye;1850-1930 Lawn Chair;2020-2100 Midscale;2150-2230 Perfect Binding;2320-0000 Imaginary Husband
+Stalles|z|1215-1245 Hungry;1300-1330 Ringlets;1345-1415 Flowers For The Dead;1430-1500 Fellatio;1515-1545 Monks;1720-1800 Pushbike;1850-1930 Date Camp;2020-2100 Rampressure;2150-2230 Stonks;2320-0000 Newbuild
+Tramhuis|v|1300-1330 Max Sloan;1400-1430 MF Tomlinson
+Rotown|w|1920-2000 Magasin;2040-2120 Beige;2200-2240 Fellatio
+Rotown|d|1920-2000 The North;2050-2130 Shrink;2220-2300 Ben Kidson;2350-0030 Bloodworm
+Rotown|v|1200-1245 Painkiller;1315-1400 PleasureInc.;1430-1515 Canned Pineapple;1600-1640 August;1730-1810 Jawdropped;1900-1940 Child Of Prague;2030-2110 Paulie Swan;2200-2240 Milkweed;2330-0010 The Guest List
+Rotown|z|1200-1230 FIEP;1310-1340 plonki;1420-1450 Camilo Donoso;1530-1600 Apeshit;1730-1810 Thank;1900-1940 Pyncher;2030-2110 State Of Grace;2200-2240 Spike Fuck;2330-0010 GX Nurse
+Paradijskerk|d|1950-2030 Nina Winder-Lind;2120-2200 Mry;2250-2330 Nadeem Din-Gabisi
+Paradijskerk|v|1650-1730 Alice Costelloe;1820-1900 Jana Horn;1950-2030 MF Tomlinson;2120-2200 Corin V;2250-2330 Juni Habel
+Paradijskerk|z|1650-1730 Gordi;1820-1900 Leela Rosa;1950-2030 Jackson Roy;2120-2200 Michael Ian Cummings;2240-2320 Serena Clara
+Arminius|w|2000-2040 Smudged;2120-2200 Loveth Besamoh;2240-2320 Library Card
+Arminius Down|d|1900-1940 Painkiller;2030-2110 Casual Smart;2200-2240 Compost Compost Compost;2320-0000 Lots Of Hands
+Arminius Down|v|1600-1640 The Healing Power Of Horses;1730-1810 Spanish Horses;1900-1940 Spike Fuck;2030-2110 Tough Cookie;2200-2240 Glasshouse Red Spider Mite;2330-0010 Lemonsuckr
+Arminius Down|z|1600-1640 Gnarcissists;1730-1810 Monde Ufo;1900-1940 Latter;2030-2110 Shrink;2200-2240 Sundayclub;2330-0010 Milkweed
+Arminius Up|d|1940-2020 Tracey Nelson;2110-2150 Tokyo Sea Dragons;2240-2320 Zilcho Hamblin
+Arminius Up|v|1640-1720 Neve Cariad;1810-1850 The Glow-Worms;1940-2020 Mry;2110-2150 Family Stereo;2240-2320 Al Cologne
+Arminius Up|z|1640-1720 Bert;1810-1850 Toast Club;1940-2020 Perfect Binding;2110-2150 Lucky Iris;2240-2320 Wyatt
+Zondebok en Zwarte Schaap|z|1300-1345 The Velcro;1400-1445 Doctor Sleep;1500-1545 Yummy
+V2_|d|1920-2000 Mleko;2040-2120 Cosign;2220-2300 Sundayclub
+V2_|v|1640-1720 Casual Smart;1810-1850 Burglar;1940-2020 Monde Ufo;2110-2150 Milo Korbenski;2240-2320 Wyatt
+V2_|z|1640-1720 Studio20;1810-1850 Glasshouse Red Spider Mite;1940-2020 Ringlets;2110-2150 The Glow-Worms;2240-2320 Insider Trading
+Worm 1|d|1910-1950 Bed;2050-2130 La Flemme;2230-2310 GX Nurse
+Worm 1|v|1610-1650 Nina Winder-Lind;1750-1830 Norman D. Loco;1930-2010 Echo Northstar;2110-2150 Gardens;2250-2330 Pales
+Worm 1|z|1750-1830 Lots Of Hands;1930-2010 My Purse;2110-2150 Shitkid;2250-2330 Gnarcissists
+Worm 2|d|2000-2040 Milo Korbenski;2140-2220 Serena Clara;2320-0000 Iskandr
+Worm 2|v|1700-1740 Michael Ian Cummings;1840-1920 Daufødt;2020-2100 Gordi;2200-2240 JJ Bull;2340-0020 Lucky Iris
+Worm 2|z|1700-1740 Ashnymph;1840-1920 Jana Horn;2020-2100 Lots Of;2200-2240 Bog Band;2340-0020 Rian Brazil
+V11|d|1920-2000 Plainhead;2040-2120 Tough Cookie;2200-2240 Holly Head;2320-0000 Gnarcissists
+V11|v|1215-1255 Daufødt;1310-1350 Fog Bandits;1405-1445 San Jose;1500-1540 Bikini Body;1640-1720 Mleko;1810-1850 Wesley & The Boys;1940-2020 Normal Village;2110-2150 Flowers For The Dead;2240-2320 Ferguson Hi-Fi
+V11|z|1210-1250 Imaginary Husband;1310-1350 Holly Head;1410-1450 Bathing Suits;1510-1550 Lemonsuckr;1640-1720 Serena Clara;1810-1850 Milkweed;1940-2020 Hamburger;2110-2150 Scotstown Dance Band;2240-2320 Shark School
+Waalse Kerk|v|1700-1740 Ropeburn;1830-1910 Max Sloan;2000-2040 Curiosity Shop;2130-2210 Iskandr
+Waalse Kerk|z|1700-1740 Neve Cariad;1830-1910 Maicín;2000-2040 Goodbye;2130-2210 Gwen
+Baanhof|v|1620-1700 Kelly No Brakes;1750-1830 Girlfriend.;1920-2000 Shark School;2050-2130 Shrink;2220-2300 Trip Westerns
+Baanhof|z|1740-1820 Newbuild;1920-2000 Tokyo Sea Dragons;2050-2130 Melanie Baker;2220-2300 Hamburger
+Remastered|v|1750-1830 Wing!;1920-2000 Turnspit;2050-2130 GX Nurse;2220-2300 Yoo Doo Right
+Remastered|z|1750-1830 Paulie Swan;1920-2000 Noonzy;2050-2130 Bathing Suits;2220-2300 Ashnymph`;
+// Land van herkomst: alleen acts waarvan het land in de officiële aankondigingen stond
+const CSRC=`UK:al cologne,alice costelloe,arkayla,ashnymph,atticomatic,bathing suits,benchwarmer,ben kidson,bert,bloodworm,bramwell,casual smart,cherryholt,compost compost compost,cosign,curiosity shop,wyatt,zilcho hamblin,cordelia gartside,corin v,ferguson hi-fi,lots of,nico & linus,part-time model,the north,the paris match,toast club,girlfriend.;US:alien boy,babe haven,flowers for the dead;IE:black nylon,bog band,brooki,burglar,child of prague,echo northstar,esmeralda road;CA:yoo doo right;JP:bed;NL:beige,doom fever,ebby,fellatio;NO:daufødt;DK:date camp;AT:gardens`;
+const CO={};CSRC.split(";").forEach(g=>{const[c,l]=g.split(":");l.split(",").forEach(n=>CO[n]=c)});
+const VENUES=[],ACTS=[];
+RAW.split("\n").forEach(l=>{const[vn,d,r]=l.split("|");let v=VENUES.find(x=>x.name===vn);if(!v){v={id:"v"+VENUES.length,name:vn};VENUES.push(v)}
+r.split(";").forEach(t=>{const m=t.match(/^(\d\d)(\d\d)-(\d\d)(\d\d) (.+)$/);ACTS.push({id:"a"+ACTS.length,name:m[5],venueId:v.id,day:d,start:m[1]+":"+m[2],end:m[3]+":"+m[4],country:CO[m[5].toLowerCase()],genre:/Workshop|Crash Course/.test(m[5])?"Extra":""})})});
+VENUES.forEach((v,i)=>v.color="hsl("+Math.round(i*137.5)%360+" 45% 38%)");
+const CTRY={NL:["Nederland","NL"],UK:["Verenigd Koninkrijk","GB"],US:["Verenigde Staten","US"],IE:["Ierland","IE"],CA:["Canada","CA"],JP:["Japan","JP"],NO:["Noorwegen","NO"],DK:["Denemarken","DK"],AT:["Oostenrijk","AT"]};
+const flag=c=>{if(!c)return"";const x=(CTRY[c]||[c,c])[1];return String.fromCodePoint(...[...x].map(ch=>127397+ch.charCodeAt(0)))};
+const cname=c=>c?(CTRY[c]||[c])[0]:"";
+const pills=a=>(a.genre?`<span class="pill">${a.genre}</span>`:"")+(a.country?`<span class="pill">${flag(a.country)} ${cname(a.country)}</span>`:"");
+const sub=a=>(a.country||a.genre)?"<br>"+[a.genre,a.country?flag(a.country)+" "+cname(a.country):""].filter(Boolean).join(" · "):"";
+const others=a=>{const o=ACTS.filter(x=>x.name===a.name&&x.id!==a.id).sort((x,y)=>DAYS.findIndex(d=>d.id===x.day)-DAYS.findIndex(d=>d.id===y.day)||byTime(x,y));return o.length?`<div class="grp">Ook te zien</div>`+o.map(x=>`<button class="oth" data-open="${x.id}">${dayOf(x.day).label} · ${x.start} · ${venue(x.venueId).name}</button>`).join(""):""};
 // ===== STATE =====
 let favs=[];try{favs=JSON.parse(localStorage.getItem("lotd-favs")||"[]")}catch(e){}
 const saveFavs=()=>{try{localStorage.setItem("lotd-favs",JSON.stringify(favs))}catch(e){}};
 const isFav=id=>favs.includes(id);
-let day=DAYS[0].id,q="";
+const tdy=new Date().toISOString().slice(0,10);let day=(DAYS.find(d=>d.date===tdy)||DAYS[0]).id,q="";
 const venue=id=>VENUES.find(v=>v.id===id),act=id=>ACTS.find(a=>a.id===id),dayOf=id=>DAYS.find(d=>d.id===id);
-const mins=t=>{const[h,m]=t.split(":").map(Number);return h*60+m};
+const mins=t=>{const[h,m]=t.split(":").map(Number),n=h*60+m;return n<360?n+1440:n};
 const byTime=(a,b)=>mins(a.start)-mins(b.start);
-const PPH=130;
+const PPH=160;
 
 // ===== ICONS =====
 const ico={
@@ -131,7 +204,7 @@ const go=h=>{location.hash=h};
 function toggleFav(id){favs=isFav(id)?favs.filter(x=>x!==id):[...favs,id];saveFavs();render(true)}
 
 function row(a,showVenue=true){const d=dayOf(a.day),v=venue(a.venueId);
-return `<div class="item"><button class="t" data-open="${a.id}"><b>${a.name}</b><span><i class="dot" style="background:${v.color}"></i>${v.name} · ${d.label} ${a.start}–${a.end}<br>${a.genre} · ${flag(a.country)} ${cname(a.country)}</span></button><button class="hb ${isFav(a.id)?"on":""}" data-fav="${a.id}" aria-label="Favoriet">${heart(isFav(a.id))}</button></div>`}
+return `<div class="item"><button class="t" data-open="${a.id}"><b>${a.name}</b><span><i class="dot" style="background:${v.color}"></i>${v.name} · ${d.label} ${a.start}–${a.end}${sub(a)}</span></button><button class="hb ${isFav(a.id)?"on":""}" data-fav="${a.id}" aria-label="Favoriet">${heart(isFav(a.id))}</button></div>`}
 
 function vTimetable(onlyFavs){
 const list=ACTS.filter(a=>a.day===day&&(!onlyFavs||isFav(a.id)));
@@ -141,9 +214,9 @@ const start=Math.floor(Math.min(...list.map(a=>mins(a.start)))/60)*60-0;
 const end=Math.ceil(Math.max(...list.map(a=>mins(a.end)))/60)*60;
 const hours=(end-start)/60,W=hours*PPH;
 let ticks="";for(let i=0;i<=hours;i++)ticks+=`<div class="tick" style="left:${i*PPH}px">${String((start/60+i)%24).padStart(2,"0")}:00</div>`;
-const rows=VENUES.filter(v=>!onlyFavs||list.some(a=>a.venueId===v.id)).map(v=>{const acts=list.filter(a=>a.venueId===v.id).map(a=>{
+const rows=VENUES.filter(v=>list.some(a=>a.venueId===v.id)).map(v=>{const acts=list.filter(a=>a.venueId===v.id).map(a=>{
 const l=(mins(a.start)-start)/60*PPH,w=(mins(a.end)-mins(a.start))/60*PPH;
-return `<button class="act ${isFav(a.id)?"fav":""}" style="left:${l}px;width:${w-3}px;background:${v.color}" data-open="${a.id}">${isFav(a.id)?'<i class="h">♥</i>':""}<b>${a.name}</b><span>${a.start} · ${flag(a.country)} ${a.country}</span><span class="g">${a.genre}</span></button>`}).join("");
+return `<button class="act ${isFav(a.id)?"fav":""}" style="left:${l}px;width:${w-3}px;background:${v.color}" data-open="${a.id}">${isFav(a.id)?'<i class="h">♥</i>':""}<b>${a.name}</b><span>${a.start}–${a.end}</span>${a.country||a.genre?`<span class="g">${a.country?flag(a.country)+" "+a.country:a.genre}</span>`:""}</button>`}).join("");
 return `<div class="row"><div class="lab"><i class="dot" style="background:${v.color}"></i>${v.name}</div><div class="track" style="width:${W}px;background-size:${PPH}px 100%">${acts}</div></div>`}).join("");
 let now="";const d=dayOf(day),n=new Date();
 if(d.date===n.toISOString().slice(0,10)){const nm=n.getHours()*60+n.getMinutes();if(nm>=start&&nm<=end)now=`<div class="now" style="left:${92+(nm-start)/60*PPH}px"></div>`}
@@ -164,8 +237,8 @@ return `<div class="list">${DAYS.map(d=>{const l=f.filter(a=>a.day===d.id).sort(
 
 function vAct(id){const a=act(id);if(!a)return `<div class="empty">Act niet gevonden.</div>`;
 const v=venue(a.venueId),d=dayOf(a.day);
-return `<button class="back" data-back>← Terug</button><div class="det"><span class="pill">${a.genre}</span><span class="pill">${flag(a.country)} ${cname(a.country)}</span>
-<h2>${a.name}</h2><div class="meta"><i class="dot" style="background:${v.color}"></i>${v.name}<br>${d.label} · ${a.start}–${a.end}<br>Herkomst: ${flag(a.country)} ${cname(a.country)}</div><p>${a.bio}</p>
+return `<button class="back" data-back>← Terug</button><div class="det">${pills(a)}
+<h2>${a.name}</h2><div class="meta"><i class="dot" style="background:${v.color}"></i>${v.name}<br>${d.label} · ${a.start}–${a.end}<br>Herkomst: ${flag(a.country)} ${cname(a.country)}</div>${others(a)}
 <button class="big ${isFav(a.id)?"on":""}" data-fav="${a.id}">${isFav(a.id)?"♥ In favorieten":"♡ Toevoegen aan favorieten"}</button></div>`}
 
 let openId=null;
@@ -173,8 +246,8 @@ function renderModal(){const m=document.getElementById("modal"),a=openId&&act(op
 if(!a){m.innerHTML="";return}
 const v=venue(a.venueId),d=dayOf(a.day);
 m.innerHTML=`<div class="ov"><div class="sheet" role="dialog" aria-modal="true" aria-label="${a.name}"><div class="grab"></div><button class="x" data-close aria-label="Sluiten">✕</button>
-<span class="pill">${a.genre}</span><span class="pill">${flag(a.country)} ${cname(a.country)}</span>
-<h2>${a.name}</h2><div class="meta"><i class="dot" style="background:${v.color}"></i>${v.name}<br>${d.label} · ${a.start}–${a.end}</div><p>${a.bio}</p>
+${pills(a)}
+<h2>${a.name}</h2><div class="meta"><i class="dot" style="background:${v.color}"></i>${v.name}<br>${d.label} · ${a.start}–${a.end}</div>${others(a)}
 <button class="big ${isFav(a.id)?"on":""}" data-fav="${a.id}">${isFav(a.id)?"♥ In favorieten":"♡ Toevoegen aan favorieten"}</button></div></div>`}
 function openAct(id){if(openId===null)history.pushState({m:1},"");openId=id;renderModal()}
 function closeAct(){if(openId===null)return;openId=null;renderModal();if(history.state&&history.state.m)history.back()}
