@@ -138,6 +138,44 @@ nav button.on{font-weight:700}
   .seg{padding-left:24px;padding-right:24px}
   .list{max-width:760px;margin:0 auto}
 }
+
+/* LOTD visual language: clean white space, black type and electric blue circles. */
+:root{--bg:#fff;--panel:#fff;--panel-2:#f2f2f2;--line:#050505;--text:#050505;--muted:#444;--accent:#1717ff;--hot:#1717ff;--accent-ink:#fff;--sans:Arial,Helvetica,sans-serif;--mono:Arial,Helvetica,sans-serif}
+body{background:#fff;color:#050505;font-family:Arial,Helvetica,sans-serif}
+header{background:#fff;border-bottom:0;padding-top:0}
+header:before{height:34px;background:#050505;color:#fff;padding-left:24px;font-size:10px;letter-spacing:.12em}
+.brandbar{margin-top:34px;min-height:82px;gap:18px}
+.lotd-mark{width:68px;height:68px;border:0;border-radius:50%;background:#050505;box-shadow:none;transform:none;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:.68;letter-spacing:-.12em}
+.lotd-mark span{font-size:9px;letter-spacing:-.08em}
+.brandcopy h1{font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:700;letter-spacing:.02em}
+.brandcopy p{font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0;color:#444}
+.brandstamp{width:62px;height:62px;border-radius:50%;background:var(--accent);box-shadow:none;transform:none;font-family:Arial,Helvetica,sans-serif;font-size:9px}
+.brandstamp b{font-family:Arial,Helvetica,sans-serif;font-size:24px}
+header h1{display:none}
+header h2{font-family:Arial,Helvetica,sans-serif;font-size:clamp(38px,7vw,64px);font-weight:700;letter-spacing:-.06em;line-height:.9;text-transform:none;margin:34px 0 26px}
+main{background:#fff}
+.seg{gap:0;padding:0 16px 16px;background:#fff;border-bottom:0;backdrop-filter:none}
+.seg button{border:0;border-radius:0;border-bottom:2px solid #050505;padding:12px 4px;font-family:Arial,Helvetica,sans-serif;font-size:14px;text-align:left;min-height:44px}
+.seg button.on{background:#fff;color:#050505;border-color:#050505;font-weight:700;box-shadow:none}
+.seg button:not(.on){color:#666;border-bottom-color:#cfcfcf}
+.tt{border-top:2px solid #050505}
+.hrow{height:34px;background:#fff;border-bottom:2px solid #050505}
+.lab{width:112px;background:#fff;border-right:2px solid #050505;font-family:Arial,Helvetica,sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.tick{border-left:1px solid #cfcfcf;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#444;padding-top:10px}
+.row{height:82px;border-bottom:1px solid #cfcfcf}
+.track{background-image:linear-gradient(to right,#cfcfcf 1px,transparent 1px)}
+.act{top:8px;bottom:8px;border-radius:0;border:0;padding:7px 9px;background:#050505!important;color:#fff;box-shadow:none;transition:none}
+.act:nth-child(4n+1){background:#050505!important}.act:nth-child(4n+2){background:#1717ff!important}.act:nth-child(4n+3){background:#5d5dff!important}.act:nth-child(4n){background:#d9d9ff!important;color:#050505}
+.act b{font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:700}.act span{font-family:Arial,Helvetica,sans-serif;font-size:11px}.act .g{font-style:normal;opacity:.8}
+.act.fav{border:3px solid #1717ff;box-shadow:inset 0 0 0 1px #fff}.act .h{color:#fff}
+.item{border:2px solid #050505;border-radius:0;background:#fff;box-shadow:none;margin-bottom:8px}
+.search input{border:2px solid #050505;border-radius:0;background:#fff;font-family:Arial,Helvetica,sans-serif}
+nav{border-top:2px solid #050505;background:#fff;box-shadow:none}
+nav button{font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:.04em}nav button.on{color:#1717ff}
+.tt-tools button,.share-btn,.big,.oth{border-radius:0;font-family:Arial,Helvetica,sans-serif;box-shadow:none}.tt-tools button{background:#fff}.tt-tools button.on{background:#1717ff;color:#fff}.share-btn,.big{border:2px solid #1717ff;color:#1717ff}.big.on{background:#1717ff;color:#fff}
+.ov{background:rgba(5,5,5,.7)}.sheet{border-radius:0;background:#fff;border:2px solid #050505}.grab{border-radius:0;background:#050505}.x{color:#050505}
+.det h2,.sheet h2{font-family:Arial,Helvetica,sans-serif;font-weight:700}.meta,.pill{font-family:Arial,Helvetica,sans-serif}.pill{border-radius:0}.bio{border-left:3px solid #1717ff}
+@media (max-width:599px){header{padding-bottom:4px}.brandbar{min-height:58px;margin-top:34px;gap:10px}.lotd-mark{width:52px;height:52px;font-size:12px}.lotd-mark span{font-size:7px}.brandstamp{width:46px;height:46px}.brandstamp b{font-size:18px}header h2{font-size:42px;margin:22px 0 18px}.lab{width:96px}}
 </style>
 </head>
 <body>
