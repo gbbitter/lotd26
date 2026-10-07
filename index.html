@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Left of the Dial 2026 – Timetable</title>
+<style>
+:root{--bg:#1b1a19;--panel:#262422;--line:#3a3733;--text:#f2ede6;--muted:#a39b90;--accent:#ff9a2e;--accent-ink:#1b1a19;
+--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;--sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);color-scheme:dark}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f4efe7;--panel:#fffaf2;--line:#d9d0c2;--text:#25221e;--muted:#6f675c;--accent:#d96a00;--accent-ink:#fff;color-scheme:light}}
+:root[data-theme="dark"]{--bg:#1b1a19;--panel:#262422;--line:#3a3733;--text:#f2ede6;--muted:#a39b90;--accent:#ff9a2e;--accent-ink:#1b1a19}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);display:flex;flex-direction:column;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.mono{font-family:var(--mono)}
+header{padding:12px 16px 8px}
+h1{margin:0;font-family:var(--mono);font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h2{margin:2px 0 0;font-size:20px}
+main{flex:1;min-height:0;overflow:auto}
+nav{display:flex;border-top:1px solid var(--line);background:var(--panel);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{flex:1;padding:10px 0 8px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:var(--muted);min-height:56px;font-family:var(--mono);letter-spacing:.05em}
+nav button svg{width:22px;height:22px}
+nav button.on{color:var(--accent)}
+.seg{display:flex;gap:6px;padding:0 16px 10px}
+.seg button{flex:1;padding:10px;border:1px solid var(--line);border-radius:10px;font-family:var(--mono);font-size:13px;min-height:44px}
+.seg button.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+.tt{height:100%;overflow:auto;position:relative;border-top:1px solid var(--line)}
+.tt-in{position:relative}
+.hrow,.row{display:flex}
+.hrow{position:sticky;top:0;z-index:3;background:var(--bg);height:30px;border-bottom:1px solid var(--line)}
+.lab{position:sticky;left:0;z-index:2;width:92px;flex:none;background:var(--bg);border-right:1px solid var(--line);display:flex;align-items:center;padding:0 8px;font-size:12px;font-weight:600;line-height:1.2}
+.hrow .lab{z-index:4}
+.tick{position:absolute;top:0;bottom:0;border-left:1px solid var(--line);font-family:var(--mono);font-size:11px;color:var(--muted);padding:8px 0 0 4px}
+.trackh{position:relative;flex:none}
+.row{height:76px;border-bottom:1px solid var(--line)}
+.track{position:relative;flex:none;background-image:linear-gradient(to right,var(--line) 1px,transparent 1px)}
+.act{position:absolute;top:6px;bottom:6px;border-radius:8px;padding:6px 8px;text-align:left;overflow:hidden;color:#fff;border:2px solid transparent;display:flex;flex-direction:column;justify-content:center;gap:2px}
+.act b{font-size:13px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.act span{font-family:var(--mono);font-size:11px;opacity:.9}
+.act.fav{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+.act .h{position:absolute;top:4px;right:6px;color:var(--accent);font-size:13px}
+.now{position:absolute;top:0;bottom:0;width:2px;background:var(--accent);z-index:1;pointer-events:none}
+.list{padding:0 16px 16px}
+.item{display:flex;align-items:center;gap:10px;padding:12px;margin-bottom:8px;background:var(--panel);border:1px solid var(--line);border-radius:12px}
+.item .t{flex:1;text-align:left;min-width:0}
+.item .t b{display:block;font-size:15px}
+.item .t span{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.dot{width:10px;height:10px;border-radius:50%;flex:none;display:inline-block;margin-right:6px}
+.hb{width:44px;height:44px;display:grid;place-items:center;font-size:22px;color:var(--muted);flex:none}
+.hb.on{color:var(--accent)}
+.search{padding:0 16px 12px}
+.search input{width:100%;padding:13px 14px;font-size:16px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--text);outline:none}
+.search input:focus{border-color:var(--accent)}
+.grp{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin:14px 0 8px}
+.empty{padding:40px 24px;text-align:center;color:var(--muted)}
+.det{padding:8px 16px 24px}
+.back{padding:12px 16px;color:var(--accent);font-family:var(--mono);font-size:13px;min-height:44px}
+.det h2{font-size:28px;margin:8px 0 6px}
+.meta{font-family:var(--mono);font-size:13px;color:var(--muted);line-height:1.8}
+.det p{font-size:16px;line-height:1.55;margin:16px 0}
+.big{width:100%;padding:16px;border-radius:12px;font-weight:700;font-size:16px;border:2px solid var(--accent);color:var(--accent);min-height:52px}
+.big.on{background:var(--accent);color:var(--accent-ink)}
+.pill{display:inline-block;padding:3px 10px;border-radius:99px;border:1px solid var(--line);font-size:12px;margin:0 6px 6px 0;font-family:var(--mono)}
+
+.act span{white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.act .g{opacity:.8;font-style:italic}
+.ov{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.62);display:flex;align-items:flex-end;justify-content:center}
+.sheet{position:relative;width:100%;max-width:520px;max-height:88%;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:20px 20px 0 0;padding:14px 18px calc(22px + env(safe-area-inset-bottom,0px));animation:up .2s ease-out;overscroll-behavior:contain}
+@keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.grab{width:40px;height:4px;border-radius:4px;background:var(--line);margin:0 auto 10px}
+.x{position:absolute;top:10px;right:10px;width:44px;height:44px;font-size:22px;color:var(--muted)}
+.sheet h2{font-size:26px;margin:6px 44px 8px 0}
+.sheet p{font-size:16px;line-height:1.55;margin:14px 0 18px}
+@media (min-width:600px){.ov{align-items:center}.sheet{border-radius:20px;max-height:80%}}
+</style>
+</head>
+<body>
+<header><h1>Left of the Dial · 2026</h1><h2 id="title">Timetable</h2></header>
+<main id="main"></main>
+<nav id="nav"></nav>
+<div id="modal"></div>
+<script>
+// ===== DATA (placeholder – vervang door echte line-up) =====
+const DAYS=[{id:"vr",label:"Vrijdag",date:"2026-10-09"},{id:"za",label:"Zaterdag",date:"2026-10-10"},{id:"zo",label:"Zondag",date:"2026-10-11"}];
+const VENUES=[{id:"main",name:"Hoofdzaal",color:"#b4452f"},{id:"club",name:"Clubzaal",color:"#2f7f86"},{id:"cafe",name:"Café",color:"#7a5aa6"},{id:"out",name:"Buitenpodium",color:"#4f7d3a"}];
+const A=(id,name,venueId,day,start,end,genre,country,bio)=>({id,name,venueId,day,start,end,genre,country,bio});
+const ACTS=[
+A("a1","Velvet Static","main","vr","19:00","20:00","Shoegaze","NL","Een muur van galm met zachte zang. Hun debuut kwam uit op een kleine Rotterdamse label."),
+A("a2","Paper Lanterns","club","vr","19:30","20:15","Indie folk","UK","Intieme liedjes met banjo en harmonie. Live nog beter dan op plaat."),
+A("a3","Nine Wires","main","vr","21:00","22:15","Post-punk","DE","Strakke bas en scherpe gitaren. Een van de meest besproken liveacts van het seizoen."),
+A("a4","Mira Okafor","cafe","vr","20:00","20:45","Singer-songwriter","NG","Fluisterstille liedjes met jazzakkoorden. Treedt solo op met alleen gitaar."),
+A("a5","Hollow Tides","out","vr","20:30","21:30","Dreampop","BE","Zwevende synths en dromerige melodieën. Ideaal voor het begin van de avond."),
+A("a6","Brutalist Garden","club","za","18:00","19:00","Noise rock","NL","Rauw, luid en onvoorspelbaar. Garantie op een zweterige zaal."),
+A("a7","Sunday Static","cafe","za","18:45","19:30","Lo-fi","US","Huiskamerliedjes opgenomen op cassette. Klein, warm en eigenzinnig."),
+A("a8","Lune","main","za","20:00","21:15","Art pop","FR","Theatraal en kleurrijk met veel elektronica. Een visuele show om niet te missen."),
+A("a9","The Ordinary Saints","out","za","19:30","20:30","Garage rock","AU","Snelle riffs en meezingrefreinen. Komen speciaal over voor dit festival."),
+A("a10","Kiko & The Static","club","za","21:30","22:30","Synth punk","JP","Hyperactief duo met drumcomputer. Nooit twee shows hetzelfde."),
+A("a11","Dust Bloom","cafe","zo","16:00","16:45","Slowcore","SE","Trage, melancholische nummers. Perfect voor een rustige zondagmiddag."),
+A("a12","Marlowe","main","zo","17:00","18:00","Indie rock","UK","Klassiek gitaarwerk met een moderne twist. Terug na een lange pauze."),
+A("a13","Oscillator Club","out","zo","16:30","17:30","Krautrock","DE","Lange, hypnotiserende jams. Analoge synths en motorische ritmes."),
+A("a14","Fenne Voss","club","zo","18:30","19:15","Dream folk","NL","Tere stem en subtiele arrangementen. Net uitgekomen met haar tweede album."),
+A("a15","Closing Hours","main","zo","20:00","21:30","Alt-rock","NL","Het afsluitende optreden van het festival. Groots, emotioneel en luid.")];
+
+const CTRY={NL:["Nederland","NL"],UK:["Verenigd Koninkrijk","GB"],DE:["Duitsland","DE"],NG:["Nigeria","NG"],BE:["België","BE"],US:["Verenigde Staten","US"],FR:["Frankrijk","FR"],AU:["Australië","AU"],JP:["Japan","JP"],SE:["Zweden","SE"]};
+const flag=c=>{const x=(CTRY[c]||[c,c])[1];return String.fromCodePoint(...[...x].map(ch=>127397+ch.charCodeAt(0)))};
+const cname=c=>(CTRY[c]||[c])[0];
+// ===== STATE =====
+let favs=[];try{favs=JSON.parse(localStorage.getItem("lotd-favs")||"[]")}catch(e){}
+const saveFavs=()=>{try{localStorage.setItem("lotd-favs",JSON.stringify(favs))}catch(e){}};
+const isFav=id=>favs.includes(id);
+let day=DAYS[0].id,q="";
+const venue=id=>VENUES.find(v=>v.id===id),act=id=>ACTS.find(a=>a.id===id),dayOf=id=>DAYS.find(d=>d.id===id);
+const mins=t=>{const[h,m]=t.split(":").map(Number);return h*60+m};
+const byTime=(a,b)=>mins(a.start)-mins(b.start);
+const PPH=130;
+
+// ===== ICONS =====
+const ico={
+tt:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg>',
+se:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>',
+fa:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.600-7 10-7 10z"/></svg>'};
+const heart=on=>on?"♥":"♡";
+
+// ===== ROUTER =====
+const route=()=>{const h=location.hash.slice(1)||"/";const m=h.match(/^\/act\/(.+)$/);return m?{p:"act",id:m[1]}:{p:h==="/"?"tt":h.slice(1)}};
+const go=h=>{location.hash=h};
+
+function toggleFav(id){favs=isFav(id)?favs.filter(x=>x!==id):[...favs,id];saveFavs();render(true)}
+
+function row(a,showVenue=true){const d=dayOf(a.day),v=venue(a.venueId);
+return `<div class="item"><button class="t" data-open="${a.id}"><b>${a.name}</b><span><i class="dot" style="background:${v.color}"></i>${v.name} · ${d.label} ${a.start}–${a.end}<br>${a.genre} · ${flag(a.country)} ${cname(a.country)}</span></button><button class="hb ${isFav(a.id)?"on":""}" data-fav="${a.id}" aria-label="Favoriet">${heart(isFav(a.id))}</button></div>`}
+
+function vTimetable(onlyFavs){
+const list=ACTS.filter(a=>a.day===day&&(!onlyFavs||isFav(a.id)));
+const segHtml=`<div class="seg">${DAYS.map(x=>`<button class="${x.id===day?"on":""}" data-day="${x.id}">${x.label}</button>`).join("")}</div>`;
+if(!list.length)return segHtml+`<div class="empty">${onlyFavs?(favs.length?"Geen favorieten op deze dag.":"Nog geen favorieten.<br>Tik op het hartje bij een act om hem hier te zien."):"Geen acts."}</div>`;
+const start=Math.floor(Math.min(...list.map(a=>mins(a.start)))/60)*60-0;
+const end=Math.ceil(Math.max(...list.map(a=>mins(a.end)))/60)*60;
+const hours=(end-start)/60,W=hours*PPH;
+let ticks="";for(let i=0;i<=hours;i++)ticks+=`<div class="tick" style="left:${i*PPH}px">${String((start/60+i)%24).padStart(2,"0")}:00</div>`;
+const rows=VENUES.filter(v=>!onlyFavs||list.some(a=>a.venueId===v.id)).map(v=>{const acts=list.filter(a=>a.venueId===v.id).map(a=>{
+const l=(mins(a.start)-start)/60*PPH,w=(mins(a.end)-mins(a.start))/60*PPH;
+return `<button class="act ${isFav(a.id)?"fav":""}" style="left:${l}px;width:${w-3}px;background:${v.color}" data-open="${a.id}">${isFav(a.id)?'<i class="h">♥</i>':""}<b>${a.name}</b><span>${a.start} · ${flag(a.country)} ${a.country}</span><span class="g">${a.genre}</span></button>`}).join("");
+return `<div class="row"><div class="lab"><i class="dot" style="background:${v.color}"></i>${v.name}</div><div class="track" style="width:${W}px;background-size:${PPH}px 100%">${acts}</div></div>`}).join("");
+let now="";const d=dayOf(day),n=new Date();
+if(d.date===n.toISOString().slice(0,10)){const nm=n.getHours()*60+n.getMinutes();if(nm>=start&&nm<=end)now=`<div class="now" style="left:${92+(nm-start)/60*PPH}px"></div>`}
+return segHtml+`
+<div class="tt"><div class="tt-in" style="width:${92+W}px"><div class="hrow"><div class="lab"></div><div class="trackh" style="width:${W}px">${ticks}</div></div>${rows}${now}</div></div>`}
+
+function vSearch(){
+const s=q.trim().toLowerCase();
+const res=s?ACTS.filter(a=>a.name.toLowerCase().includes(s)||venue(a.venueId).name.toLowerCase().includes(s)):[];
+return `<div class="search"><input id="q" type="search" placeholder="Zoek act of locatie…" value="${q.replace(/"/g,"&quot;")}" autocomplete="off"></div>
+<div class="list" id="res">${resHtml(s,res)}</div>`}
+function resHtml(s,res){return !s?`<div class="empty">Typ de naam van een act of locatie.</div>`:res.length?res.sort((a,b)=>DAYS.findIndex(d=>d.id===a.day)-DAYS.findIndex(d=>d.id===b.day)||byTime(a,b)).map(a=>row(a)).join(""):`<div class="empty">Niets gevonden voor “${s}”.</div>`}
+
+function vFavs(){
+const f=ACTS.filter(a=>isFav(a.id));
+if(!f.length)return `<div class="empty">Nog geen favorieten.<br>Tik op het hartje bij een act om hem hier te bewaren.</div>`;
+return `<div class="list">${DAYS.map(d=>{const l=f.filter(a=>a.day===d.id).sort(byTime);return l.length?`<div class="grp">${d.label}</div>${l.map(a=>row(a)).join("")}`:""}).join("")}</div>`}
+
+function vAct(id){const a=act(id);if(!a)return `<div class="empty">Act niet gevonden.</div>`;
+const v=venue(a.venueId),d=dayOf(a.day);
+return `<button class="back" data-back>← Terug</button><div class="det"><span class="pill">${a.genre}</span><span class="pill">${flag(a.country)} ${cname(a.country)}</span>
+<h2>${a.name}</h2><div class="meta"><i class="dot" style="background:${v.color}"></i>${v.name}<br>${d.label} · ${a.start}–${a.end}<br>Herkomst: ${flag(a.country)} ${cname(a.country)}</div><p>${a.bio}</p>
+<button class="big ${isFav(a.id)?"on":""}" data-fav="${a.id}">${isFav(a.id)?"♥ In favorieten":"♡ Toevoegen aan favorieten"}</button></div>`}
+
+let openId=null;
+function renderModal(){const m=document.getElementById("modal"),a=openId&&act(openId);
+if(!a){m.innerHTML="";return}
+const v=venue(a.venueId),d=dayOf(a.day);
+m.innerHTML=`<div class="ov"><div class="sheet" role="dialog" aria-modal="true" aria-label="${a.name}"><div class="grab"></div><button class="x" data-close aria-label="Sluiten">✕</button>
+<span class="pill">${a.genre}</span><span class="pill">${flag(a.country)} ${cname(a.country)}</span>
+<h2>${a.name}</h2><div class="meta"><i class="dot" style="background:${v.color}"></i>${v.name}<br>${d.label} · ${a.start}–${a.end}</div><p>${a.bio}</p>
+<button class="big ${isFav(a.id)?"on":""}" data-fav="${a.id}">${isFav(a.id)?"♥ In favorieten":"♡ Toevoegen aan favorieten"}</button></div></div>`}
+function openAct(id){if(openId===null)history.pushState({m:1},"");openId=id;renderModal()}
+function closeAct(){if(openId===null)return;openId=null;renderModal();if(history.state&&history.state.m)history.back()}
+function render(keep){renderModal();
+const r=route(),main=document.getElementById("main"),scroll=keep?[main.scrollTop,(main.querySelector(".tt")||{}).scrollLeft,(main.querySelector(".tt")||{}).scrollTop]:[0,0,0];
+const titles={tt:"Timetable",search:"Zoeken",favorites:"Favorieten",act:"Act"};
+document.getElementById("title").textContent=titles[r.p]||"Timetable";
+main.innerHTML=r.p==="search"?vSearch():r.p==="favorites"?vTimetable(true):r.p==="act"?vAct(r.id):vTimetable();
+const tab=r.p==="act"?(sessionStorage.getItem("from")||"tt"):r.p;
+document.getElementById("nav").innerHTML=[["tt","Timetable","/"],["search","Zoeken","/search"],["favorites","Favorieten","/favorites"]].map(([k,l,h])=>`<button class="${tab===k?"on":""}" data-go="${h}">${ico[k==="tt"?"tt":k==="search"?"se":"fa"]}${l}</button>`).join("");
+if(keep){main.scrollTop=scroll[0];const t=main.querySelector(".tt");if(t){t.scrollLeft=scroll[1];t.scrollTop=scroll[2]}}
+if(r.p==="search"&&!keep){const i=document.getElementById("q");if(i&&q)i.focus()}
+}
+
+document.addEventListener("click",e=>{
+if(e.target.classList.contains("ov")){closeAct();return}
+const t=e.target.closest("[data-open],[data-close],[data-go],[data-fav],[data-day],[data-back]");if(!t)return;
+if(t.dataset.open){openAct(t.dataset.open);return}
+if(t.hasAttribute("data-close")){closeAct();return}
+if(t.dataset.fav){toggleFav(t.dataset.fav);return}
+if(t.dataset.day){day=t.dataset.day;render();return}
+if(t.hasAttribute("data-back")){history.length>1?history.back():go("/");return}
+const h=t.dataset.go;const cur=route().p;if(h.startsWith("/act/")&&cur!=="act")sessionStorage.setItem("from",cur);go(h)});
+document.addEventListener("input",e=>{if(e.target.id==="q"){q=e.target.value;const s=q.trim().toLowerCase();const res=s?ACTS.filter(a=>a.name.toLowerCase().includes(s)||venue(a.venueId).name.toLowerCase().includes(s)):[];document.getElementById("res").innerHTML=resHtml(s,res)}});
+window.addEventListener("hashchange",()=>render());
+window.addEventListener("popstate",()=>{if(openId!==null){openId=null;renderModal()}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeAct()});
+render();
+</script>
+</body>
+</html>
