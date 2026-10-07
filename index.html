@@ -77,6 +77,40 @@ nav button.on{color:var(--accent)}
 @media (min-width:600px){.ov{align-items:center}.sheet{border-radius:20px;max-height:80%}}
 .oth{display:block;width:100%;text-align:left;padding:12px;margin-bottom:6px;border:1px solid var(--line);border-radius:10px;font-family:var(--mono);font-size:13px;min-height:44px}
 .seg button{padding:10px 4px}
+
+/* Responsive polish: keep the dense timetable readable without changing its data. */
+header{flex:none;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 10px;background:var(--bg)}
+header h2{font-weight:750;letter-spacing:-.02em}
+main{scrollbar-width:thin;scrollbar-color:var(--line) transparent;padding-bottom:8px}
+.seg{position:sticky;top:0;z-index:6;padding:10px 16px 12px;background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(14px);border-bottom:1px solid color-mix(in srgb,var(--line) 65%,transparent)}
+.seg button{transition:background .15s ease,border-color .15s ease,transform .15s ease}
+.seg button:active,.hb:active,.big:active,.back:active,.oth:active{transform:scale(.98)}
+.seg button:focus-visible,.act:focus-visible,.item button:focus-visible,.hb:focus-visible,.big:focus-visible,.back:focus-visible,.oth:focus-visible,.search input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tt{border-top:0;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.tt:after{content:"Swipe horizontally to see later times";display:block;position:sticky;left:10px;width:max-content;margin:10px 0 0 102px;padding:4px 8px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--muted);font-family:var(--mono);font-size:10px;pointer-events:none;opacity:.85}
+.row{min-height:76px}
+.lab{font-size:11px;padding:0 7px}
+.act{min-width:54px;transition:filter .15s ease,transform .15s ease}
+.act:active{filter:brightness(1.12);transform:scale(.99)}
+.item{min-height:68px;margin-bottom:10px;box-shadow:0 1px 0 color-mix(in srgb,var(--line) 55%,transparent)}
+.item .t{min-height:44px;display:flex;flex-direction:column;justify-content:center}
+.hb{border-radius:999px;transition:color .15s ease,background .15s ease,transform .15s ease}
+.hb:hover{background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.search{padding-top:10px}
+.search input{min-height:48px}
+nav{flex:none;box-shadow:0 -8px 24px color-mix(in srgb,#000 18%,transparent)}
+nav button{min-height:60px;padding-bottom:calc(8px + env(safe-area-inset-bottom,0px));transition:color .15s ease,background .15s ease}
+nav button.on{font-weight:700}
+@media (max-width:599px){
+  .tt:after{content:"Swipe to explore the timetable"}
+  .sheet{max-height:92%;padding-left:16px;padding-right:16px}
+  .det{padding-left:16px;padding-right:16px}
+}
+@media (min-width:600px){
+  header{padding-left:24px;padding-right:24px}
+  .seg{padding-left:24px;padding-right:24px}
+  .list{max-width:760px;margin:0 auto}
+}
 </style>
 </head>
 <body>
@@ -208,7 +242,7 @@ return `<div class="item"><button class="t" data-open="${a.id}"><b>${a.name}</b>
 
 function vTimetable(onlyFavs){
 const list=ACTS.filter(a=>a.day===day&&(!onlyFavs||isFav(a.id)));
-const segHtml=`<div class="seg">${DAYS.map(x=>`<button class="${x.id===day?"on":""}" data-day="${x.id}">${x.label}</button>`).join("")}</div>`;
+const segHtml=`<div class="seg" role="tablist" aria-label="Kies een festivaldag">${DAYS.map(x=>`<button class="${x.id===day?"on":""}" data-day="${x.id}" role="tab" aria-selected="${x.id===day}">${x.label}</button>`).join("")}</div>`;
 if(!list.length)return segHtml+`<div class="empty">${onlyFavs?(favs.length?"Geen favorieten op deze dag.":"Nog geen favorieten.<br>Tik op het hartje bij een act om hem hier te zien."):"Geen acts."}</div>`;
 const start=Math.floor(Math.min(...list.map(a=>mins(a.start)))/60)*60-0;
 const end=Math.ceil(Math.max(...list.map(a=>mins(a.end)))/60)*60;
@@ -257,7 +291,7 @@ const titles={tt:"Timetable",search:"Zoeken",favorites:"Favorieten",act:"Act"};
 document.getElementById("title").textContent=titles[r.p]||"Timetable";
 main.innerHTML=r.p==="search"?vSearch():r.p==="favorites"?vTimetable(true):r.p==="act"?vAct(r.id):vTimetable();
 const tab=r.p==="act"?(sessionStorage.getItem("from")||"tt"):r.p;
-document.getElementById("nav").innerHTML=[["tt","Timetable","/"],["search","Zoeken","/search"],["favorites","Favorieten","/favorites"]].map(([k,l,h])=>`<button class="${tab===k?"on":""}" data-go="${h}">${ico[k==="tt"?"tt":k==="search"?"se":"fa"]}${l}</button>`).join("");
+document.getElementById("nav").innerHTML=[["tt","Timetable","/"],["search","Zoeken","/search"],["favorites","Favorieten","/favorites"]].map(([k,l,h])=>`<button class="${tab===k?"on":""}" data-go="${h}" aria-current="${tab===k?"page":"false"}">${ico[k==="tt"?"tt":k==="search"?"se":"fa"]}${l}</button>`).join("");
 if(keep){main.scrollTop=scroll[0];const t=main.querySelector(".tt");if(t){t.scrollLeft=scroll[1];t.scrollTop=scroll[2]}}
 if(r.p==="search"&&!keep){const i=document.getElementById("q");if(i&&q)i.focus()}
 }
