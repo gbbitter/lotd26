@@ -1,0 +1,13 @@
+{
+  "name": "Left of the Dial 2026 Timetable",
+  "short_name": "LOTD 2026",
+  "description": "Your personal timetable for Left of the Dial 2026 in Rotterdam.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#080b18",
+  "theme_color": "#1557ff",
+  "lang": "en-NL",
+  "icons": [
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

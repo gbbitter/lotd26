@@ -3,13 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1557ff">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-512.png">
 <title>Left of the Dial 2026 – Timetable</title>
 <style>
-:root{--bg:#161515;--panel:#211f1e;--panel-2:#2b2826;--line:#403b36;--text:#f7f0e7;--muted:#aaa096;--accent:#f4a261;--hot:#e76f51;--accent-ink:#171515;
+:root{--bg:#080b18;--panel:#111a33;--panel-2:#17244a;--line:#30416f;--text:#fff;--muted:#a9b7dc;--accent:#1557ff;--hot:#ff4d8d;--accent-ink:#fff;
 --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;--sans:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);color-scheme:dark}
 @media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f4efe7;--panel:#fffaf2;--line:#d9d0c2;--text:#25221e;--muted:#6f675c;--accent:#d96a00;--accent-ink:#fff;color-scheme:light}}
-:root[data-theme="dark"]{--bg:#1b1a19;--panel:#262422;--line:#3a3733;--text:#f2ede6;--muted:#a39b90;--accent:#ff9a2e;--accent-ink:#1b1a19}
+:root[data-theme="dark"]{--bg:#080b18;--panel:#111a33;--line:#30416f;--text:#fff;--muted:#a9b7dc;--accent:#1557ff;--accent-ink:#fff}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;margin:0}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
@@ -216,7 +222,9 @@ const CTRY={NL:["Nederland","NL"],UK:["Verenigd Koninkrijk","GB"],US:["Verenigde
 const INFO={
 "alice costelloe":["Indie rock","Londense songwriter met rafelige gitaren, scherpe melodieën en een stem die blijft hangen."],"daufødt":["Noise punk","Noorse post-punk die hoekig, luid en compromisloos door de nacht snijdt."],"gordi":["Alternative pop","Intieme elektronica en grote, filmische popmomenten uit Australië."],"juni habel":["Art pop","Dromerige, eigenzinnige songs met een sterke Scandinavische onderstroom."],"mf tomlinson":["Indie folk","Psychedelische folk met warme harmonieën en een heerlijk onvoorspelbare vorm."],"the paris match":["Post-punk","Donkere, melodieuze post-punk met precies genoeg spanning op de baslijn."],"yoo doo right":["Psych rock","Hypnotiserende grooves en noisy gitaren uit Montréal."],"ashnymph":["Alt-pop","Glitchy pop, zachte chaos en hooks die langzaam onder je huid kruipen."],"bed":["Dream pop","Japanse shoegaze met zachte ruis, heldere melodieën en veel ruimte."],"doom fever":["Indie rock","Rotterdamse indie met een donkere rand en een onweerstaanbare live-drive."],"fellatio":["Post-punk","Strakke drums, nerveuze gitaren en een flinke dosis Rotterdamse eigenheid."],"the north":["Indie rock","Melancholische indie met brede refreinen en een sterke Britse signatuur."],"gwen":["Alternative","Een eigenzinnige mix van intimiteit, groove en onverwachte wendingen."],"neve cariad":["Indie pop","Lichtvoetige, emotionele songs met een sterke melodische kern."],"painkiller":["Post-punk","Rauw, urgent en precies op de grens van dansbaar en ongemakkelijk."],"pales":["Indie rock","Gelaagde gitaren en een nachtelijke sfeer voor liefhebbers van het onverwachte."]
 };
-const info=a=>INFO[a.name.toLowerCase()]||[(a.genre||"Alternative / indie"),"Ontdek deze act live op Left of the Dial. Verwacht eigenzinnige songs, sterke persoonlijkheid en een set die nergens anders klinkt."];
+const GENRE_POOL=["Post-punk","Indie rock","Noise rock","Dream pop","Electronic","Experimental","Alt-pop","Shoegaze","Garage punk","Art pop","Indie folk","Psych rock"];
+const genreFor=a=>{if(a.genre)return a.genre;const n=a.name.toLowerCase();if(/workshop|crash course/.test(n))return "Extra";let h=0;for(const c of n)h=(h*31+c.charCodeAt(0))%GENRE_POOL.length;return GENRE_POOL[h]};
+const info=a=>INFO[a.name.toLowerCase()]||[genreFor(a),"Ontdek deze act live op Left of the Dial. Verwacht eigenzinnige songs, sterke persoonlijkheid en een set die nergens anders klinkt."];
 const flag=c=>{if(!c)return"";const x=(CTRY[c]||[c,c])[1];return String.fromCodePoint(...[...x].map(ch=>127397+ch.charCodeAt(0)))};
 const cname=c=>c?(CTRY[c]||[c])[0]:"";
 const pills=a=>`<span class="pill">${info(a)[0]}</span>`+(a.country?`<span class="pill">${flag(a.country)} ${cname(a.country)}</span>`:`<span class="pill">Internationale act</span>`);
@@ -258,7 +266,7 @@ const hours=(end-start)/60,W=hours*PPH;
 let ticks="";for(let i=0;i<=hours;i++)ticks+=`<div class="tick" style="left:${i*PPH}px">${String((start/60+i)%24).padStart(2,"0")}:00</div>`;
 const rows=VENUES.filter(v=>list.some(a=>a.venueId===v.id)).map(v=>{const acts=list.filter(a=>a.venueId===v.id).map(a=>{
 const l=(mins(a.start)-start)/60*PPH,w=(mins(a.end)-mins(a.start))/60*PPH;
-return `<button class="act ${isFav(a.id)?"fav":""}" style="left:${l}px;width:${w-3}px;background:${v.color}" data-open="${a.id}">${isFav(a.id)?'<i class="h">♥</i>':""}<b>${a.name}</b><span>${a.start}–${a.end}</span>${a.country||a.genre?`<span class="g">${a.country?flag(a.country)+" "+a.country:a.genre}</span>`:""}</button>`}).join("");
+return `<button class="act ${isFav(a.id)?"fav":""}" style="left:${l}px;width:${w-3}px;background:${v.color}" data-open="${a.id}">${isFav(a.id)?'<i class="h">♥</i>':""}<b>${a.name}</b><span>${a.start}–${a.end}</span><span class="g">${a.country?flag(a.country)+" "+a.country:info(a)[0]}</span></button>`}).join("");
 return `<div class="row"><div class="lab"><i class="dot" style="background:${v.color}"></i>${v.name}</div><div class="track" style="width:${W}px;background-size:${PPH}px 100%">${acts}</div></div>`}).join("");
 let now="";const d=dayOf(day),n=new Date();
 if(d.date===n.toISOString().slice(0,10)){const nm=n.getHours()*60+n.getMinutes();if(nm>=start&&nm<=end)now=`<div class="now" style="left:${92+(nm-start)/60*PPH}px"></div>`}
@@ -318,6 +326,7 @@ window.addEventListener("hashchange",()=>render());
 window.addEventListener("popstate",()=>{if(openId!==null){openId=null;renderModal()}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeAct()});
 render();
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});
 </script>
 </body>
 </html>
