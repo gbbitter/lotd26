@@ -12,11 +12,11 @@
 <title>Left of the Dial 2026 – Timetable</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap');
-:root{--bg:#080808;--panel:#111111;--panel-2:#1a1a1a;--line:#343434;--text:#fff;--muted:#b4b4b4;--accent:#2838ff;--hot:#ff477e;--accent-ink:#fff;
+:root{--bg:#fff;--panel:#f4f4f4;--panel-2:#e9e9e9;--line:#111;--text:#080808;--muted:#5b5b5b;--accent:#1919ff;--hot:#ff477e;--accent-ink:#fff;
 --mono:"DM Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;--sans:"Barlow Condensed",Arial Narrow,ui-sans-serif,system-ui,sans-serif;
-box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);color-scheme:dark}
-@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f4efe7;--panel:#fffaf2;--line:#d9d0c2;--text:#25221e;--muted:#6f675c;--accent:#d96a00;--accent-ink:#fff;color-scheme:light}}
-:root[data-theme="dark"]{--bg:#080b18;--panel:#111a33;--line:#30416f;--text:#fff;--muted:#a9b7dc;--accent:#1557ff;--accent-ink:#fff}
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#fff;--panel:#f4f4f4;--panel-2:#e9e9e9;--line:#111;--text:#080808;--muted:#5b5b5b;--accent:#1919ff;--accent-ink:#fff;color-scheme:light}}
+:root[data-theme="dark"]{--bg:#fff;--panel:#f4f4f4;--panel-2:#e9e9e9;--line:#111;--text:#080808;--muted:#5b5b5b;--accent:#1919ff;--accent-ink:#fff}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;margin:0}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
@@ -86,14 +86,14 @@ nav button.on{color:var(--accent)}
 .seg button{padding:10px 4px}
 
 /* Responsive polish: keep the dense timetable readable without changing its data. */
-header{flex:none;padding:calc(14px + env(safe-area-inset-top,0px)) 16px 16px;background:var(--bg);position:relative;border-bottom:1px solid var(--line)}
-header:before{content:"";position:absolute;inset:0 0 auto;height:4px;background:var(--accent)}
-.brandbar{display:flex;align-items:center;gap:12px;min-height:68px}
-.lotd-mark{width:58px;height:58px;flex:none;border-radius:50%;background:#000;color:#fff;display:grid;place-content:center;text-align:center;font:900 13px/.75 var(--sans);letter-spacing:-.08em;text-transform:lowercase;border:2px solid #fff;box-shadow:3px 3px 0 var(--accent);transform:rotate(-6deg)}
-.lotd-mark span{font-size:9px;letter-spacing:-.04em}
-.brandcopy{min-width:0;flex:1}.brandcopy h1{font:800 14px/1 var(--sans);color:#fff;text-transform:uppercase;letter-spacing:.08em}.brandcopy p{margin:7px 0 0;color:var(--muted);font:10px var(--mono);letter-spacing:.02em;white-space:nowrap}
-.brandstamp{width:48px;height:48px;display:grid;place-content:center;text-align:center;border-radius:50%;background:var(--accent);color:#fff;font:700 10px/.9 var(--mono);transform:rotate(8deg)}.brandstamp b{font:900 19px var(--sans);line-height:.9}
-header h1{font-size:11px;letter-spacing:.2em} header h2{font-size:clamp(30px,6vw,48px);font-weight:900;letter-spacing:-.055em;line-height:.95;margin-top:18px;text-transform:uppercase}
+header{flex:none;padding:calc(14px + env(safe-area-inset-top,0px)) 16px 18px;background:var(--bg);position:relative;border-bottom:2px solid var(--line)}
+header:before{content:"LEFT OF THE DIAL 2026  •  21 / 22 / 23 / 24 OCTOBER  •  ROTTERDAM  •  SOLD OUT";position:absolute;inset:0 0 auto;height:26px;background:#080808;color:#fff;display:flex;align-items:center;overflow:hidden;white-space:nowrap;font:10px var(--mono);letter-spacing:.08em;padding-left:16px}
+.brandbar{display:flex;align-items:center;gap:14px;min-height:68px;margin-top:22px}
+.lotd-mark{width:62px;height:62px;flex:none;border-radius:50%;background:#080808;color:#fff;display:grid;place-content:center;text-align:center;font:900 14px/.72 var(--sans);letter-spacing:-.1em;text-transform:lowercase;border:2px solid #080808;box-shadow:4px 4px 0 var(--accent);transform:rotate(-6deg)}
+.lotd-mark span{font-size:9px;letter-spacing:-.05em}
+.brandcopy{min-width:0;flex:1}.brandcopy h1{font:900 15px/.95 var(--sans);color:var(--text);text-transform:uppercase;letter-spacing:.04em}.brandcopy p{margin:7px 0 0;color:var(--muted);font:10px var(--mono);letter-spacing:.02em;white-space:nowrap}
+.brandstamp{width:52px;height:52px;display:grid;place-content:center;text-align:center;border-radius:50%;background:var(--accent);color:#fff;font:700 10px/.9 var(--mono);transform:rotate(8deg);box-shadow:3px 3px 0 #080808}.brandstamp b{font:900 21px var(--sans);line-height:.9}
+header h1{font-size:11px;letter-spacing:.2em} header h2{font-size:clamp(34px,7vw,58px);font-weight:900;letter-spacing:-.06em;line-height:.9;margin-top:22px;text-transform:uppercase}
 main{scrollbar-width:thin;scrollbar-color:var(--line) transparent;padding-bottom:8px}
 .seg{position:sticky;top:0;z-index:6;padding:10px 16px 12px;background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(14px);border-bottom:1px solid color-mix(in srgb,var(--line) 65%,transparent)}
 .seg button{transition:background .15s ease,border-color .15s ease,transform .15s ease}
@@ -107,7 +107,7 @@ main{scrollbar-width:thin;scrollbar-color:var(--line) transparent;padding-bottom
 .act b{letter-spacing:-.015em}
 .act .g{font-size:10px;letter-spacing:.01em}
 .act:active{filter:brightness(1.12);transform:scale(.99)}
-.item{min-height:68px;margin-bottom:10px;box-shadow:0 1px 0 color-mix(in srgb,var(--line) 55%,transparent)}
+.item{min-height:68px;margin-bottom:10px;box-shadow:4px 4px 0 color-mix(in srgb,var(--accent) 22%,transparent);border-radius:0;background:var(--bg);border:2px solid var(--line)}
 .item .t{min-height:44px;display:flex;flex-direction:column;justify-content:center}
 .hb{border-radius:999px;transition:color .15s ease,background .15s ease,transform .15s ease}
 .hb:hover{background:color-mix(in srgb,var(--accent) 12%,transparent)}
@@ -303,7 +303,7 @@ const v=venue(a.venueId),d=dayOf(a.day);
 m.innerHTML=`<div class="ov"><div class="sheet" role="dialog" aria-modal="true" aria-label="${a.name}"><div class="grab"></div><button class="x" data-close aria-label="Sluiten">✕</button>
 ${pills(a)}
 <h2>${a.name}</h2><div class="meta"><i class="dot" style="background:${v.color}"></i>${v.name}<br>${d.label} · ${a.start}–${a.end}</div>${others(a)}
-<button class="big ${isFav(a.id)?"on":""}" data-fav="${a.id}">${isFav(a.id)?"♥ In favorieten":"♡ Toevoegen aan favorieten"}</button></div></div>`}
+<button class="big ${isFav(a.id)?"on":""}" data-fav="${a.id}">${isFav(a.id)?"�� In favorieten":"♡ Toevoegen aan favorieten"}</button></div></div>`}
 function openAct(id){if(openId===null)history.pushState({m:1},"");openId=id;renderModal()}
 function closeAct(){if(openId===null)return;openId=null;renderModal();if(history.state&&history.state.m)history.back()}
 function render(keep){renderModal();
