@@ -1,6 +1,6 @@
 const VERSION = "2026-10-1";
 const CACHE = `lotd-${VERSION}`;
-const APP_SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-512.png"];
+const APP_SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-512.png", "./game.js"];
 
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));
