@@ -1,16 +1,27 @@
+const SUPABASE_URL = "https://kqaacbzeaokkdceirdfj.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxYWFjYnplYW9ra2RjZWlyZGZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0Mzc0MDIsImV4cCI6MjEwNzAxMzQwMn0.ActIR4sojnRWQyC_kJdN6BUl2u2q5BnY3cW57N8Cthw";
+
 const leaderboard = (() => {
-  const KEY = "lotd-wapperman-scores";
+  const KEY = "lotd-wapperman-offline-scores";
+  const endpoint = `${SUPABASE_URL}/rest/v1/scores`;
+  const headers = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, "Content-Type": "application/json" };
+  const localScores = () => { try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch { return []; } };
+  const saveLocal = score => { const scores = [...localScores(), score].sort((a, b) => b.score - a.score).slice(0, 10); localStorage.setItem(KEY, JSON.stringify(scores)); };
   async function getTopScores() {
-    try { return JSON.parse(localStorage.getItem(KEY) || "[]").slice(0, 10); } catch { return []; }
+    const response = await fetch(`${endpoint}?select=name,score,created_at&order=score.desc&limit=10`, { headers, cache: "no-store" });
+    if (!response.ok) throw new Error("leaderboard-fetch-failed");
+    return await response.json();
   }
   async function submitScore(name, score) {
+    const entry = { name: String(name).trim().slice(0, 16), score: Math.max(0, Math.min(100000, Math.round(score))) };
     try {
-      const scores = await getTopScores();
-      scores.push({ name: String(name).trim().slice(0, 16), score: Math.max(0, Math.round(score)) });
-      scores.sort((a, b) => b.score - a.score);
-      localStorage.setItem(KEY, JSON.stringify(scores.slice(0, 10)));
-      return scores.slice(0, 10);
-    } catch { return []; }
+      const response = await fetch(endpoint, { method: "POST", headers: { ...headers, Prefer: "return=minimal" }, body: JSON.stringify(entry), cache: "no-store" });
+      if (!response.ok) throw new Error("leaderboard-submit-failed");
+      return await getTopScores();
+    } catch (error) {
+      saveLocal(entry);
+      const offline = new Error("offline"); offline.name = "OfflineScoreSaved"; throw offline;
+    }
   }
   return { getTopScores, submitScore };
 })();
@@ -37,7 +48,20 @@ const leaderboard = (() => {
   function draw() { const w = canvas.clientWidth, h = canvas.clientHeight; ctx.clearRect(0,0,w,h); ctx.fillStyle="#fff"; ctx.fillRect(0,0,w,h); ctx.strokeStyle="#111"; ctx.lineWidth=2; for(let i=0;i<5;i++){ctx.beginPath();ctx.moveTo(i*w/4,0);ctx.lineTo(i*w/4,h);ctx.strokeStyle="#eee";ctx.stroke();} obstacles.forEach(o=>{ctx.save();ctx.translate(o.x,o.y);ctx.rotate(o.rot);if(logo.complete)ctx.drawImage(logo,-o.size/2,-o.size/2,o.size,o.size);else{ctx.fillStyle="#111";ctx.beginPath();ctx.arc(0,0,o.size/2,0,Math.PI*2);ctx.fill();}ctx.restore();}); const bob=state==="hit"?20:Math.sin(elapsed*7)*5, bodyY=h-72+bob; ctx.save(); ctx.translate(x,bodyY); ctx.fillStyle="#111"; ctx.beginPath();ctx.ellipse(0,12,27,state==="hit"?25:40,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle="#0000ff";ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-20,-4);ctx.quadraticCurveTo(-48,Math.sin(elapsed*8)*18-26,-64,-8);ctx.moveTo(20,-4);ctx.quadraticCurveTo(48,Math.sin(elapsed*8+1)*18-26,64,-8);ctx.stroke();ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(0,-33,25,0,Math.PI*2);ctx.fill();ctx.fillStyle="#0000ff";ctx.beginPath();ctx.arc(-9,-35,5,0,Math.PI*2);ctx.arc(9,-35,5,0,Math.PI*2);ctx.fill();ctx.restore(); }
   function loop(t) { const dt = Math.min(.05, (t-(last||t))/1000); last=t; if(state === "playing") update(dt); draw(); raf=requestAnimationFrame(loop); }
   function gameOver() { if(state !== "hit") return; state="gameover"; best=Math.max(best,score); localStorage.setItem("lotd-wapperman-best",best); overlay(`<h2>Game over</h2><p>Score <b>${score}</b> · Persoonlijk record <b>${best}</b></p><input id="score-name" maxlength="16" placeholder="Naam (optioneel)" aria-label="Naam (optioneel)"><button data-save disabled>Opslaan</button><button data-retry>Opnieuw spelen</button>`); const input=$("score-name"), saveBtn=document.querySelector("[data-save]"); input.oninput=()=>saveBtn.disabled=!input.value.trim(); }
-  async function save() { const input=$("score-name"); if(!input.value.trim()) return; await leaderboard.submitScore(input.value,score); showTop(); }
-  async function showTop() { state="top"; const scores=await leaderboard.getTopScores(); overlay(`<h2>Top 10</h2><ol class="game-top">${scores.map(s=>`<li><span>${esc(s.name)}</span><b>${s.score}</b></li>`).join("") || "<li>Nog geen scores</li>"}</ol><button data-retry>Opnieuw spelen</button>`); }
+  async function save() {
+    const input=$("score-name"); if(!input.value.trim()) return;
+    try { await leaderboard.submitScore(input.value,score); showTop(); }
+    catch (error) { if (error.name === "OfflineScoreSaved") showTop("Offline – lokaal opgeslagen"); else showTop("Opslaan mislukt"); }
+  }
+  async function showTop(notice = "") {
+    state="top";
+    overlay(`<h2>Top 10</h2><p aria-live="polite">Laden...</p>`);
+    try {
+      const scores=await leaderboard.getTopScores();
+      overlay(`${notice ? `<p class="game-notice">${esc(notice)}</p>` : ""}<ol class="game-top">${scores.map(s=>`<li><span>${esc(s.name)}</span><b>${s.score}</b></li>`).join("") || "<li>Nog geen scores</li>"}</ol><button data-retry>Opnieuw spelen</button>`);
+    } catch {
+      overlay(`${notice ? `<p class="game-notice">${esc(notice)}</p>` : ""}<p>De online scores konden niet worden geladen.</p><button data-top>Opnieuw proberen</button><button data-retry>Opnieuw spelen</button>`);
+    }
+  }
   window.WappermanGame = { mount };
 })();
