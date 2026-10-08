@@ -140,7 +140,7 @@ nav button.on{font-weight:700}
 }
 
 /* LOTD visual language: clean white space, black type and electric blue circles. */
-#app-header{z-index:10}.lotd-mark{object-fit:contain;display:block}#app-header .brandbar{min-height:58px;margin-top:26px;gap:12px}#app-header .lotd-mark{width:54px;height:54px;border:1px solid #fff}#app-header h2{font-size:clamp(30px,5vw,48px);margin:18px 0 14px}
+.statusbar{min-height:0;background:#050505;color:#fff;text-align:center;font:700 11px Arial;padding:0;overflow:hidden}.statusbar:not(:empty){padding:8px 12px}.large-text{font-size:117%}.route{display:block;color:#1717ff;font-style:normal}.star{color:#777}.star.on{color:#1717ff}.clash{display:block;color:#c2185b;font:500 10px Arial;font-style:normal;margin-top:3px}.clash-marker{color:#c2185b!important}.install-note{margin:10px 16px;padding:12px;border:1px solid #050505;font:12px Arial;background:#f5f5f5}.access-tools{display:flex;gap:8px;padding:8px 16px}.access-tools button{border:1px solid #050505;background:#fff;padding:8px;font:700 11px Arial}.statusbar{position:sticky;top:0;z-index:20}#app-header{z-index:10}.lotd-mark{object-fit:contain;display:block}#app-header .brandbar{min-height:58px;margin-top:26px;gap:12px}#app-header .lotd-mark{width:54px;height:54px;border:1px solid #fff}#app-header h2{font-size:clamp(30px,5vw,48px);margin:18px 0 14px}
 :root{--bg:#fff;--panel:#fff;--panel-2:#f2f2f2;--line:#050505;--text:#050505;--muted:#444;--accent:#1717ff;--hot:#1717ff;--accent-ink:#fff;--sans:Arial,Helvetica,sans-serif;--mono:Arial,Helvetica,sans-serif}
 body{background:#fff;color:#050505;font-family:Arial,Helvetica,sans-serif}
 header{background:#fff;border-bottom:0;padding-top:0}
@@ -181,7 +181,7 @@ nav button{font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:
 </style>
 </head>
 <body>
-<header id="app-header"><div class="brandbar"><img class="lotd-mark" src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/lotd-logo-c6lqMUD95gwzWwfVBJxT2zXsGQE1pk.png" alt="Left of the Dial logo"><div class="brandcopy"><h1>New music festival</h1><p>21 / 22 / 23 / 24 October 2026 · Rotterdam</p></div><div class="brandstamp">LOTD<br><b>26</b></div></div><h2 id="title">Timetable</h2></header>
+<div class="statusbar" id="statusbar" role="status"></div><header id="app-header"><div class="brandbar"><img class="lotd-mark" src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/lotd-logo-c6lqMUD95gwzWwfVBJxT2zXsGQE1pk.png" alt="Left of the Dial logo"><div class="brandcopy"><h1>New music festival</h1><p>21 / 22 / 23 / 24 October 2026 · Rotterdam</p></div><div class="brandstamp">LOTD<br><b>26</b></div></div><h2 id="title">Timetable</h2></header>
 <main id="main"></main>
 <nav id="nav"></nav>
   <div id="modal"></div>
@@ -276,7 +276,9 @@ const VENUES=[],ACTS=[];
 const slug=s=>s.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
 RAW.split("\n").forEach(l=>{const[vn,d,r]=l.split("|");let v=VENUES.find(x=>x.name===vn);if(!v){v={id:"v"+VENUES.length,name:vn};VENUES.push(v)}
 r.split(";").forEach(t=>{const m=t.match(/^(\d\d)(\d\d)-(\d\d)(\d\d) (.+)$/);const name=m[5],start=m[1]+":"+m[2];ACTS.push({id:`${slug(name)}-${slug(vn)}-${d}-${m[1]}${m[2]}`,name,venueId:v.id,day:d,start,end:m[3]+":"+m[4],country:CO[name.toLowerCase()],genre:/Workshop|Crash Course/.test(name)?"Extra":""})})});
-VENUES.forEach((v,i)=>v.color="hsl("+Math.round(i*137.5)%360+" 45% 38%)");
+const VENUE_COORDS={Annabel:[51.92536,4.47601],Arminius:[51.91494,4.47371],Baanhof:[51.91282,4.48025],BIRD:[51.92671,4.47881],Barrio:[51.9256,4.478],"De Doelen":[51.92182,4.47329],MONO:[51.92858,4.47827],Paradijskerk:[51.9169,4.4725],Reijngoud:[51.9285,4.47811],REMASTERED:[51.91051,4.4828],Rotown:[51.91694,4.47167],Sahara:[51.92525,4.4759],Salsability:[51.9246,4.4779],Stalles:[51.9167,4.4712],"Theater Rotterdam":[51.91998,4.4741],Uniek:[51.9187,4.47],V11:[51.91717,4.48452],V2_:[51.9145,4.4707],"Waalse Kerk":[51.91384,4.47991],WORM:[51.915,4.47]};
+const venueBase=name=>Object.keys(VENUE_COORDS).find(k=>name.toLowerCase().startsWith(k.toLowerCase()))||name;
+VENUES.forEach((v,i)=>{v.color="hsl("+Math.round(i*137.5)%360+" 45% 38%)";v.coords=VENUE_COORDS[venueBase(v.name)]||null});
 const CTRY={NL:["Nederland","NL"],UK:["Verenigd Koninkrijk","GB"],US:["Verenigde Staten","US"],IE:["Ierland","IE"],CA:["Canada","CA"],JP:["Japan","JP"],NO:["Noorwegen","NO"],DK:["Denemarken","DK"],AT:["Oostenrijk","AT"]};
 const INFO={
 "alice costelloe":["Indie rock","Londense songwriter met rafelige gitaren, scherpe melodieën en een stem die blijft hangen."],"daufødt":["Noise punk","Noorse post-punk die hoekig, luid en compromisloos door de nacht snijdt."],"gordi":["Alternative pop","Intieme elektronica en grote, filmische popmomenten uit Australië."],"juni habel":["Art pop","Dromerige, eigenzinnige songs met een sterke Scandinavische onderstroom."],"mf tomlinson":["Indie folk","Psychedelische folk met warme harmonieën en een heerlijk onvoorspelbare vorm."],"the paris match":["Post-punk","Donkere, melodieuze post-punk met precies genoeg spanning op de baslijn."],"yoo doo right":["Psych rock","Hypnotiserende grooves en noisy gitaren uit Montréal."],"ashnymph":["Alt-pop","Glitchy pop, zachte chaos en hooks die langzaam onder je huid kruipen."],"bed":["Dream pop","Japanse shoegaze met zachte ruis, heldere melodieën en veel ruimte."],"doom fever":["Indie rock","Rotterdamse indie met een donkere rand en een onweerstaanbare live-drive."],"fellatio":["Post-punk","Strakke drums, nerveuze gitaren en een flinke dosis Rotterdamse eigenheid."],"the north":["Indie rock","Melancholische indie met brede refreinen en een sterke Britse signatuur."],"gwen":["Alternative","Een eigenzinnige mix van intimiteit, groove en onverwachte wendingen."],"neve cariad":["Indie pop","Lichtvoetige, emotionele songs met een sterke melodische kern."],"painkiller":["Post-punk","Rauw, urgent en precies op de grens van dansbaar en ongemakkelijk."],"pales":["Indie rock","Gelaagde gitaren en een nachtelijke sfeer voor liefhebbers van het onverwachte."]
@@ -291,6 +293,11 @@ const sub=a=>"<br>"+[info(a)[0],a.country?countryCode(a.country)+" · "+cname(a.
 const others=a=>{const o=ACTS.filter(x=>x.name===a.name&&x.id!==a.id).sort((x,y)=>DAYS.findIndex(d=>d.id===x.day)-DAYS.findIndex(d=>d.id===y.day)||byTime(x,y));return o.length?`<div class="grp">Ook te zien</div>`+o.map(x=>`<button class="oth" data-open="${x.id}">${dayOf(x.day).label} · ${x.start} · ${venue(x.venueId).name}</button>`).join(""):""};
 // ===== STATE =====
 let favs=[];try{const stored=JSON.parse(localStorage.getItem("lotd-favs")||"[]");favs=Array.isArray(stored)?stored.filter(id=>ACTS.some(a=>a.id===id)):[]}catch(e){}
+let priorities={};try{priorities=JSON.parse(localStorage.getItem("lotd-priorities")||"{}")}catch(e){}
+let lang=localStorage.getItem("lotd-lang")||"nl",largeText=localStorage.getItem("lotd-large-text")==="1";
+const tx={nl:{timetable:"Timetable",search:"Zoeken",favorites:"Favorieten",game:"Wapperman",interested:"Geïnteresseerd",must:"Moet zien",walk:"min lopen",miss:"je mist de eerste",install:"Voeg deze app toe aan je beginscherm voor snelle offline toegang.",offline:"Offline — gegevens uit cache"},en:{timetable:"Timetable",search:"Search",favorites:"Favourites",game:"Wapperman",interested:"Interested",must:"Must see",walk:"min walk",miss:"you’ll miss the first",install:"Add this app to your home screen for quick offline access.",offline:"Offline — showing cached data"}};
+const t=k=>tx[lang][k]||k;
+const savePrefs=()=>{try{localStorage.setItem("lotd-priorities",JSON.stringify(priorities));localStorage.setItem("lotd-lang",lang);localStorage.setItem("lotd-large-text",largeText?"1":"0")}catch(e){}};
 let hiddenVenues=[];try{const stored=JSON.parse(localStorage.getItem("lotd-hidden-venues")||"[]");hiddenVenues=Array.isArray(stored)?stored.filter(id=>VENUES.some(v=>v.id===id)):[]}catch(e){}
 let favOnly=false, sharedIds=null, sharedReadOnly=false;
 const saveFavs=()=>{try{localStorage.setItem("lotd-favs",JSON.stringify(favs))}catch(e){} };
@@ -298,14 +305,19 @@ const saveVenues=()=>{try{localStorage.setItem("lotd-hidden-venues",JSON.stringi
 const sharedFromHash=()=>{const m=location.hash.match(/^#f=([^&]*)/);return m?m[1].split(",").filter(id=>ACTS.some(a=>a.id===id)):null};
 const parseShared=()=>{const ids=sharedFromHash();if(ids)sharedIds=ids};
 parseShared();
-const isFav=id=>favs.includes(id);
+const isFav=id=>favs.includes(id);const priority=id=>priorities[id]||"interested";const isMust=id=>isFav(id)&&priority(id)==="must";
+const norm=s=>String(s).normalize("NFKD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+const distanceMinutes=(a,b)=>{const x=venue(a.venueId)?.coords,y=venue(b.venueId)?.coords;if(!x||!y)return null;const lat=(x[0]+y[0])/2,dx=(y[1]-x[1])*111000*Math.cos(lat*Math.PI/180),dy=(y[0]-x[0])*111000;return Math.max(1,Math.round(Math.hypot(dx,dy)/80))};
+const travelNote=(a,b)=>{const walk=distanceMinutes(a,b);if(walk===null)return "";const miss=Math.max(0,mins(b.start)-mins(a.end));return `${venue(a.venueId).name} → ${venue(b.venueId).name}: ${walk} ${t("walk")}${miss?`, ${t("miss")} ${miss} min`:""}.`};
 const tdy=new Date().toISOString().slice(0,10);let day=(DAYS.find(d=>d.date===tdy)||DAYS[0]).id,q="";
 const venue=id=>VENUES.find(v=>v.id===id),act=id=>ACTS.find(a=>a.id===id),dayOf=id=>DAYS.find(d=>d.id===id);
 const mins=t=>{const[h,m]=t.split(":").map(Number),n=h*60+m;return n<360?n+1440:n};
 const clashTime=t=>mins(t);
 const clashInterval=a=>{const start=clashTime(a.start);let end=clashTime(a.end);if(end<start)end+=1440;return {start,end}};
 const getClashes=(a,favorites=favs)=>{const range=clashInterval(a);return ACTS.filter(x=>x.id!==a.id&&favorites.includes(x.id)&&x.day===a.day).map(x=>{const other=clashInterval(x),start=Math.max(range.start,other.start),end=Math.min(range.end,other.end);return end>start&&range.start<other.end&&other.start<range.end?{act:x,minutes:end-start}:null}).filter(Boolean).sort((a,b)=>clashTime(a.act.start)-clashTime(b.act.start))};
-const clashText=a=>getClashes(a).map(({act:other,minutes})=>`${other.name} (${minutes} min)`).join(", ").replace(/, ([^,]*)$/, " en $1");
+const clashText=a=>getClashes(a).map(({act:other,minutes})=>`${other.name} (${minutes} min${isMust(other)?`, ${t("must")}`:""})`).join(", ").replace(/, ([^,]*)$/, " en $1");
+const nextFav=a=>ACTS.filter(x=>isFav(x.id)&&x.day===a.day&&mins(x.start)>=mins(a.end)).sort(byTime)[0];
+const routeNote=a=>{const b=nextFav(a);return b?travelNote(a,b):""};
 const nowPlaying=a=>{const n=new Date();return dayOf(a.day).date===tdy&&mins(a.start)<=n.getHours()*60+n.getMinutes()&&mins(a.end)>n.getHours()*60+n.getMinutes()};
 const byTime=(a,b)=>mins(a.start)-mins(b.start);
 const PPH=window.innerWidth>=900?Math.max(120,Math.min(220,(window.innerWidth-92)/10)):160;
@@ -322,15 +334,17 @@ const heart=on=>on?"♥":"♡";
 const route=()=>{const h=location.hash.slice(1)||"/";const m=h.match(/^\/act\/(.+)$/);return m?{p:"act",id:m[1]}:{p:h==="/"?"tt":h.startsWith("f=")?"favorites":h.slice(1)}};
 const go=h=>{location.hash=h};
 
-function toggleFav(id){favs=isFav(id)?favs.filter(x=>x!==id):[...favs,id];saveFavs();render(true)}
+function toggleFav(id){favs=isFav(id)?favs.filter(x=>x!==id):[...favs,id];if(!isFav(id))priorities[id]="interested";saveFavs();savePrefs();render(true)}
+function togglePriority(id){if(!isFav(id))favs=[...favs,id];priorities[id]=priority(id)==="must"?"interested":"must";saveFavs();savePrefs();render(true)}
 
 function row(a,showVenue=true){const d=dayOf(a.day),v=venue(a.venueId),clashes=getClashes(a),clash=clashText(a);
-return `<div class="item"><button class="t" data-open="${a.id}"><b>${a.name}</b><span><i class="dot" style="background:${v.color}"></i>${v.name} · ${d.label} ${a.start}–${a.end}${sub(a)}${clashes.length?`<em class="clash">⚠ Overlapt met ${clash}</em>`:""}</span></button><button class="hb ${isFav(a.id)?"on":""}" data-fav="${a.id}" aria-label="Favoriet">${heart(isFav(a.id))}</button></div>`}
+return `<div class="item"><button class="t" data-open="${a.id}"><b>${a.name}</b><span><i class="dot" style="background:${v.color}"></i>${v.name} · ${d.label} ${a.start}–${a.end}${sub(a)}${clashes.length?`<em class="clash">⚠ Overlapt met ${clash}</em>`:""}${routeNote(a)?`<em class="route">${routeNote(a)}</em>`:""}</span></button><button class="hb ${isFav(a.id)?"on":""}" data-fav="${a.id}" aria-label="${t("interested")}">${heart(isFav(a.id))}</button><button class="hb star ${isMust(a.id)?"on":""}" data-must="${a.id}" aria-label="${t("must")}">★</button></div>`}
 
 function vTimetable(onlyFavs){
 const ids=sharedReadOnly&&sharedIds?sharedIds:null;const list=ACTS.filter(a=>a.day===day&&(!onlyFavs||isFav(a.id))&&(!ids||ids.includes(a.id))&&!hiddenVenues.includes(a.venueId));const today=dayOf(day).date===tdy;
 const jump=today?`<button class="now-btn" data-now>Nu</button>`:"";
-const segHtml=`<div class="seg" role="tablist" aria-label="Kies een festivaldag">${DAYS.map(x=>`<button class="${x.id===day?"on":""}" data-day="${x.id}" role="tab" aria-selected="${x.id===day}">${x.label}</button>`).join("")}</div><div class="tt-tools"><button class="${favOnly||sharedReadOnly?"on":""}" data-fav-only>${sharedReadOnly?"Gedeelde lijst":"♡ Alleen favorieten"}</button><button class="venue-btn" data-venues>Locaties${hiddenVenues.length?` · ${VENUES.length-hiddenVenues.length}`:""}</button></div>`;
+const tools=`<div class="access-tools"><button data-lang>${lang.toUpperCase()}</button><button data-large-text>${largeText?"A−":"A+"}</button></div><div class="install-note">${t("install")}</div>`;
+const segHtml=tools+`<div class="seg" role="tablist" aria-label="Kies een festivaldag">${DAYS.map(x=>`<button class="${x.id===day?"on":""}" data-day="${x.id}" role="tab" aria-selected="${x.id===day}">${x.label}</button>`).join("")}</div><div class="tt-tools"><button class="${favOnly||sharedReadOnly?"on":""}" data-fav-only>${sharedReadOnly?"Gedeelde lijst":"♡ Alleen favorieten"}</button><button class="venue-btn" data-venues>Locaties${hiddenVenues.length?` · ${VENUES.length-hiddenVenues.length}`:""}</button></div>`;
 if(!list.length)return segHtml+`<div class="empty">${onlyFavs?(favs.length?"Geen favorieten op deze dag.":"Nog geen favorieten.<br>Tik op het hartje bij een act om hem hier te zien."):"Geen acts."}</div>`;
 const start=Math.floor(Math.min(...list.map(a=>mins(a.start)))/60)*60-0;
 const end=Math.ceil(Math.max(...list.map(a=>mins(a.end)))/60)*60;
@@ -346,10 +360,9 @@ return segHtml+`<div class="tt-wrap">${jump}
 <div class="tt"><div class="tt-in" style="width:${92+W}px"><div class="hrow"><div class="lab"></div><div class="trackh" style="width:${W}px">${ticks}</div></div>${rows}${now}</div></div>`}
 
 function vSearch(){
-const s=q.trim().toLowerCase();
-const res=s?ACTS.filter(a=>a.name.toLowerCase().includes(s)||venue(a.venueId).name.toLowerCase().includes(s)):[];
-return `<div class="search"><input id="q" type="search" placeholder="Zoek act of locatie…" value="${q.replace(/"/g,"&quot;")}" autocomplete="off"></div>
-<div class="list" id="res">${resHtml(s,res)}</div>`}
+const s=norm(q.trim());
+  const res=s?ACTS.filter(a=>norm(a.name).includes(s)||norm(venue(a.venueId).name).includes(s)||norm(info(a)[0]).includes(s)||norm(a.country||"").includes(s)||norm(cname(a.country)).includes(s)):[];
+  return `<div class="search"><input id="q" type="search" placeholder="${lang==="en"?"Search act, genre, country or venue…":"Zoek act, genre, land of locatie…"}" value="${q.replace(/"/g,"&quot;")}" autocomplete="off"></div><div class="list" id="res">${resHtml(s,res)}</div>`}
 function resHtml(s,res){return !s?`<div class="empty">Typ de naam van een act of locatie.</div>`:res.length?res.sort((a,b)=>DAYS.findIndex(d=>d.id===a.day)-DAYS.findIndex(d=>d.id===b.day)||byTime(a,b)).map(a=>row(a)).join(""):`<div class="empty">Niets gevonden voor “${s}”.</div>`}
 
 function vFavs(){
@@ -375,7 +388,7 @@ function openAct(id){if(openId===null)history.pushState({m:1},"");openId=id;rend
 function closeAct(){if(openId===null)return;openId=null;renderModal();if(history.state&&history.state.m)history.back()}
 function render(keep){renderModal();
 const r=route(),main=document.getElementById("main"),scroll=keep?[main.scrollTop,(main.querySelector(".tt")||{}).scrollLeft,(main.querySelector(".tt")||{}).scrollTop]:[0,0,0];
-const titles={tt:"Timetable",search:"Zoeken",favorites:"Favorieten",game:"Wapperman",act:"Act"};
+const titles={tt:t("timetable"),search:t("search"),favorites:t("favorites"),game:t("game"),act:"Act"};
 document.getElementById("title").textContent=titles[r.p]||"Timetable";
 main.innerHTML=r.p==="search"?vSearch():r.p==="favorites"?vFavs():r.p==="act"?vAct(r.id):r.p==="game"?`<div id="wapperman-root"></div>`:vTimetable(favOnly);
   if(r.p==="game") WappermanGame.mount();
@@ -396,6 +409,9 @@ const viewShared=e.target.closest("[data-view-shared]");if(viewShared){sharedRea
 const addShared=e.target.closest("[data-add-shared]");if(addShared){favs=[...new Set([...favs,...(sharedIds||[])])];saveFavs();sharedIds=null;sharedReadOnly=false;history.replaceState(null,"",location.pathname+location.search+"#/favorites");render();return}
 const favToggle=e.target.closest("[data-fav-only]");if(favToggle){if(sharedReadOnly){go("/favorites")}else{favOnly=!favOnly;render(true)}return}
 const venueCheck=e.target.closest("[data-venue]");if(venueCheck){const id=venueCheck.dataset.venue;hiddenVenues=venueCheck.checked?hiddenVenues.filter(x=>x!==id):[...hiddenVenues,id];saveVenues();render(true);return}
+if(e.target.closest("[data-lang]")){lang=lang==="nl"?"en":"nl";savePrefs();render();return}
+if(e.target.closest("[data-large-text]")){largeText=!largeText;savePrefs();document.documentElement.classList.toggle("large-text",largeText);render(true);return}
+const must=e.target.closest("[data-must]");if(must){togglePriority(must.dataset.must);return}
 const t=e.target.closest("[data-open],[data-close],[data-go],[data-fav],[data-day],[data-back]");if(!t)return;
 if(t.dataset.open){openAct(t.dataset.open);return}
 if(t.hasAttribute("data-close")){closeAct();return}
@@ -404,10 +420,11 @@ if(t.dataset.day){day=t.dataset.day;render();return}
 if(t.hasAttribute("data-now")){const tt=document.getElementById("main").querySelector(".tt");if(tt){const n=new Date(),start=Math.floor(Math.min(...ACTS.filter(a=>a.day===day).map(a=>mins(a.start)))/60)*60;tt.scrollLeft=Math.max(0,((n.getHours()*60+n.getMinutes()-start)/60)*PPH-100)}return}
 if(t.hasAttribute("data-back")){history.length>1?history.back():go("/");return}
 const h=t.dataset.go;const cur=route().p;if(h.startsWith("/act/")&&cur!=="act")sessionStorage.setItem("from",cur);go(h)});
-document.addEventListener("input",e=>{if(e.target.id==="q"){q=e.target.value;const s=q.trim().toLowerCase();const res=s?ACTS.filter(a=>a.name.toLowerCase().includes(s)||venue(a.venueId).name.toLowerCase().includes(s)):[];document.getElementById("res").innerHTML=resHtml(s,res)}});
+document.addEventListener("input",e=>{if(e.target.id==="q"){q=e.target.value;const s=norm(q.trim());const res=s?ACTS.filter(a=>norm(a.name).includes(s)||norm(venue(a.venueId).name).includes(s)||norm(info(a)[0]).includes(s)||norm(a.country||"").includes(s)||norm(cname(a.country)).includes(s)):[];document.getElementById("res").innerHTML=resHtml(s,res)}});
 window.addEventListener("hashchange",()=>{const ids=sharedFromHash();if(ids){sharedIds=ids;sharedReadOnly=false}render()});
 window.addEventListener("popstate",()=>{if(openId!==null){openId=null;renderModal()}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeAct()});
+const setConnection=()=>{document.getElementById("statusbar").textContent=navigator.onLine?"":"Offline — gegevens uit cache"};window.addEventListener("online",setConnection);window.addEventListener("offline",setConnection);setConnection();document.documentElement.classList.toggle("large-text",largeText);
 render();
 if ("serviceWorker" in navigator) {
   const reloadKey = "lotd-sw-reloaded";
