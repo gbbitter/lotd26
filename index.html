@@ -140,13 +140,13 @@ nav button.on{font-weight:700}
 }
 
 /* LOTD visual language: clean white space, black type and electric blue circles. */
-#app-header{transition:transform .24s ease,opacity .24s ease;will-change:transform;z-index:10}#app-header.is-hidden{transform:translateY(-100%);opacity:0;pointer-events:none}.lotd-mark{object-fit:contain;display:block}#app-header .brandbar{min-height:58px;margin-top:26px;gap:12px}#app-header .lotd-mark{width:54px;height:54px}#app-header h2{font-size:clamp(30px,5vw,48px);margin:18px 0 14px}
+#app-header{z-index:10}.lotd-mark{object-fit:contain;display:block}#app-header .brandbar{min-height:58px;margin-top:26px;gap:12px}#app-header .lotd-mark{width:54px;height:54px;border:1px solid #fff}#app-header h2{font-size:clamp(30px,5vw,48px);margin:18px 0 14px}
 :root{--bg:#fff;--panel:#fff;--panel-2:#f2f2f2;--line:#050505;--text:#050505;--muted:#444;--accent:#1717ff;--hot:#1717ff;--accent-ink:#fff;--sans:Arial,Helvetica,sans-serif;--mono:Arial,Helvetica,sans-serif}
 body{background:#fff;color:#050505;font-family:Arial,Helvetica,sans-serif}
 header{background:#fff;border-bottom:0;padding-top:0}
 header:before{height:34px;background:#050505;color:#fff;padding-left:24px;font-size:10px;letter-spacing:.12em}
 .brandbar{margin-top:34px;min-height:82px;gap:18px}
-.lotd-mark{width:68px;height:68px;border:0;border-radius:50%;background:#050505;box-shadow:none;transform:none;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:.68;letter-spacing:-.12em}
+.lotd-mark{width:68px;height:68px;border:1px solid #fff;border-radius:50%;background:#050505;box-shadow:none;transform:none;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:.68;letter-spacing:-.12em}
 .lotd-mark span{font-size:9px;letter-spacing:-.08em}
 .brandcopy h1{font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:700;letter-spacing:.02em}
 .brandcopy p{font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0;color:#444}
@@ -408,8 +408,6 @@ document.addEventListener("input",e=>{if(e.target.id==="q"){q=e.target.value;con
 window.addEventListener("hashchange",()=>{const ids=sharedFromHash();if(ids){sharedIds=ids;sharedReadOnly=false}render()});
 window.addEventListener("popstate",()=>{if(openId!==null){openId=null;renderModal()}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeAct()});
-const appHeader=document.getElementById("app-header");let lastScrollTop=0;
-document.getElementById("main").addEventListener("scroll",e=>{const top=e.target.scrollTop;if(top>lastScrollTop+4&&top>24)appHeader.classList.add("is-hidden");else if(top<lastScrollTop-4||top<=8)appHeader.classList.remove("is-hidden");lastScrollTop=top},{passive:true,capture:true});
 render();
 if ("serviceWorker" in navigator) {
   const reloadKey = "lotd-sw-reloaded";
