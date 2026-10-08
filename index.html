@@ -176,14 +176,16 @@ nav button{font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:
 .ov{background:rgba(5,5,5,.7)}.sheet{border-radius:0;background:#fff;border:2px solid #050505}.grab{border-radius:0;background:#050505}.x{color:#050505}
 .det h2,.sheet h2{font-family:Arial,Helvetica,sans-serif;font-weight:700}.meta,.pill{font-family:Arial,Helvetica,sans-serif}.pill{border-radius:0}.bio{border-left:3px solid #1717ff}
 @media (max-width:599px){header{padding-bottom:4px}.brandbar{min-height:58px;margin-top:34px;gap:10px}.lotd-mark{width:52px;height:52px;font-size:12px}.lotd-mark span{font-size:7px}.brandstamp{width:46px;height:46px}.brandstamp b{font-size:18px}header h2{font-size:42px;margin:22px 0 18px}.lab{width:96px}}
+.game{height:100%;min-height:480px;position:relative;display:flex;flex-direction:column;background:#fff;touch-action:none;overscroll-behavior:none;user-select:none}.game-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:2px solid #050505;font-family:Arial,sans-serif}.game-title{font-size:18px;font-weight:700}.game-score{font:700 26px Arial,sans-serif;color:#1717ff}.game canvas{display:block;width:100%;flex:1;min-height:420px;touch-action:none}.game-help{text-align:center;padding:8px;color:#555;font:11px Arial,sans-serif}.game-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px;background:rgba(255,255,255,.94);font-family:Arial,sans-serif}.game-overlay h2{font-size:42px;line-height:.95;margin:0 0 14px}.game-overlay p{max-width:300px;line-height:1.45;margin:0 0 20px}.game-overlay strong{font-size:17px;color:#1717ff;margin:6px 0 20px}.game-overlay button{min-height:48px;min-width:190px;padding:12px 18px;margin:5px;background:#050505;color:#fff;border:2px solid #050505;font-weight:700;font-family:Arial,sans-serif}.game-overlay button:hover,.game-overlay button:focus-visible{background:#1717ff;color:#fff}.game-overlay button:disabled{opacity:.35}.game-overlay input{width:min(260px,100%);min-height:48px;border:2px solid #050505;border-radius:0;padding:10px 12px;font:16px Arial,sans-serif;margin:6px}.game-top{width:min(300px,100%);text-align:left;margin:2px 0 18px;padding-left:28px;font-family:Arial,sans-serif}.game-top li{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #ddd}.game-top b{color:#1717ff}
 </style>
 </head>
 <body>
 <header><div class="brandbar"><div class="lotd-mark" aria-label="Left of the Dial">left<br><span>of the</span><br>dial</div><div class="brandcopy"><h1>New music festival</h1><p>21 / 22 / 23 / 24 October 2026 · Rotterdam</p></div><div class="brandstamp">LOTD<br><b>26</b></div></div><h2 id="title">Timetable</h2></header>
 <main id="main"></main>
 <nav id="nav"></nav>
-<div id="modal"></div>
-<script>
+  <div id="modal"></div>
+  <script src="game.js"></script>
+  <script>
 // ===== DATA (bron: Clashfinder lotd2026, 27 sep 2026) =====
 const DAYS=[{id:"w",label:"Wo 21",date:"2026-10-21"},{id:"d",label:"Do 22",date:"2026-10-22"},{id:"v",label:"Vr 23",date:"2026-10-23"},{id:"z",label:"Za 24",date:"2026-10-24"}];
 const RAW=`Reijngoud|v|1230-1315 Rockpool Dramas;1345-1430 Zo Lief;1500-1600 Fellatio;1730-1810 Atticomatic;1900-1940 Pyncher;2030-2110 Date Camp;2200-2240 Bramwell;2320-0000 The Jump Cuts
@@ -311,7 +313,8 @@ const PPH=window.innerWidth>=900?Math.max(120,Math.min(220,(window.innerWidth-92
 const ico={
 tt:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg>',
 se:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>',
-fa:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.600-7 10-7 10z"/></svg>'};
+fa:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.600-7 10-7 10z"/></svg>',
+game:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M12 4v4m0 8v4M4 12h4m8 0h4"/></svg>'};
 const heart=on=>on?"♥":"♡";
 
 // ===== ROUTER =====
@@ -371,11 +374,12 @@ function openAct(id){if(openId===null)history.pushState({m:1},"");openId=id;rend
 function closeAct(){if(openId===null)return;openId=null;renderModal();if(history.state&&history.state.m)history.back()}
 function render(keep){renderModal();
 const r=route(),main=document.getElementById("main"),scroll=keep?[main.scrollTop,(main.querySelector(".tt")||{}).scrollLeft,(main.querySelector(".tt")||{}).scrollTop]:[0,0,0];
-const titles={tt:"Timetable",search:"Zoeken",favorites:"Favorieten",act:"Act"};
+const titles={tt:"Timetable",search:"Zoeken",favorites:"Favorieten",game:"Wapperman",act:"Act"};
 document.getElementById("title").textContent=titles[r.p]||"Timetable";
-main.innerHTML=r.p==="search"?vSearch():r.p==="favorites"?vFavs():r.p==="act"?vAct(r.id):vTimetable(favOnly);
+main.innerHTML=r.p==="search"?vSearch():r.p==="favorites"?vFavs():r.p==="act"?vAct(r.id):r.p==="game"?`<div id="wapperman-root"></div>`:vTimetable(favOnly);
+  if(r.p==="game") WappermanGame.mount();
 const tab=r.p==="act"?(sessionStorage.getItem("from")||"tt"):r.p;
-document.getElementById("nav").innerHTML=[["tt","Timetable","/"],["search","Zoeken","/search"],["favorites","Favorieten","/favorites"]].map(([k,l,h])=>`<button class="${tab===k?"on":""}" data-go="${h}" aria-current="${tab===k?"page":"false"}">${ico[k==="tt"?"tt":k==="search"?"se":"fa"]}${l}</button>`).join("");
+document.getElementById("nav").innerHTML=[["tt","Timetable","/"],["search","Zoeken","/search"],["favorites","Favorieten","/favorites"],["game","Wapperman","/game"]].map(([k,l,h])=>`<button class="${tab===k?"on":""}" data-go="${h}" aria-current="${tab===k?"page":"false"}">${ico[k==="tt"?"tt":k==="search"?"se":k==="favorites"?"fa":"game"]||"◉"}${l}</button>`).join("");
 if(keep){main.scrollTop=scroll[0];const t=main.querySelector(".tt");if(t){t.scrollLeft=scroll[1];t.scrollTop=scroll[2]}}
 if(r.p==="search"&&!keep){const i=document.getElementById("q");if(i&&q)i.focus()}
 }
@@ -404,7 +408,20 @@ window.addEventListener("hashchange",()=>{const ids=sharedFromHash();if(ids){sha
 window.addEventListener("popstate",()=>{if(openId!==null){openId=null;renderModal()}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeAct()});
 render();
-if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});
+if ("serviceWorker" in navigator) {
+  const reloadKey = "lotd-sw-reloaded";
+  navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" }).then(registration => {
+    registration.update().catch(() => {});
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") registration.update().catch(() => {});
+    });
+  }).catch(() => {});
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (sessionStorage.getItem(reloadKey)) return;
+    sessionStorage.setItem(reloadKey, "1");
+    window.location.reload();
+  });
+}
 </script>
 </body>
 </html>
