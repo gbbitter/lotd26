@@ -404,7 +404,20 @@ window.addEventListener("hashchange",()=>{const ids=sharedFromHash();if(ids){sha
 window.addEventListener("popstate",()=>{if(openId!==null){openId=null;renderModal()}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeAct()});
 render();
-if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});
+if ("serviceWorker" in navigator) {
+  const reloadKey = "lotd-sw-reloaded";
+  navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" }).then(registration => {
+    registration.update().catch(() => {});
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") registration.update().catch(() => {});
+    });
+  }).catch(() => {});
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (sessionStorage.getItem(reloadKey)) return;
+    sessionStorage.setItem(reloadKey, "1");
+    window.location.reload();
+  });
+}
 </script>
 </body>
 </html>
