@@ -423,15 +423,68 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
   render = function (keep) {
     renderModal();
     const r = route(), main = document.getElementById("main"), tt0 = main.querySelector(".tt"), sc = keep ? [main.scrollTop, tt0 ? tt0.scrollLeft : 0, tt0 ? tt0.scrollTop : 0] : [0, 0, 0];
-    const titles = { tt: "Timetable", now: L("Nu & straks", "Now & next"), search: L("Zoeken", "Search"), favorites: L("Favorieten", "Favorites"), game: "Wapperman", act: "Act" };
+    const titles = { tt: "Timetable", now: L("Nu & straks", "Now & next"), search: L("Zoeken", "Search"), favorites: L("Favorieten", "Favorites"), game: "Wapperman", map: L("Kaart", "Map"), act: "Act" };
     document.getElementById("title").textContent = titles[r.p] || "Timetable";
-    main.innerHTML = r.p === "search" ? vSearch() : r.p === "favorites" ? vFavs() : r.p === "act" ? vAct(r.id) : r.p === "now" ? vNowView() : r.p === "game" ? `<div id="wapperman-root"></div>` : vTimetable(favOnly);
-    if (r.p === "game") WappermanGame.mount(); else trNode(main);
-    const tab = r.p === "act" ? (sessionStorage.getItem("from") || "tt") : r.p, icon = { tt: "tt", now: "clock", search: "se", favorites: "fa", game: "game" }, nav = document.getElementById("nav");
-    nav.innerHTML = [["tt", "Timetable", "/"], ["now", L("Nu", "Now"), "/now"], ["search", L("Zoeken", "Search"), "/search"], ["favorites", L("Favorieten", "Favorites"), "/favorites"], ["game", "Wapperman", "/game"]].map(([k, l, h]) => `<button class="${tab === k ? "on" : ""}" data-go="${h}" aria-current="${tab === k ? "page" : "false"}">${ico[icon[k]] || "◉"}${l}</button>`).join("");
+    main.innerHTML = r.p === "search" ? vSearch() : r.p === "favorites" ? vFavs() : r.p === "act" ? vAct(r.id) : r.p === "now" ? vNowView() : r.p === "game" ? `<div id="wapperman-root"></div>` : r.p === "map" ? vMapView() : vTimetable(favOnly);
+    if (r.p !== "map") killMap();
+    if (r.p === "game") WappermanGame.mount(); else if (r.p === "map") { trNode(main); initMap(); } else trNode(main);
+    const tab = r.p === "act" ? (sessionStorage.getItem("from") || "tt") : r.p, icon = { tt: "tt", now: "clock", search: "se", favorites: "fa", game: "game", map: "map" }, nav = document.getElementById("nav");
+    nav.innerHTML = [["tt", "Timetable", "/"], ["now", L("Nu", "Now"), "/now"], ["map", L("Kaart", "Map"), "/map"], ["search", L("Zoeken", "Search"), "/search"], ["favorites", L("Favorieten", "Favorites"), "/favorites"], ["game", "Wapperman", "/game"]].map(([k, l, h]) => `<button class="${tab === k ? "on" : ""}" data-go="${h}" aria-current="${tab === k ? "page" : "false"}">${ico[icon[k]] || "◉"}${l}</button>`).join("");
     if (keep) { main.scrollTop = sc[0]; const tt = main.querySelector(".tt"); if (tt) { tt.scrollLeft = sc[1]; tt.scrollTop = sc[2]; } }
     if (r.p === "search" && !keep) { const i = document.getElementById("q"); if (i && q) i.focus(); }
   };
+
+  ico.map = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 22s7-6.2 7-12A7 7 0 0 0 5 10c0 5.800 7 12 7 12z"/><circle cx="12" cy="10" r="2.500"/></svg>';
+  /* ---- kaart ---- */
+  const LOGO = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/lotd-logo-c6lqMUD95gwzWwfVBJxT2zXsGQE1pk.png";
+  let mapTok = 0, lmap = null, mapDay = null, mapVen = null, userDot = null;
+  const mapGroups = () => { const g = {}; VENUES.forEach(v => { const b = baseName(v.name); (g[b] = g[b] || { name: b, ids: [], c: coordOf(v.name) }).ids.push(v.id); if (!g[b].c) g[b].c = coordOf(v.name); }); return Object.values(g); };
+  const defMapDay = () => { const f = festNow(), d = DAYS.find(x => x.date === f.ds); return (d || DAYS[0]).id; };
+  const mapSheet = () => {
+    const g = mapGroups().find(x => x.name === mapVen); if (!g) return "";
+    const list = ACTS.filter(a => g.ids.includes(a.venueId) && a.day === mapDay).sort(byTime), addr = addrOf(g.name);
+    const seg = `<div class="seg" role="tablist" aria-label="${L("Kies een dag", "Pick a day")}">${DAYS.map(x => `<button class="${x.id === mapDay ? "on" : ""}" data-mapday="${x.id}" role="tab" aria-selected="${x.id === mapDay}">${x.label}</button>`).join("")}</div>`;
+    const rows = list.length ? list.map(a => { const sub = g.ids.length > 1 ? venue(a.venueId).name.replace(g.name, "").trim() : "", mk = isStar(a.id) ? ' <span class="mk must">♥</span>' : isFav(a.id) ? ' <span class="mk">★</span>' : ""; return `<button class="m-act${a.cancelled ? " cx" : ""}" data-open="${a.id}"><time>${a.endUnknown ? a.start + "+" : a.start}</time><span><b>${a.cancelled ? `<s>${a.name}</s>` : a.name}${mk}</b>${sub ? `<small>${sub}</small>` : ""}</span></button>`; }).join("") : `<p class="m-empty">${L("Geen optredens op deze dag.", "No shows on this day.")}</p>`;
+    return `<div class="m-sub">${L("Locatie", "Location")}</div><h2>${g.name}</h2>${g.c ? `<a class="m-row" href="${routeUrl(g.c)}" target="_blank" rel="noopener">${sv(SI.pin)}<span><b>${L("Route hierheen", "Directions")}</b>${addr ? `<small>${addr}, Rotterdam</small>` : ""}</span></a>` : ""}${seg}<div class="m-list">${rows}</div>`;
+  };
+  const openMapSheet = n => { mapVen = n; if (!mapDay) mapDay = defMapDay(); sheet = mapSheet(); sheet && (sheet = '<div data-mapsheet>' + sheet + '</div>'); renderModal(); };
+  const vMapView = () => `<div class="mapwrap" id="mapwrap"><div id="lmap" aria-label="${L("Kaart met alle locaties", "Map of all venues")}"></div><div class="mapbtns"><button data-maploc aria-label="${L("Mijn locatie", "My location")}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2" fill="currentColor"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg></button><button data-mapfit aria-label="${L("Alles tonen", "Show all")}">${sv(SI.pin, 24)}</button></div><div class="mapnote" id="mapnote"></div></div>`;
+  const loadLeaflet = () => new Promise((ok, no) => {
+    if (window.L && window.L.map) return ok();
+    if (!document.getElementById("lf-css")) { const l = document.createElement("link"); l.id = "lf-css"; l.rel = "stylesheet"; l.href = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"; document.head.appendChild(l); }
+    const s = document.createElement("script"); s.src = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"; s.onload = ok; s.onerror = no; document.head.appendChild(s);
+  });
+  const killMap = () => { if (lmap) { try { lmap.remove(); } catch (e) {} lmap = null; userDot = null; } };
+  const mapFallback = () => { const el = document.getElementById("lmap"); if (!el) return; el.innerHTML = `<div class="mapfb"><p>${L("De kaart kon niet laden (geen internet?). Kies een locatie:", "The map could not load (offline?). Pick a location:")}</p>${mapGroups().map(g => `<button data-mapven="${g.name.replace(/"/g, "&quot;")}">${g.name}</button>`).join("")}</div>`; };
+  const initMap = () => {
+    killMap(); const tok = ++mapTok, wrap = document.getElementById("mapwrap"), main = document.getElementById("main"); if (!wrap) return;
+    wrap.style.height = Math.max(320, main.clientHeight) + "px";
+    const groups = mapGroups(), miss = groups.filter(g => !g.c);
+    if (miss.length) document.getElementById("mapnote").textContent = L("Nog geen kaartpositie: ", "No map position yet: ") + miss.map(g => g.name).join(", ");
+    loadLeaflet().then(() => {
+      if (tok !== mapTok || !document.getElementById("lmap")) return; killMap(); const Lf = window.L;
+      lmap = Lf.map("lmap", { zoomControl: false, attributionControl: true }).setView([51.919, 4.476], 14);
+      Lf.control.zoom({ position: "topleft" }).addTo(lmap);
+      Lf.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", { maxZoom: 19, subdomains: "abcd", attribution: "© OpenStreetMap contributors © CARTO" }).addTo(lmap);
+      const pts = [];
+      groups.filter(g => g.c).forEach(g => {
+        const ic = Lf.divIcon({ className: "lotd-pin", html: `<span class="pin"><img src="${LOGO}" alt="" onerror="this.remove()"><i>LOTD</i></span><em>${g.name}</em>`, iconSize: [46, 46], iconAnchor: [23, 23] });
+        const mk = Lf.marker(g.c, { icon: ic, title: g.name, keyboard: true, alt: g.name }).addTo(lmap); mk.on("click", () => openMapSheet(g.name)); pts.push(g.c);
+      });
+      lmap._fit = () => pts.length && lmap.fitBounds(pts, { padding: [30, 30], maxZoom: 17 }); lmap._fit();
+      const zc = () => { const z = lmap.getZoom(); wrap.classList.toggle("zl", z >= 15); }; lmap.on("zoomend", zc); zc();
+      setTimeout(() => lmap && lmap.invalidateSize(), 200);
+    }).catch(() => { if (tok === mapTok) mapFallback(); });
+  };
+  document.addEventListener("click", e => {
+    const tg = e.target, c = sel => tg.closest && tg.closest(sel), stop = () => e.stopImmediatePropagation();
+    if (sheet && c("[data-open]") && sheet.indexOf("data-mapsheet") > -1) { sheet = null; return; }
+    let b;
+    if ((b = c("[data-mapday]"))) { stop(); mapDay = b.getAttribute("data-mapday"); sheet = '<div data-mapsheet>' + mapSheet() + '</div>'; renderModal(); return; }
+    if ((b = c("[data-mapven]"))) { stop(); openMapSheet(b.getAttribute("data-mapven")); return; }
+    if (c("[data-mapfit]")) { stop(); lmap && lmap._fit && lmap._fit(); return; }
+    if (c("[data-maploc]")) { stop(); if (!navigator.geolocation || !lmap) return; navigator.geolocation.getCurrentPosition(p => { const ll = [p.coords.latitude, p.coords.longitude]; if (userDot) userDot.setLatLng(ll); else userDot = window.L.circleMarker(ll, { radius: 8, color: "#fff", weight: 3, fillColor: "#1717ff", fillOpacity: 1 }).addTo(lmap); lmap.setView(ll, Math.max(lmap.getZoom(), 15)); }, () => { const n = document.getElementById("mapnote"); if (n) n.textContent = L("Locatie niet beschikbaar. Sta locatietoegang toe.", "Location unavailable. Allow location access."); }, { enableHighAccuracy: true, timeout: 10000 }); return; }
+  }, true);
 
   /* ---- klikken (vóór de bestaande afhandeling) ---- */
   document.addEventListener("click", e => {
@@ -466,7 +519,11 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
   document.addEventListener("keydown", e => { if (e.key === "Escape") { if (sheet) { sheet = null; renderModal(); } else if (genreOpen) { genreOpen = false; renderModal(); render(true); } } });
 
   const css = document.createElement("style");
-  css.textContent = `a.oth{text-decoration:none;color:inherit;box-sizing:border-box;display:block}.when{font-style:normal;font-weight:700;color:var(--accent)}.checkrow span{font-size:12px}
+  css.textContent = `.mapwrap{position:relative;isolation:isolate;width:100%;background:#e8e8e8}#lmap{position:absolute;inset:0;z-index:0}.mapbtns{position:absolute;right:12px;bottom:16px;z-index:500;display:flex;flex-direction:column;gap:8px}.mapbtns button{width:48px;height:48px;background:#fff;color:#000;border:2px solid #000;border-radius:0;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.25)}.mapbtns button:active{background:#1717ff;color:#fff}.mapnote{position:absolute;left:12px;right:70px;bottom:16px;z-index:500;font-size:13px;background:#fff;border:1px solid #000;padding:6px 8px;empty-cells:hide}.mapnote:empty{display:none}
+.lotd-pin{background:none!important;border:none!important}.lotd-pin .pin{display:block;width:32px;height:32px;margin:7px;font-size:7px;line-height:26px;transition:all .15s;border-radius:50%;background:#000;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.45);overflow:hidden;position:relative;color:#fff;font-family:Arial,sans-serif;font-weight:700;text-align:center}.lotd-pin .pin img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.lotd-pin .pin i{font-style:normal}.lotd-pin em{display:none;position:absolute;left:50%;top:49px;transform:translateX(-50%);white-space:nowrap;font:700 12px Arial,sans-serif;font-style:normal;background:#fff;color:#000;padding:1px 5px;border:1px solid #000}.zl .lotd-pin .pin{width:46px;height:46px;margin:0;font-size:9px;line-height:40px}.zl .lotd-pin em{display:block}.leaflet-container{font-family:Arial,sans-serif}.leaflet-control-zoom a{width:40px!important;height:40px!important;line-height:40px!important;border-radius:0!important;color:#000!important}
+.mapfb{padding:16px;overflow:auto;height:100%}.mapfb button{display:block;width:100%;text-align:left;min-height:48px;margin:6px 0;padding:8px 12px;border:2px solid #000;background:#fff;font-size:16px;font-weight:700}
+.m-list{margin-top:8px}.m-act{display:flex;gap:12px;width:100%;text-align:left;align-items:flex-start;padding:12px 0;border:0;border-top:1px solid #ddd;background:none;min-height:52px;color:#000}.m-act time{font-weight:700;color:#1717ff;min-width:58px;font-size:16px;font-variant-numeric:tabular-nums}.m-act b{font-size:16px;display:block}.m-act small{display:block;color:#555;font-size:13px}.m-act.cx{opacity:.6}.m-act .mk{color:#000;font-size:14px}.m-act .mk.must{color:#1717ff}.m-empty{padding:16px 0;color:#555}
+a.oth{text-decoration:none;color:inherit;box-sizing:border-box;display:block}.when{font-style:normal;font-weight:700;color:var(--accent)}.checkrow span{font-size:12px}
 .hint{font-style:normal;color:var(--accent);font-weight:700}.upd{padding:14px 16px 22px;font-size:11px;color:var(--muted);text-align:center}
 .fr{display:inline-block;width:9px;height:9px;border-radius:50%;background:#ff7a00;vertical-align:middle;margin-left:4px}.act .fr{position:absolute;right:6px;bottom:6px;margin:0;border:1px solid #fff}
 .act.cancel{opacity:.5}.act.cancel b{text-decoration:line-through}.sheet s{opacity:.6}
@@ -497,7 +554,7 @@ body{font-size:16px}header:before{font-size:11px!important}.brandcopy p{font-siz
 .tick{font-size:12px!important}.lab{font-size:12px!important}.act b{font-size:15px!important}.act span{font-size:12px!important}.act .g{font-size:12px!important}
 .item .t b{font-size:17px!important}.item .t span{font-size:14px!important}.meta{font-size:15px!important}.pill{font-size:13px!important;padding:6px 10px!important}
 .seg button{font-size:15px!important}.tt-tools button{font-size:14px!important;min-height:44px!important}.oth{font-size:15px!important;min-height:48px}.grp{font-size:13px!important}
-nav button{font-size:12px!important}.upd{font-size:13px!important}#lotd-status{font-size:14px!important}#lotd-status button{min-height:44px!important}.det p,.sheet p{font-size:17px!important}.now-btn{font-size:13px!important;min-height:40px}
+nav button{font-size:11px!important;letter-spacing:0!important;min-width:0;padding-left:0!important;padding-right:0!important}.upd{font-size:13px!important}#lotd-status{font-size:14px!important}#lotd-status button{min-height:44px!important}.det p,.sheet p{font-size:17px!important}.now-btn{font-size:13px!important;min-height:40px}
 @media (max-width:420px){.titlebar{flex-wrap:wrap}#lotd-ctl{margin-bottom:0}header h2{margin-bottom:10px!important}}
 html.big body{font-size:19px}html.big .act b{font-size:18px!important}html.big .act span,html.big .act .g{font-size:14px!important}html.big .item .t b{font-size:20px!important}html.big .item .t span,html.big .meta{font-size:16px!important}html.big .seg button,html.big .tt-tools button,html.big .oth{font-size:17px!important}html.big .lab,html.big .tick{font-size:14px!important}html.big .row{height:104px}html.big .pill,html.big .checkrow{font-size:15px!important}html.big nav button{font-size:13px!important}`;
   document.head.appendChild(css);
