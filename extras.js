@@ -255,16 +255,24 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
   const baseName = n => n.replace(/ (Up|Down|WBH|Foyer|1|2)( & (Up|Down|2))?$/, "");
   const coordOf = n => coords[n] || coords[baseName(n)];
   const addrOf = n => ADDR[n] || ADDR[baseName(n)] || "";
-  /* ---- ontbrekende coördinaten opzoeken via adres (eenmalig, daarna bewaard) ---- */
-  const GEOQ = { "Time is the New Space": "Schiekade 185, 3013 BR Rotterdam", "Tramhuis": "Hermesplantsoen 3, 3014 GW Rotterdam", "Zondebok en Zwarte Schaap": "Witte de Withstraat 96, 3012 LC Rotterdam" };
-  (function geoMissing() {
-    const store = LS.get("lotd-geo", {}) || {};
-    Object.keys(GEOQ).forEach(n => {
-      if (store[n]) { if (!coords[n]) coords[n] = store[n]; return; }
-      if (coords[n] || !navigator.onLine) return;
-      fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=nl&q=" + encodeURIComponent(GEOQ[n]), { headers: { Accept: "application/json" } })
-        .then(r => r.json()).then(j => { if (!j || !j[0]) return; const c = [+(+j[0].lat).toFixed(5), +(+j[0].lon).toFixed(5)]; coords[n] = c; store[n] = c; LS.set("lotd-geo", store); if (route().p === "map") render(true); }).catch(() => {});
-    });
+  /* ---- coördinaten controleren via adres (eenmalig per toestel, daarna bewaard) ---- */
+  const GEOQ = { "Time is the New Space": "Schiekade 185, 3013 BR", "Tramhuis": "Hermesplantsoen 3, 3014 GW", "Zondebok en Zwarte Schaap": "Witte de Withstraat 96, 3012 LC", "Raampoortstraat 24-28": "Raampoortstraat 24", "Wijnhaven t/o 101": "Wijnhaven 101" };
+  const geoQuery = n => { const a = ADDR[n]; return (GEOQ[n] || GEOQ[a] || a) + ", Rotterdam"; };
+  const GEO_V = 2;
+  let geoStore = LS.get("lotd-geo2", null); if (!geoStore || geoStore.v !== GEO_V) geoStore = { v: GEO_V, c: {} };
+  const applyGeo = () => { Object.keys(geoStore.c).forEach(n => { coords[n] = geoStore.c[n]; }); };
+  applyGeo();
+  (function geoAll() {
+    if (!navigator.onLine) return;
+    const todo = Object.keys(ADDR).filter(n => !geoStore.c[n] || geoStore.q && geoStore.q[n] !== geoQuery(n)); if (!todo.length) return;
+    geoStore.q = geoStore.q || {}; let k = 0, got = 0;
+    const next = () => {
+      if (k >= todo.length) { if (got) { LS.set("lotd-geo2", geoStore); if (route().p === "map") render(true); } return; }
+      const n = todo[k++];
+      fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=nl&bounded=1&viewbox=4.38,51.98,4.58,51.86&q=" + encodeURIComponent(geoQuery(n)), { headers: { Accept: "application/json" } })
+        .then(r => r.json()).then(j => { if (j && j[0]) { const c = [+(+j[0].lat).toFixed(5), +(+j[0].lon).toFixed(5)]; if (c[0] > 51.86 && c[0] < 51.98 && c[1] > 4.38 && c[1] < 4.58) { geoStore.c[n] = c; geoStore.q[n] = geoQuery(n); coords[n] = c; got++; LS.set("lotd-geo2", geoStore); } } }).catch(() => {}).then(() => setTimeout(next, 1100));
+    };
+    setTimeout(next, 1500);
   })();
   const distM = (p, q) => { const R = 6371000, r = Math.PI / 180, dl = (q[0] - p[0]) * r, dg = (q[1] - p[1]) * r, h = Math.sin(dl / 2) ** 2 + Math.cos(p[0] * r) * Math.cos(q[0] * r) * Math.sin(dg / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };
   const routeUrl = c => "https://www.google.com/maps/dir/?api=1&travelmode=walking&destination=" + c[0] + "," + c[1];
@@ -325,7 +333,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     const uniq = a => [...new Set(a.filter(Boolean))];
     favs = uniq(favBefore.map(mapId)); stars = uniq((silent ? LS.get("lotd-stars", []) : stars).map(mapId)).filter(isFav); friend.ids = uniq(friend.ids.map(mapId));
     hiddenVenues = LS.get("lotd-hidden-venues", []).filter(id => VENUES.some(v => v.id === id)); const sh = sharedFromHash(); if (sh) sharedIds = sh;
-    saveFavs(); saveStars(); saveFriend(); coords = Object.assign({}, DEF_COORDS, LS.get("lotd-geo", {}), j.coords || {});
+    saveFavs(); saveStars(); saveFriend(); coords = Object.assign({}, DEF_COORDS, geoStore.c, j.coords || {});
     const ch = []; favBefore.forEach(id => { const o = oldById.get(id); if (!o) return; const nid = mapId(id), n = nid && act(nid);
       if (!n) ch.push({ o, txt: L("staat niet meer in het programma", "is no longer in the program")});
       else if (n.cancelled && !o.cancelled) ch.push({ o, txt: L("vervalt", "is cancelled")});
