@@ -1,4 +1,4 @@
-const VERSION = "2026-10-1";
+const VERSION = "2026-10-2";
 const CACHE = `lotd-${VERSION}`;
 const APP_SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-512.png", "./game.js", "./extras.js"];
 
@@ -35,9 +35,12 @@ function staleWhileRevalidate(request) {
 
 self.addEventListener("fetch", event => {
   const { request } = event;
-  if (request.method !== "GET" || new URL(request.url).origin !== self.location.origin) return;
-  if (request.mode === "navigate" || new URL(request.url).pathname.endsWith("/index.html")) {
-    event.respondWith(networkFirst(request));
+  const url = new URL(request.url);
+  if (request.method !== "GET" || url.origin !== self.location.origin) return;   // o.a. Supabase: nooit cachen
+  if (url.pathname.endsWith("/lineup.json")) return;                              // altijd vers van het netwerk (app regelt offline zelf)
+  const p = url.pathname;
+  if (request.mode === "navigate" || p.endsWith("/index.html") || p.endsWith("/game.js") || p.endsWith("/extras.js")) {
+    event.respondWith(networkFirst(request));                                     // code: altijd nieuwste, cache alleen als offline-fallback
     return;
   }
   event.respondWith(staleWhileRevalidate(request));
