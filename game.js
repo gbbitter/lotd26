@@ -312,12 +312,12 @@ const leaderboard = (() => {
     state = "over"; lock = performance.now() + 600; bestEl.textContent = "Record " + best;
     showT(`<h2>${isRec ? "Nieuw record!" : "Af!"}</h2><p>Score <b>${score}</b> · Record <b>${best}</b><br>Logo's ontweken: <b>${dodged}</b></p><p class="wg-q" id="qm"></p><div id="sbox"><input id="n" maxlength="16" placeholder="Naam" autocomplete="off" enterkeyhint="done" aria-label="Naam"><button class="wg-btn" id="sv" disabled>Opslaan in Top 10</button></div><button class="wg-btn alt" id="r">Opnieuw spelen</button><button class="wg-btn alt" id="t">Bekijk Top 10</button>`, () => {
       const n = ov.querySelector("#n"), sv = ov.querySelector("#sv"), qm = ov.querySelector("#qm"), box = ov.querySelector("#sbox");
-      n.value = store.get("lotd-wapperman-name") || ""; sv.disabled = !n.value.trim();
+      n.value = ""; sv.disabled = true;
       n.addEventListener("input", () => { sv.disabled = !n.value.trim(); });
       n.addEventListener("keydown", e => { if (e.key === "Enter" && !sv.disabled) sv.click(); });
       on("#r", start); on("#t", () => showTop());
       on("#sv", async () => {
-        const name = n.value.trim().slice(0, 16); if (!name) return; sv.disabled = true; store.set("lotd-wapperman-name", name);
+        const name = n.value.trim().slice(0, 16); if (!name) return; sv.disabled = true;
         const res = await leaderboard.submitScore(name, score); showTop({ name, score }, res);
       });
       leaderboard.getTopScores().then(({ list }) => {         // haal je de Top 10? zo niet, dan geen naamveld
