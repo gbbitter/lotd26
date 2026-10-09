@@ -1,4 +1,4 @@
-const VERSION = "2026-10-12";
+const VERSION = "2026-10-14";
 const CACHE = `lotd-${VERSION}`;
 const APP_SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-512.png", "./game.js", "./extras.js"];
 
