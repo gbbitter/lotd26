@@ -1,19 +1,39 @@
-/* Wapperman v3 – "dino-game" versie. Vervangt het volledige game.js */
+/* Wapperman v4 – gedeelde topscores + verplichte naam.
+   STAP 1: maak een gratis Supabase-project, voer de SQL uit (zie handleiding) en vul hieronder URL en "anon public" key in.
+   Laat je ze leeg, dan werkt alles nog steeds, maar staan de scores alleen op dit apparaat. */
+const LB = { url: "", key: "" };   // bv. url: "https://abcd1234.supabase.co", key: "eyJ..."
+
 const leaderboard = (() => {
-  const KEY = "lotd-wapperman-scores";
+  const LOCAL = "lotd-wapperman-scores", CACHE = "lotd-wapperman-top-cache", PEND = "lotd-wapperman-pending";
+  const online = () => !!(LB.url && LB.key);
+  const rd = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch { return d; } };
+  const wr = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+  async function api(path, opt) {
+    const r = await fetch(LB.url.replace(/\/$/, "") + "/rest/v1/" + path, { cache: "no-store", ...opt, headers: { apikey: LB.key, Authorization: "Bearer " + LB.key, "Content-Type": "application/json", ...((opt && opt.headers) || {}) } });
+    if (!r.ok) throw new Error("HTTP " + r.status); return r;
+  }
+  async function flush() {                       // eerder mislukte scores alsnog versturen
+    const p = rd(PEND, []); if (!p.length) return; const rest = [];
+    for (const it of p) { try { await api("rpc/submit_score", { method: "POST", body: JSON.stringify({ p_name: it.name, p_score: it.score }) }); } catch { rest.push(it); } }
+    wr(PEND, rest);
+  }
+  function localInsert(name, score) {            // alleen-lokaal: beste score per naam
+    const list = rd(LOCAL, []), k = name.toLowerCase(), i = list.findIndex(r => r.name.toLowerCase() === k);
+    if (i >= 0) { if (score > list[i].score) list[i] = { name, score }; } else list.push({ name, score });
+    list.sort((a, b) => b.score - a.score); wr(LOCAL, list.slice(0, 10));
+  }
   async function getTopScores() {
-    try { return JSON.parse(localStorage.getItem(KEY) || "[]").slice(0, 10); } catch { return []; }
+    if (!online()) return { list: rd(LOCAL, []).slice(0, 10), source: "local" };
+    try { await flush(); const r = await api("scores?select=name,score&order=score.desc,updated_at.asc&limit=10"), list = await r.json(); wr(CACHE, list); return { list, source: "online" }; }
+    catch { return { list: rd(CACHE, []), source: "cache" }; }
   }
   async function submitScore(name, score) {
-    try {
-      const scores = await getTopScores();
-      scores.push({ name: String(name).trim().slice(0, 16), score: Math.max(0, Math.round(score)) });
-      scores.sort((a, b) => b.score - a.score);
-      localStorage.setItem(KEY, JSON.stringify(scores.slice(0, 10)));
-      return scores.slice(0, 10);
-    } catch { return []; }
+    name = String(name).trim().slice(0, 16); score = Math.max(0, Math.round(score));
+    if (!online()) { localInsert(name, score); return { ok: true, source: "local" }; }
+    try { await api("rpc/submit_score", { method: "POST", body: JSON.stringify({ p_name: name, p_score: score }) }); return { ok: true, source: "online" }; }
+    catch { const p = rd(PEND, []); p.push({ name, score }); wr(PEND, p); return { ok: false, queued: true, source: "cache" }; }
   }
-  return { getTopScores, submitScore };
+  return { getTopScores, submitScore, online };
 })();
 
 (() => {
@@ -22,6 +42,10 @@ const leaderboard = (() => {
   const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, String(v)); } catch {} } };
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  const EN = { "Ontwijk de logo's, ook met je armen. Pak de blauwe ster voor een schild. Houd links of rechts op je scherm ingedrukt. Op desktop: muis of pijltjestoetsen.": "Dodge the logos, arms included. Grab the blue star for a shield. Hold the left or right side of your screen. On desktop: mouse or arrow keys.", "Nieuw record!": "New record!", "Af!": "Game over!", "Logo's ontweken:": "Logos dodged:", "Opnieuw spelen": "Play again", "Naam": "Name", "Laden…": "Loading…", "Opnieuw proberen": "Try again", "Opslaan in Top 10": "Save to Top 10", "Bekijk Top 10": "View Top 10", "Nog geen scores": "No scores yet", "Spelen": "Play", "Terug": "Back", "Pauze": "Paused", "Verder": "Resume", "SCHILD WEG": "SHIELD GONE", "SCHILD!": "SHIELD!", "NIEUW RECORD!": "NEW RECORD!" };
+  const Lg = (nl, en) => window.LOTD_LANG === "en" ? en : nl;
+  const tr = s => { if (window.LOTD_LANG !== "en") return s; let o = String(s); for (const k in EN) o = o.split(k).join(EN[k]); return o; };
   const rnd = (a, b) => a + Math.random() * (b - a), clamp = (v, a, b) => Math.max(a, Math.min(b, v)), lerp = (a, b, t) => a + (b - a) * t;
 
   /* ===== TUNING: pas hier de moeilijkheid aan ===== */
@@ -64,7 +88,8 @@ const leaderboard = (() => {
 .wg li{display:flex;gap:10px;padding:10px 8px;border-bottom:1px solid #000;font-size:18px}
 .wg li i{font-style:normal;width:28px;opacity:.5}
 .wg li span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.wg li.me{background:${BLUE};color:#fff}`;
+.wg li.me{background:${BLUE};color:#fff}
+.wg-q{font-weight:700}.wg-note{font-size:13px;border:2px solid #000;padding:8px;margin:0 0 14px}`;
 
   let root, cv, cx, scoreEl, bestEl, ov, sndEl, ro, raf, last = 0, sprites, prevOverflow, ac = null;
   let W = 0, H = 0, s = 1, groundY = 0, lanes = 6, laneW = 60, maxV = 300;
@@ -108,7 +133,7 @@ const leaderboard = (() => {
   }
 
   /* ---------- effecten ---------- */
-  function pop(txt, px, py, size = 22, col) { pops.push({ txt, x: px, y: py, t: 0, life: 1.1, size, col }); }
+  function pop(txt, px, py, size = 22, col) { pops.push({ txt: tr(txt), x: px, y: py, t: 0, life: 1.1, size, col }); }
   function burst(px, py, n = 24) {
     if (reduced) n = 8;
     for (let i = 0; i < n; i++) { const a = rnd(0, 6.28), v = rnd(80, 300); particles.push({ x: px, y: py, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 120, t: 0, life: rnd(.5, .9), c: ["#111", BLUE, "#fff"][i % 3], r: rnd(3, 7) }); }
@@ -273,34 +298,45 @@ const leaderboard = (() => {
   }
 
   /* ---------- schermen ---------- */
+  function showT(html, bind) { show(tr(html), bind); }
   function show(html, bind) { ov.innerHTML = `<div class="wg-card">${html}</div>`; ov.classList.add("on"); ov.scrollTop = 0; if (bind) bind(); }
   function hide() { ov.classList.remove("on"); ov.innerHTML = ""; }
   function on(sel, fn) { const el = ov.querySelector(sel); if (el) el.addEventListener("click", () => { if (performance.now() < lock) return; fn(el); }); }
   function showStart() {
     state = "start"; bestEl.textContent = "Record " + best;
-    show(`<h2>Wapperman</h2><p>Ontwijk de logo's, ook met je armen. Pak de blauwe ster voor een schild. Houd links of rechts op je scherm ingedrukt. Op desktop: muis of pijltjestoetsen.</p><button class="wg-btn" id="a">Start</button><button class="wg-btn alt" id="b">Top 10</button>`,
+    showT(`<h2>Wapperman</h2><p>Ontwijk de logo's, ook met je armen. Pak de blauwe ster voor een schild. Houd links of rechts op je scherm ingedrukt. Op desktop: muis of pijltjestoetsen.</p><button class="wg-btn" id="a">Start</button><button class="wg-btn alt" id="b">Top 10</button>`,
       () => { on("#a", start); on("#b", () => showTop()); });
   }
   function gameOver() {
     state = "over"; lock = performance.now() + 600; bestEl.textContent = "Record " + best;
-    show(`<h2>${isRec ? "Nieuw record!" : "Af!"}</h2><p>Score <b>${score}</b> · Record <b>${best}</b><br>Logo's ontweken: <b>${dodged}</b></p><button class="wg-btn" id="r">Opnieuw spelen</button><input id="n" maxlength="16" placeholder="Naam (optioneel)" autocomplete="off" enterkeyhint="done" aria-label="Naam (optioneel)"><button class="wg-btn alt" id="sv" disabled>Opslaan in Top 10</button><button class="wg-btn alt" id="t">Bekijk Top 10</button>`, () => {
-      const n = ov.querySelector("#n"), sv = ov.querySelector("#sv");
+    showT(`<h2>${isRec ? "Nieuw record!" : "Af!"}</h2><p>Score <b>${score}</b> · Record <b>${best}</b><br>Logo's ontweken: <b>${dodged}</b></p><p class="wg-q" id="qm"></p><div id="sbox"><input id="n" maxlength="16" placeholder="Naam" autocomplete="off" enterkeyhint="done" aria-label="Naam"><button class="wg-btn" id="sv" disabled>Opslaan in Top 10</button></div><button class="wg-btn alt" id="r">Opnieuw spelen</button><button class="wg-btn alt" id="t">Bekijk Top 10</button>`, () => {
+      const n = ov.querySelector("#n"), sv = ov.querySelector("#sv"), qm = ov.querySelector("#qm"), box = ov.querySelector("#sbox");
+      n.value = store.get("lotd-wapperman-name") || ""; sv.disabled = !n.value.trim();
       n.addEventListener("input", () => { sv.disabled = !n.value.trim(); });
       n.addEventListener("keydown", e => { if (e.key === "Enter" && !sv.disabled) sv.click(); });
       on("#r", start); on("#t", () => showTop());
       on("#sv", async () => {
-        const name = n.value.trim(); if (!name) return; sv.disabled = true;
-        const list = await leaderboard.submitScore(name, score); showTop(list, { name: name.slice(0, 16), score });
+        const name = n.value.trim().slice(0, 16); if (!name) return; sv.disabled = true; store.set("lotd-wapperman-name", name);
+        const res = await leaderboard.submitScore(name, score); showTop({ name, score }, res);
+      });
+      leaderboard.getTopScores().then(({ list }) => {         // haal je de Top 10? zo niet, dan geen naamveld
+        if (state !== "over") return; const need = list.length >= 10 ? list[9].score : -1;
+        if (score > need) qm.textContent = Lg("Je haalt de Top 10! Vul je naam in.", "You made the Top 10! Enter your name.");
+        else { box.style.display = "none"; qm.innerHTML = Lg(`Net niet in de Top 10. Je mist nog <b>${need - score + 1}</b> punten.`, `Just missed the Top 10. You need <b>${need - score + 1}</b> more points.`); }
       });
     });
   }
-  async function showTop(list, me) {
+  async function showTop(me, res) {
     state = "top"; lock = performance.now() + 250;
-    if (!list) list = await leaderboard.getTopScores();
-    const mark = me ? list.findIndex(r => r.name === me.name && r.score === me.score) : -1;
-    const rows = list.map((r, i) => `<li class="${i === mark ? "me" : ""}"><i>${i + 1}</i><span>${esc(r.name)}</span><b>${r.score}</b></li>`).join("") || "<li><span>Nog geen scores</span></li>";
-    show(`<h2>Top 10</h2><ol>${rows}</ol><button class="wg-btn" id="a">Spelen</button><button class="wg-btn alt" id="b">Terug</button>`,
-      () => { on("#a", start); on("#b", showStart); });
+    showT(`<h2>Top 10</h2><p>Laden…</p>`);
+    const { list, source } = await leaderboard.getTopScores(); if (state !== "top") return;
+    const note = res && res.queued ? Lg("Geen verbinding: je score wordt later verstuurd.", "No connection: your score will be sent later.")
+      : source === "local" ? Lg("Let op: deze scores staan alleen op dit apparaat.", "Note: these scores are stored on this device only.")
+      : source === "cache" ? Lg("Offline: laatst bekende stand.", "Offline: last known standings.") : "";
+    const mark = me ? list.findIndex(r => r.name.toLowerCase() === me.name.toLowerCase() && r.score === me.score) : -1;
+    const rows = list.map((r, i) => `<li class="${i === mark ? "me" : ""}"><i>${i + 1}</i><span>${esc(r.name)}</span><b>${r.score}</b></li>`).join("") || `<li><span>${Lg("Nog geen scores", "No scores yet")}</span></li>`;
+    show(`<h2>Top 10</h2>${note ? `<p class="wg-note">${note}</p>` : ""}<ol>${rows}</ol>` + tr(`<button class="wg-btn" id="a">Spelen</button>${source === "cache" ? '<button class="wg-btn alt" id="rt">Opnieuw proberen</button>' : ""}<button class="wg-btn alt" id="b">Terug</button>`),
+      () => { on("#a", start); on("#rt", () => showTop(me)); on("#b", showStart); });
   }
 
   /* ---------- invoer ---------- */
@@ -326,7 +362,7 @@ const leaderboard = (() => {
   function onVis() {
     if (document.hidden && state === "playing") {
       state = "paused"; touchDir = 0; active = null; lock = performance.now() + 300;
-      show(`<h2>Pauze</h2><button class="wg-btn" id="a">Verder</button>`, () => on("#a", () => { hide(); last = 0; state = "playing"; }));
+      showT(`<h2>Pauze</h2><button class="wg-btn" id="a">Verder</button>`, () => on("#a", () => { hide(); last = 0; state = "playing"; }));
     }
   }
 
