@@ -250,7 +250,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
   const accLine = n => { const r = ACC.find(x => n.startsWith(x[0])); if (!r) return ""; const note = L(r[2], r[3]); return "♿ " + (r[1] ? L("Rolstoeltoegankelijk", "Wheelchair accessible") : L("Niet rolstoeltoegankelijk", "Not wheelchair accessible")) + (note ? " · " + note : ""); };
 
   /* ---- loopafstand (alleen als lineup.json "coords" bevat) ---- */
-  const DEF_COORDS = {"Annabel": [51.92536, 4.47601], "Arminius": [51.91494, 4.47371], "Baanhof": [51.91282, 4.48025], "Bird": [51.92671, 4.47881], "Barrio": [51.9256, 4.478], "De Doelen": [51.92182, 4.47329], "Mono": [51.92858, 4.47827], "Paradijskerk": [51.9169, 4.4725], "Reijngoud": [51.9285, 4.47811], "Remastered": [51.91051, 4.4828], "Rotown": [51.91694, 4.47167], "Sahara": [51.92525, 4.4759], "Salsability": [51.9246, 4.4779], "Stalles": [51.9167, 4.4712], "TR": [51.91998, 4.4741], "Uniek": [51.9187, 4.47], "V11": [51.91717, 4.48452], "V2_": [51.9145, 4.4707], "Waalse Kerk": [51.91384, 4.47991], "Worm": [51.915, 4.47]}, ADDR = {"Time is the New Space": "Schiekade 185", "Tramhuis": "Hermesplantsoen 3", "Zondebok en Zwarte Schaap": "Witte de Withstraat 96", "Annabel": "Schiestraat 20", "Arminius": "Museumpark 3", "Baanhof": "Baan 159", "Bird": "Raampoortstraat 24-28", "Barrio": "Teilingerstraat 19B", "De Doelen": "Schouwburgplein 50", "Mono": "Vijverhofstraat 15", "Paradijskerk": "Nieuwe Binnenweg 25", "Reijngoud": "Vijverhofstraat 10", "Remastered": "Willemsplein 79", "Rotown": "Nieuwe Binnenweg 19", "Sahara": "Schiestraat 18", "Salsability": "Delftsestraat 9", "Stalles": "Nieuwe Binnenweg 11A", "TR": "Schouwburgplein 25", "Uniek": "Mauritsweg 34", "V11": "Wijnhaven t/o 101", "V2_": "Eendrachtsstraat 10", "Waalse Kerk": "Pierre Baylestraat 1", "Worm": "Boomgaardsstraat 71"};
+  const DEF_COORDS = {"Annabel": [51.92536, 4.47601], "Arminius": [51.91494, 4.47371], "Baanhof": [51.91282, 4.48025], "Bird": [51.92671, 4.47881], "Barrio": [51.9256, 4.478], "De Doelen": [51.92182, 4.47329], "Mono": [51.92858, 4.47827], "Paradijskerk": [51.9169, 4.4725], "Reijngoud": [51.9285, 4.47811], "Remastered": [51.91051, 4.4828], "Rotown": [51.91694, 4.47167], "Sahara": [51.92525, 4.4759], "Salsability": [51.9246, 4.4779], "Stalles": [51.91712, 4.47203], "TR": [51.91998, 4.4741], "Uniek": [51.9187, 4.47], "V11": [51.91717, 4.48452], "V2_": [51.9145, 4.4707], "Waalse Kerk": [51.91384, 4.47991], "Worm": [51.915, 4.47]}, ADDR = {"Time is the New Space": "Schiekade 185", "Tramhuis": "Hermesplantsoen 3", "Zondebok en Zwarte Schaap": "Witte de Withstraat 96", "Annabel": "Schiestraat 20", "Arminius": "Museumpark 3", "Baanhof": "Baan 159", "Bird": "Raampoortstraat 24-28", "Barrio": "Teilingerstraat 19B", "De Doelen": "Schouwburgplein 50", "Mono": "Vijverhofstraat 15", "Paradijskerk": "Nieuwe Binnenweg 25", "Reijngoud": "Vijverhofstraat 10", "Remastered": "Willemsplein 79", "Rotown": "Nieuwe Binnenweg 19", "Sahara": "Schiestraat 18", "Salsability": "Delftsestraat 9", "Stalles": "Nieuwe Binnenweg 11A", "TR": "Schouwburgplein 25", "Uniek": "Mauritsweg 34", "V11": "Wijnhaven t/o 101", "V2_": "Eendrachtsstraat 10", "Waalse Kerk": "Pierre Baylestraat 1", "Worm": "Boomgaardsstraat 71"};
   let cached = LS.get("lotd-lineup", null), coords = Object.assign({}, DEF_COORDS, (cached && cached.coords) || {});
   const baseName = n => n.replace(/ (Up|Down|WBH|Foyer|1|2)( & (Up|Down|2))?$/, "");
   const coordOf = n => coords[n] || coords[baseName(n)];
@@ -258,13 +258,15 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
   /* ---- coördinaten controleren via adres (eenmalig per toestel, daarna bewaard) ---- */
   const GEOQ = {"Annabel": "Schiestraat 20, 3013 AH Rotterdam", "Arminius": "Museumpark 3, 3015 CB Rotterdam", "Baanhof": "Baan 159, 3011 CA Rotterdam", "Bird": "Raampoortstraat 24, 3032 AH Rotterdam", "Barrio": "Teilingerstraat 19B, 3032 AN Rotterdam", "De Doelen": "Schouwburgplein 50, 3012 CL Rotterdam", "Mono": "Vijverhofstraat 15, 3032 SB Rotterdam", "Paradijskerk": "Nieuwe Binnenweg 25, 3014 GB Rotterdam", "Reijngoud": "Vijverhofstraat 10, 3032 SN Rotterdam", "Remastered": "Willemsplein 79, 3016 DR Rotterdam", "Rotown": "Nieuwe Binnenweg 19, 3014 GB Rotterdam", "Sahara": "Schiestraat 18, 3013 AH Rotterdam", "Salsability": "Delftsestraat 9A, 3013 AB Rotterdam", "Stalles": "Nieuwe Binnenweg 11A, 3014 GA Rotterdam", "TR": "Schouwburgplein 25, 3012 CL Rotterdam", "Uniek": "Mauritsweg 34, 3012 JR Rotterdam", "V11": "Wijnhaven 101, 3011 WN Rotterdam", "V2_": "Eendrachtsstraat 10, 3012 XL Rotterdam", "Waalse Kerk": "Pierre Baylestraat 1, 3011 BH Rotterdam", "Worm": "Boomgaardsstraat 71, 3012 BN Rotterdam", "Time is the New Space": "Schiekade 185, 3013 BR Rotterdam", "Tramhuis": "Hermesplantsoen 3, 3014 GW Rotterdam", "Zondebok en Zwarte Schaap": "Witte de Withstraat 96, 3012 LC Rotterdam"};
   const geoQuery = n => GEOQ[n] || (ADDR[n] + ", Rotterdam");
+  const DEF_MANUAL = () => { const o = {}; Object.keys(MANUAL).forEach(n => { o[n] = DEF_COORDS[n]; }); return o; };
+  const MANUAL = { "Stalles": 1 }; /* handmatig gecontroleerde posities in DEF_COORDS: niet opzoeken */
   const GEO_V = 3;
   let geoStore = LS.get("lotd-geo3", null); if (!geoStore || geoStore.v !== GEO_V) geoStore = { v: GEO_V, c: {} };
-  const applyGeo = () => { Object.keys(geoStore.c).forEach(n => { coords[n] = geoStore.c[n]; }); };
+  const applyGeo = () => { Object.keys(geoStore.c).forEach(n => { if (!MANUAL[n]) coords[n] = geoStore.c[n]; }); };
   applyGeo();
   (function geoAll() {
     if (!navigator.onLine) return;
-    const todo = Object.keys(ADDR).filter(n => !geoStore.c[n] || geoStore.q && geoStore.q[n] !== geoQuery(n)); if (!todo.length) return;
+    const todo = Object.keys(ADDR).filter(n => !MANUAL[n] && (!geoStore.c[n] || geoStore.q && geoStore.q[n] !== geoQuery(n))); if (!todo.length) return;
     geoStore.q = geoStore.q || {}; let k = 0, got = 0;
     const next = () => {
       if (k >= todo.length) { if (got) { LS.set("lotd-geo3", geoStore); if (route().p === "map") render(true); } return; }
@@ -333,7 +335,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     const uniq = a => [...new Set(a.filter(Boolean))];
     favs = uniq(favBefore.map(mapId)); stars = uniq((silent ? LS.get("lotd-stars", []) : stars).map(mapId)).filter(isFav); friend.ids = uniq(friend.ids.map(mapId));
     hiddenVenues = LS.get("lotd-hidden-venues", []).filter(id => VENUES.some(v => v.id === id)); const sh = sharedFromHash(); if (sh) sharedIds = sh;
-    saveFavs(); saveStars(); saveFriend(); coords = Object.assign({}, DEF_COORDS, geoStore.c, j.coords || {});
+    saveFavs(); saveStars(); saveFriend(); coords = Object.assign({}, DEF_COORDS, geoStore.c, DEF_MANUAL(), j.coords || {});
     const ch = []; favBefore.forEach(id => { const o = oldById.get(id); if (!o) return; const nid = mapId(id), n = nid && act(nid);
       if (!n) ch.push({ o, txt: L("staat niet meer in het programma", "is no longer in the program")});
       else if (n.cancelled && !o.cancelled) ch.push({ o, txt: L("vervalt", "is cancelled")});
