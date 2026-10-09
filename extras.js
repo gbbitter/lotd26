@@ -229,8 +229,13 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
   const accLine = n => { const r = ACC.find(x => n.startsWith(x[0])); if (!r) return ""; const note = L(r[2], r[3]); return "♿ " + (r[1] ? L("Rolstoeltoegankelijk", "Wheelchair accessible") : L("Niet rolstoeltoegankelijk", "Not wheelchair accessible")) + (note ? " · " + note : ""); };
 
   /* ---- loopafstand (alleen als lineup.json "coords" bevat) ---- */
-  let cached = LS.get("lotd-lineup", null), coords = (cached && cached.coords) || {};
-  const coordOf = n => coords[n] || coords[n.replace(/ (Up|Down|WBH|Foyer|1|2)( & (Up|Down|2))?$/, "")];
+  const DEF_COORDS = {"Annabel": [51.92536, 4.47601], "Arminius": [51.91494, 4.47371], "Baanhof": [51.91282, 4.48025], "Bird": [51.92671, 4.47881], "Barrio": [51.9256, 4.478], "De Doelen": [51.92182, 4.47329], "Mono": [51.92858, 4.47827], "Paradijskerk": [51.9169, 4.4725], "Reijngoud": [51.9285, 4.47811], "Remastered": [51.91051, 4.4828], "Rotown": [51.91694, 4.47167], "Sahara": [51.92525, 4.4759], "Salsability": [51.9246, 4.4779], "Stalles": [51.9167, 4.4712], "TR": [51.91998, 4.4741], "Uniek": [51.9187, 4.47], "V11": [51.91717, 4.48452], "V2_": [51.9145, 4.4707], "Waalse Kerk": [51.91384, 4.47991], "Worm": [51.915, 4.47]}, ADDR = {"Annabel": "Schiestraat 20", "Arminius": "Museumpark 3", "Baanhof": "Baan 159", "Bird": "Raampoortstraat 24-28", "Barrio": "Teilingerstraat 19B", "De Doelen": "Schouwburgplein 50", "Mono": "Vijverhofstraat 15", "Paradijskerk": "Nieuwe Binnenweg 25", "Reijngoud": "Vijverhofstraat 10", "Remastered": "Willemsplein 79", "Rotown": "Nieuwe Binnenweg 19", "Sahara": "Schiestraat 18", "Salsability": "Delftsestraat 9", "Stalles": "Nieuwe Binnenweg 11A", "TR": "Schouwburgplein 25", "Uniek": "Mauritsweg 34", "V11": "Wijnhaven t/o 101", "V2_": "Eendrachtsstraat 10", "Waalse Kerk": "Pierre Baylestraat 1", "Worm": "Boomgaardsstraat 71"};
+  let cached = LS.get("lotd-lineup", null), coords = Object.assign({}, DEF_COORDS, (cached && cached.coords) || {});
+  const baseName = n => n.replace(/ (Up|Down|WBH|Foyer|1|2)( & (Up|Down|2))?$/, "");
+  const coordOf = n => coords[n] || coords[baseName(n)];
+  const addrOf = n => ADDR[n] || ADDR[baseName(n)] || "";
+  const distM = (p, q) => { const R = 6371000, r = Math.PI / 180, dl = (q[0] - p[0]) * r, dg = (q[1] - p[1]) * r, h = Math.sin(dl / 2) ** 2 + Math.cos(p[0] * r) * Math.cos(q[0] * r) * Math.sin(dg / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };
+  const routeUrl = c => "https://www.google.com/maps/dir/?api=1&travelmode=walking&destination=" + c[0] + "," + c[1];
   const walk = (a, b) => { const p = coordOf(venue(a.venueId).name), q2 = coordOf(venue(b.venueId).name); if (!p || !q2) return null; if (a.venueId === b.venueId) return 1; const R = 6371000, r = Math.PI / 180, dl = (q2[0] - p[0]) * r, dg = (q2[1] - p[1]) * r, h = Math.sin(dl / 2) ** 2 + Math.cos(p[0] * r) * Math.cos(q2[0] * r) * Math.sin(dg / 2) ** 2; return Math.max(1, Math.ceil(2 * R * Math.asin(Math.sqrt(h)) * 1.3 / 80)); };
   const nextLine = a => {
     if (!isFav(a.id) || a.cancelled) return ""; const e = mins(a.end);
@@ -261,7 +266,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     const p = S[k]; bar.className = "on" + (k === "offline" ? " off" : "");
     bar.innerHTML = `<span>${p.text()}${k !== "offline" && navigator.onLine === false ? " · Offline" : ""}</span>${p.btn ? `<button data-st-act="${k}">${p.btn()}</button>` : ""}${p.x ? `<button class="sx" data-st-x="${k}" aria-label="Sluiten">✕</button>` : ""}`; trNode(bar);
   }
-  const ctl = document.createElement("div"); ctl.id = "lotd-ctl"; ctl.innerHTML = `<button data-lang="nl">NL</button><button data-lang="en">EN</button><button data-aa aria-label="Tekstgrootte / Text size">Aa</button>`; document.querySelector("header").appendChild(ctl);
+  const ctl = document.createElement("div"); ctl.id = "lotd-ctl"; ctl.innerHTML = `<button data-lang="nl">NL</button><button data-lang="en">EN</button><button data-aa aria-label="Tekstgrootte / Text size">Aa</button>`; { const h2 = document.getElementById("title"), bar = document.createElement("div"); bar.className = "titlebar"; h2.parentNode.insertBefore(bar, h2); bar.appendChild(h2); bar.appendChild(ctl); }
   const paintCtl = () => { ctl.querySelectorAll("[data-lang]").forEach(b => b.classList.toggle("on", b.dataset.lang === lang)); ctl.querySelector("[data-aa]").classList.toggle("on", big); };
   function setLang(l) { lang = l; window.LOTD_LANG = l; localStorage.setItem("lotd-lang", l); document.documentElement.lang = l; setDays(); paintCtl(); paintStatus(); render(true); }
 
@@ -288,7 +293,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     const uniq = a => [...new Set(a.filter(Boolean))];
     favs = uniq(favBefore.map(mapId)); stars = uniq((silent ? LS.get("lotd-stars", []) : stars).map(mapId)).filter(isFav); friend.ids = uniq(friend.ids.map(mapId));
     hiddenVenues = LS.get("lotd-hidden-venues", []).filter(id => VENUES.some(v => v.id === id)); const sh = sharedFromHash(); if (sh) sharedIds = sh;
-    saveFavs(); saveStars(); saveFriend(); coords = j.coords || {};
+    saveFavs(); saveStars(); saveFriend(); coords = Object.assign({}, DEF_COORDS, j.coords || {});
     const ch = []; favBefore.forEach(id => { const o = oldById.get(id); if (!o) return; const nid = mapId(id), n = nid && act(nid);
       if (!n) ch.push({ o, txt: L("staat niet meer in het programma", "is no longer in the program")});
       else if (n.cancelled && !o.cancelled) ch.push({ o, txt: L("vervalt", "is cancelled")});
@@ -302,7 +307,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
       else if (rep.changed) { post("saved", { text: () => L("Tijden bijgewerkt", "Times updated"), x: true }); setTimeout(() => drop("saved"), 8000); }
       render(true);
     }
-    coords = j.coords || coords;
+    coords = Object.assign({}, coords, j.coords || {});
     const text = lang === "en" && j.notice_en ? j.notice_en : j.notice, key = j.notice || "";
     if (text && LS.get("lotd-notice-x", "") !== key) post("notice", { text: () => (lang === "en" && j.notice_en ? j.notice_en : j.notice), x: true, key }); else drop("notice");
   }
@@ -334,7 +339,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     if (venueOpen) { _rm(); trNode(m); return; }
     const a = openId && act(openId); if (!a) { m.innerHTML = ""; return; }
     const v = venue(a.venueId), d = dayOf(a.day), url = siteUrl(a), cl = clashLine(a), hint = starHint(a), acc = accLine(v.name), nx = nextLine(a);
-    m.innerHTML = `<div class="ov"><div class="sheet" role="dialog" aria-modal="true" aria-label="${a.name}"><div class="grab"></div><button class="x" data-close aria-label="Sluiten">✕</button>${pillsX(a)}<h2>${a.cancelled ? `<s>${a.name}</s>` : a.name}</h2><div class="meta"><i class="dot" style="background:${v.color}"></i>${v.name}<br>${d.label} · ${a.start}–${a.end}${a.cancelled ? `<br><em class="clash">${L("Vervallen", "Cancelled")}</em>` : ""}${cl ? `<br><em class="clash">${cl}</em>` : ""}${hint ? `<br><em class="hint">${hint}</em>` : ""}${isFriend(a.id) ? `<br><em class="hint">${L("Je vriend wil dit ook zien", "Your friend wants to see this too")}</em>` : ""}${acc ? `<br>${acc}` : ""}${nx ? `<br>${nx}` : ""}</div>${others(a)}${url ? `<a class="oth" href="${url}" target="_blank" rel="noopener">Meer info op leftofthedial.nl ↗</a>` : ""}${a.cancelled ? "" : `<button class="oth" data-ics="${a.id}">${L("+ Zet in agenda", "+ Add to calendar")}</button>`}<button class="oth" data-star="${a.id}">${isStar(a.id) ? L("★ Moet ik zien · tik om te wissen", "★ Must-see · tap to remove") : L("☆ Markeer als ‘moet ik zien’", "☆ Mark as must-see")}</button><button class="big ${isFav(a.id) ? "on" : ""}" data-fav="${a.id}">${isFav(a.id) ? "♥ In favorieten" : "♡ Toevoegen aan favorieten"}</button></div></div>`;
+    m.innerHTML = `<div class="ov"><div class="sheet" role="dialog" aria-modal="true" aria-label="${a.name}"><div class="grab"></div><button class="x" data-close aria-label="Sluiten">✕</button>${pillsX(a)}<h2>${a.cancelled ? `<s>${a.name}</s>` : a.name}</h2><div class="meta"><i class="dot" style="background:${v.color}"></i>${v.name}<br>${d.label} · ${a.start}–${a.end}${a.cancelled ? `<br><em class="clash">${L("Vervallen", "Cancelled")}</em>` : ""}${cl ? `<br><em class="clash">${cl}</em>` : ""}${hint ? `<br><em class="hint">${hint}</em>` : ""}${isFriend(a.id) ? `<br><em class="hint">${L("Je vriend wil dit ook zien", "Your friend wants to see this too")}</em>` : ""}${acc ? `<br>${acc}` : ""}${nx ? `<br>${nx}` : ""}</div>${others(a)}${url ? `<a class="oth" href="${url}" target="_blank" rel="noopener">Meer info op leftofthedial.nl ↗</a>` : ""}${(() => { const c = coordOf(v.name); return c ? `<a class="oth" href="${routeUrl(c)}" target="_blank" rel="noopener">${L("Route naar", "Route to")} ${v.name}${addrOf(v.name) ? " · " + addrOf(v.name) : ""} ↗</a><button class="oth" data-here="${c[0]},${c[1]}">${L("Hoe lang lopen vanaf mijn locatie?", "How long to walk from my location?")}</button>` : ""; })()}${a.cancelled ? "" : `<button class="oth" data-ics="${a.id}">${L("+ Zet in agenda", "+ Add to calendar")}</button>`}<button class="oth" data-star="${a.id}">${isStar(a.id) ? L("★ Moet ik zien · tik om te wissen", "★ Must-see · tap to remove") : L("☆ Markeer als ‘moet ik zien’", "☆ Mark as must-see")}</button><button class="big ${isFav(a.id) ? "on" : ""}" data-fav="${a.id}">${isFav(a.id) ? "♥ In favorieten" : "♡ Toevoegen aan favorieten"}</button></div></div>`;
     trNode(m);
   };
 
@@ -409,6 +414,10 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     const gc = c("[data-genre]"); if (gc) { stop(); const g = gc.dataset.genre; selGenres = gc.checked ? [...selGenres, g] : selGenres.filter(x => x !== g); skipModal = true; render(true); skipModal = false; return; }
     if (c("[data-now-fav]")) { stop(); nowFav = !nowFav; render(true); return; }
     const st = c("[data-star]"); if (st) { stop(); const id = st.dataset.star; if (!isFav(id)) { favs = [...favs, id]; saveFavs(); } stars = isStar(id) ? stars.filter(x => x !== id) : [...stars, id]; saveStars(); render(true); return; }
+    const hb = c("[data-here]"); if (hb) { stop(); const q = hb.dataset.here.split(",").map(Number); hb.textContent = L("Locatie bepalen…", "Locating…");
+      if (!navigator.geolocation) { hb.textContent = L("Locatie niet beschikbaar", "Location unavailable"); return; }
+      navigator.geolocation.getCurrentPosition(p => { const m = distM([p.coords.latitude, p.coords.longitude], q); hb.textContent = m > 15000 ? L("Je bent ver weg (" + Math.round(m / 1000) + " km). Gebruik de route-knop.", "You are far away (" + Math.round(m / 1000) + " km). Use the route button.") : L("Ca. ", "About ") + Math.max(1, Math.ceil(m * 1.3 / 80)) + L(" min lopen (" + (m < 1000 ? Math.round(m / 10) * 10 + " m" : (m / 1000).toFixed(1) + " km") + ")", " min walk (" + (m < 1000 ? Math.round(m / 10) * 10 + " m" : (m / 1000).toFixed(1) + " km") + ")"); },
+        () => { hb.textContent = L("Geen toegang tot je locatie", "No access to your location"); }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }); return; }
     const ic = c("[data-ics]"); if (ic) { stop(); const a = act(ic.dataset.ics); if (a) exportIcs([a], slug(a.name) + ".ics"); return; }
     if (c("[data-ics-all]")) { stop(); const l = ACTS.filter(a => isFav(a.id)).sort((x, y) => DAYS.findIndex(d => d.id === x.day) - DAYS.findIndex(d => d.id === y.day) || byTime(x, y)); if (l.length) exportIcs(l, "lotd-2026-favorieten.ics"); else alert(L("Je hebt nog geen favorieten.", "You have no favorites yet.")); return; }
     if (c("[data-friend]")) { stop(); friend.on = !friend.on; saveFriend(); render(true); return; }
@@ -428,8 +437,16 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
 .act.cancel{opacity:.5}.act.cancel b{text-decoration:line-through}.sheet s{opacity:.6}
 #lotd-status{flex:none;display:none;align-items:center;gap:10px;padding:8px 14px;background:#1717ff;color:#fff;font:12px/1.35 Arial,Helvetica,sans-serif}#lotd-status.on{display:flex}#lotd-status.off{background:#444}
 #lotd-status button{margin-left:auto;color:#fff;background:transparent;border:1px solid #fff;padding:0 10px;min-height:32px;font:700 11px Arial,Helvetica,sans-serif}#lotd-status button+button{margin-left:0}#lotd-status .sx{border:0;font-size:18px;padding:0 6px;min-width:32px}
-#lotd-ctl{position:absolute;top:4px;right:10px;display:flex;gap:4px;z-index:6}#lotd-ctl button{color:#fff;background:transparent;border:1px solid rgba(255,255,255,.6);font:700 11px Arial,Helvetica,sans-serif;height:26px;min-width:34px;padding:0 6px}#lotd-ctl button.on{background:#fff;color:#050505}
-html.big .act b{font-size:17px}html.big .act span{font-size:13px}html.big .item .t b{font-size:18px}html.big .item .t span,html.big .meta{font-size:14px}html.big .seg button,html.big .tt-tools button{font-size:16px}html.big .lab{font-size:13px}html.big .tick{font-size:12px}html.big .row{height:96px}html.big .pill,html.big .checkrow{font-size:14px}html.big nav button{font-size:12px}`;
+.titlebar{display:flex;align-items:flex-end;justify-content:space-between;gap:10px}.titlebar h2{margin-right:auto!important;min-width:0}
+#lotd-ctl{display:flex;gap:6px;flex:none;margin-bottom:6px}#lotd-ctl button{color:#050505;background:#fff;border:2px solid #050505;font:700 14px Arial,Helvetica,sans-serif;height:44px;min-width:44px;padding:0 8px}#lotd-ctl button.on{background:#050505;color:#fff}
+/* leesbaarheid op mobiel (WCAG 1.4.4/1.4.12): basis ruimer */
+body{font-size:16px}header:before{font-size:11px!important}.brandcopy p{font-size:12px!important;white-space:normal!important}
+.tick{font-size:12px!important}.lab{font-size:12px!important}.act b{font-size:15px!important}.act span{font-size:12px!important}.act .g{font-size:12px!important}
+.item .t b{font-size:17px!important}.item .t span{font-size:14px!important}.meta{font-size:15px!important}.pill{font-size:13px!important;padding:6px 10px!important}
+.seg button{font-size:15px!important}.tt-tools button{font-size:14px!important;min-height:44px!important}.oth{font-size:15px!important;min-height:48px}.grp{font-size:13px!important}
+nav button{font-size:12px!important}.upd{font-size:13px!important}#lotd-status{font-size:14px!important}#lotd-status button{min-height:44px!important}.det p,.sheet p{font-size:17px!important}.now-btn{font-size:13px!important;min-height:40px}
+@media (max-width:420px){.titlebar{flex-wrap:wrap}#lotd-ctl{margin-bottom:0}header h2{margin-bottom:10px!important}}
+html.big body{font-size:19px}html.big .act b{font-size:18px!important}html.big .act span,html.big .act .g{font-size:14px!important}html.big .item .t b{font-size:20px!important}html.big .item .t span,html.big .meta{font-size:16px!important}html.big .seg button,html.big .tt-tools button,html.big .oth{font-size:17px!important}html.big .lab,html.big .tick{font-size:14px!important}html.big .row{height:104px}html.big .pill,html.big .checkrow{font-size:15px!important}html.big nav button{font-size:13px!important}`;
   document.head.appendChild(css);
 
   setInterval(() => { if (route().p === "now" && !openId && !venueOpen && !genreOpen && !sheet) render(true); }, 30000);
