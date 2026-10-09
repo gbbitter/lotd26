@@ -1,10 +1,31 @@
 {
- "updated": "2026-09-27T12:00:00",
- "notice": "",
- "notice_en": "",
- "cancelled": [],
- "coords": {},
- "raw": [
+"updated": "2026-09-27T12:00:00",
+"notice": "",
+"notice_en": "",
+"cancelled": [],
+"coords": {
+  "Annabel": [51.92536, 4.47601],
+  "Arminius": [51.91494, 4.47371],
+  "Baanhof": [51.91282, 4.48025],
+  "Bird": [51.92671, 4.47881],
+  "Barrio": [51.9256, 4.478],
+  "De Doelen": [51.92182, 4.47329],
+  "Mono": [51.92858, 4.47827],
+  "Paradijskerk": [51.9169, 4.4725],
+  "Reijngoud": [51.9285, 4.47811],
+  "Remastered": [51.91051, 4.4828],
+  "Rotown": [51.91694, 4.47167],
+  "Sahara": [51.92525, 4.4759],
+  "Salsability": [51.9246, 4.4779],
+  "Stalles": [51.9167, 4.4712],
+  "TR": [51.91998, 4.4741],
+  "Uniek": [51.9187, 4.47],
+  "V11": [51.91717, 4.48452],
+  "V2_": [51.9145, 4.4707],
+  "Waalse Kerk": [51.91384, 4.47991],
+  "Worm": [51.915, 4.47]
+},
+"raw": [
   "Reijngoud|v|1230-1315 Rockpool Dramas;1345-1430 Zo Lief;1500-1600 Fellatio;1730-1810 Atticomatic;1900-1940 Pyncher;2030-2110 Date Camp;2200-2240 Bramwell;2320-0000 The Jump Cuts",
   "Reijngoud|z|1230-1300 Maicín;1315-1345 Omertà;1400-1430 Child Of Prague;1445-1515 Burglar;1530-1600 Telekura;1730-1810 Twenty One Children;1900-1940 Babe Haven;2030-2110 JJ Bull;2200-2240 Mindsigh",
   "Mono|v|1650-1730 Insider Trading;1820-1900 Holly Head;1950-2030 Rampressure;2120-2200 Mek’Dr’Dr;2250-2330 LTTL Mort",
@@ -85,5 +106,5 @@
   "Baanhof|z|1740-1820 Newbuild;1920-2000 Tokyo Sea Dragons;2050-2130 Melanie Baker;2220-2300 Hamburger",
   "Remastered|v|1750-1830 Wing!;1920-2000 Turnspit;2050-2130 GX Nurse;2220-2300 Yoo Doo Right",
   "Remastered|z|1750-1830 Paulie Swan;1920-2000 Noonzy;2050-2130 Bathing Suits;2220-2300 Ashnymph"
- ]
+]
 }
