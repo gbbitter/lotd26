@@ -44,7 +44,7 @@ const leaderboard = (() => {
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-  const EN = { "Ontwijk de logo's, ook met je armen. Pak de blauwe ster voor een schild. Houd links of rechts op je scherm ingedrukt. Op desktop: muis of pijltjestoetsen.": "Dodge the logos, arms included. Grab the blue star for a shield. Hold the left or right side of your screen. On desktop: mouse or arrow keys.", "Nieuw record!": "New record!", "Af!": "Game over!", "Logo's ontweken:": "Logos dodged:", "Opnieuw spelen": "Play again", "Naam": "Name", "Laden…": "Loading…", "Opnieuw proberen": "Try again", "Opslaan in Top 10": "Save to Top 10", "Bekijk Top 10": "View Top 10", "Nog geen scores": "No scores yet", "Spelen": "Play", "Terug": "Back", "Pauze": "Paused", "Verder": "Resume", "SCHILD WEG": "SHIELD GONE", "SCHILD!": "SHIELD!", "NIEUW RECORD!": "NEW RECORD!", "Ontwijk de logo's, ook met je armen. Houd links of rechts op je scherm ingedrukt. Dubbel tikken = dash. Pak de ster voor een schild, de radio-dial voor slow-mo en de vinyls om bands te ontdekken. Dicht langs een logo geeft combo-punten.": "Dodge the logos, arms included. Hold the left or right side of the screen. Double-tap = dash. Grab the star for a shield, the radio dial for slow-mo and the records to discover bands. Near misses build a combo.", "Desktop: muis of pijltjestoetsen, spatie = dash.": "Desktop: mouse or arrow keys, space = dash.", "Houd links of rechts op je scherm ingedrukt. Dubbel tikken = dash. Pak de ster voor een schild, de radio-dial voor slow-mo en de vinyls om bands te ontdekken. Dicht langs een logo geeft combo-punten.": "Hold the left or right side of the screen. Double-tap = dash. Grab the star for a shield, the radio dial for slow-mo and the records to discover bands. Near misses build a combo.", "Max combo:": "Max combo:", "Bands ontdekt": "Bands discovered", "Tik om bij je favorieten te zetten": "Tap to add to your favorites", "Deel je score": "Share your score", "COMBO WEG": "COMBO LOST", "DIAL: SLOW-MO": "DIAL: SLOW-MO", "WIND ←": "WIND ←", "WIND →": "WIND →", "REGEN!": "RAIN!", "OVERLEEFD +25": "SURVIVED +25", "DASH": "DASH", "Gekopieerd": "Copied" };
+  const EN = { "Ontwijk de logo's, ook met je armen. Pak de blauwe ster voor een schild. Houd links of rechts op je scherm ingedrukt. Op desktop: muis of pijltjestoetsen.": "Dodge the logos, arms included. Grab the blue star for a shield. Hold the left or right side of your screen. On desktop: mouse or arrow keys.", "Nieuw record!": "New record!", "Af!": "Game over!", "Logo's ontweken:": "Logos dodged:", "Opnieuw spelen": "Play again", "Naam": "Name", "Laden…": "Loading…", "Opnieuw proberen": "Try again", "Opslaan in Top 10": "Save to Top 10", "Bekijk Top 10": "View Top 10", "Nog geen scores": "No scores yet", "Spelen": "Play", "Terug": "Back", "Pauze": "Paused", "Verder": "Resume", "SCHILD WEG": "SHIELD GONE", "SCHILD!": "SHIELD!", "NIEUW RECORD!": "NEW RECORD!", "Ontwijk de logo's, ook met je armen. Houd links of rechts op je scherm ingedrukt. Dubbel tikken = dash. Pak de ster voor een schild, de radio-dial voor slow-mo en de vinyls om bands te ontdekken. Dicht langs een logo geeft combo-punten.": "Dodge the logos, arms included. Hold the left or right side of the screen. Double-tap = dash. Grab the star for a shield, the radio dial for slow-mo and the records to discover bands. Near misses build a combo.", "Desktop: muis of pijltjestoetsen, spatie = dash.": "Desktop: mouse or arrow keys, space = dash.", "Houd links of rechts op je scherm ingedrukt. Dubbel tikken = dash. Pak de ster voor een schild, de radio-dial voor slow-mo en de vinyls om bands te ontdekken. Dicht langs een logo geeft combo-punten.": "Hold the left or right side of the screen. Double-tap = dash. Grab the star for a shield, the radio dial for slow-mo and the records to discover bands. Near misses build a combo.", "Max combo:": "Max combo:", "Bands ontdekt": "Bands discovered", "Tik op een band voor info": "Tap a band for info", "Deel je score": "Share your score", "COMBO WEG": "COMBO LOST", "DIAL: SLOW-MO": "DIAL: SLOW-MO", "WIND ←": "WIND ←", "WIND →": "WIND →", "REGEN!": "RAIN!", "OVERLEEFD +25": "SURVIVED +25", "DASH": "DASH", "Gekopieerd": "Copied" };
   const Lg = (nl, en) => window.LOTD_LANG === "en" ? en : nl;
   const tr = s => { if (window.LOTD_LANG !== "en") return s; let o = String(s); for (const k in EN) o = o.split(k).join(EN[k]); return o; };
   const rnd = (a, b) => a + Math.random() * (b - a), clamp = (v, a, b) => Math.max(a, Math.min(b, v)), lerp = (a, b, t) => a + (b - a) * t;
@@ -98,6 +98,8 @@ const leaderboard = (() => {
 .wg li span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wg li.me{background:${BLUE};color:#fff}
 .wg-combo{font-size:18px;font-weight:900;color:#0000ff;margin-top:6px;min-height:24px;letter-spacing:.02em}.wg.night .wg-combo{color:#7b7bff}.wg-combo i{display:block;height:4px;background:currentColor;margin-top:3px;transform-origin:left}
+.wg-dash{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:11px;font-weight:800;letter-spacing:.08em;color:#444}.wg-dash b{display:block;width:84px;height:7px;background:#e6e6e6;overflow:hidden}.wg-dash i{display:block;height:100%;width:100%;background:#555;transform-origin:left}.wg-dash.rdy{color:#0000ff}.wg-dash.rdy i{background:#0000ff}.wg.night .wg-dash{color:#bbb}.wg.night .wg-dash b{background:#262626}.wg.night .wg-dash.rdy{color:#7b7bff}.wg.night .wg-dash.rdy i{background:#7b7bff}
+#modal .ov{z-index:2100}
 .wg-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:0 0 16px}.wg-chip{border:2px solid #000;background:#fff;color:#000;font:inherit;font-size:14px;font-weight:700;padding:10px 12px;min-height:44px;border-radius:0;cursor:pointer}.wg-chip.on{background:#0000ff;color:#fff;border-color:#0000ff}
 .wg-q{font-weight:700}.wg-note{font-size:13px;border:2px solid #000;padding:8px;margin:0 0 14px}`;
 
@@ -107,7 +109,7 @@ const leaderboard = (() => {
   let x = 0, vel = 0, clock = 0, elapsed = 0, spawnT = 0, diagT = 0, pickupT = 0, prevGap = 2, hitT = 0, def = 0, shakeT = 0, flash = 0;
   let bonus = 0, dodged = 0, shield = 0, inv = 0, night = false, nextMile = T.mile, recShown = false, bestAtStart = 0, isRec = false;
   let obstacles = [], pickups = [], tokens = [], particles = [], pops = [], keyDir = 0, touchDir = 0, active = null, mouseX = null;
-  let combo = 0, comboT = 0, mult = 1, maxMult = 1, found = [], slow = 0, dashT = 0, dashCd = 0, dashDir = 1, lastDir = 1, lastTap = { t: 0, d: 0 }, tokenT = 5, evT = 0, evKind = null, evPhase = "", evClock = 0, windDir = 1, comboEl;
+  let combo = 0, comboT = 0, mult = 1, maxMult = 1, found = [], slow = 0, dashT = 0, dashCd = 0, dashDir = 1, lastDir = 1, lastTap = { t: 0, d: 0 }, tokenT = 5, dashEl, evT = 0, evKind = null, evPhase = "", evClock = 0, windDir = 1, comboEl;
 
   /* ---------- geluid (kleine synth, geen bestanden) ---------- */
   function beep(f, d = .08, type = "square", v = .05, slide = 0) {
@@ -219,6 +221,7 @@ const leaderboard = (() => {
     if (isWind()) want += windDir * maxV * T.windPush;
     if (dashT > 0) { dashT -= dt; vel = dashDir * maxV * T.dashSpeed; } else vel += (want - vel) * Math.min(1, 18 * dt);
     x = clamp(x + vel * dt, 30 * s, W - 30 * s); dashCd = Math.max(0, dashCd - dt); slow = Math.max(0, slow - dt);
+    if (dashEl) { const r = 1 - dashCd / T.dashCd; dashEl.classList.toggle("rdy", dashCd <= 0); dashEl.firstElementChild.nextElementSibling.firstElementChild.style.transform = "scaleX(" + r.toFixed(2) + ")"; }
     if (comboT > 0) { comboT -= dt; if (comboT <= 0 && mult > 1) pop("COMBO WEG", x, groundY - 150 * s, 16); if (comboT <= 0) { combo = 0; mult = 1; } } renderCombo();
     /* golven: wind / regen met waarschuwing */
     if (!evKind) { evT -= dt; if (evT <= 0) { evKind = Math.random() < .5 ? "wind" : "regen"; evPhase = "warn"; evClock = T.warnTime; windDir = Math.random() < .5 ? -1 : 1; pop(evKind === "wind" ? (windDir < 0 ? "WIND ←" : "WIND →") : "REGEN!", W / 2, H * .24, 34, BLUE); beep(440, .12, "sawtooth", .05); setTimeout(() => beep(440, .12, "sawtooth", .05), 180); } }
@@ -335,8 +338,6 @@ const leaderboard = (() => {
     if (flash > 0) { cx.fillStyle = `rgba(0,0,255,${Math.min(.3, flash)})`; cx.fillRect(0, 0, W, H); }
     if (state === "playing") {
       if (slow > 0) { cx.strokeStyle = BLUE; cx.lineWidth = 6; cx.globalAlpha = .5 + Math.sin(clock * 6) * .2; cx.strokeRect(3, 3, W - 6, H - 6); cx.globalAlpha = 1; }
-      const bw = 96 * s, bx = 12, by = H - 17 * s, rdy = dashCd <= 0; cx.fillStyle = P.lane; cx.fillRect(bx, by, bw, 7 * s); cx.fillStyle = rdy ? BLUE : P.base; cx.fillRect(bx, by, bw * (1 - dashCd / T.dashCd), 7 * s);
-      cx.font = `800 ${10 * s}px Arial,sans-serif`; cx.textAlign = "left"; cx.textBaseline = "bottom"; cx.fillStyle = rdy ? BLUE : P.base; cx.fillText(tr("DASH") + (rdy ? " ✓" : ""), bx, by - 2); cx.textAlign = "center"; cx.textBaseline = "middle";
     }
     cx.restore();
   }
@@ -365,12 +366,11 @@ const leaderboard = (() => {
   }
   function gameOver() {
     state = "over"; lock = performance.now() + 600; bestEl.textContent = "Record " + best;
-    const chips = found.length ? `<p class="wg-q">Bands ontdekt</p><div class="wg-chips">${found.slice(0, 8).map(f => `<button class="wg-chip ${typeof isFav === "function" && isFav(f.id) ? "on" : ""}" data-f="${esc(f.id)}" data-n="${esc(f.name)}">${typeof isFav === "function" && isFav(f.id) ? "✓ " : "+ "}${esc(f.name)}</button>`).join("")}</div><p style="font-size:13px;opacity:.7;margin-top:-8px">Tik om bij je favorieten te zetten</p>` : "";
+    const chips = found.length ? `<p class="wg-q">Bands ontdekt</p><div class="wg-chips">${found.slice(0, 8).map(f => `<button class="wg-chip" data-f="${esc(f.id)}">${esc(f.name)}</button>`).join("")}</div><p style="font-size:13px;opacity:.7;margin-top:-8px">Tik op een band voor info</p>` : "";
     showT(`<h2>${isRec ? "Nieuw record!" : "Af!"}</h2><p>Score <b>${score}</b> · Record <b>${best}</b><br>Logo's ontweken: <b>${dodged}</b> · Max combo: <b>x${maxMult}</b></p>${chips}<p class="wg-q" id="qm"></p><div id="sbox"><input id="n" maxlength="16" placeholder="Naam" autocomplete="off" enterkeyhint="done" aria-label="Naam"><button class="wg-btn" id="sv" disabled>Opslaan in Top 10</button></div><button class="wg-btn alt" id="r">Opnieuw spelen</button><button class="wg-btn alt" id="t">Bekijk Top 10</button><button class="wg-btn alt" id="sh">Deel je score</button>`, () => {
       ov.querySelectorAll(".wg-chip").forEach(c => c.addEventListener("click", () => {
-        if (performance.now() < lock || typeof isFav !== "function" || typeof saveFavs !== "function") return;
-        const id = c.dataset.f, was = isFav(id); try { favs = was ? favs.filter(z => z !== id) : [...favs, id]; saveFavs(); } catch { return; }
-        c.classList.toggle("on", !was); c.textContent = (!was ? "✓ " : "+ ") + c.dataset.n;
+        if (performance.now() < lock) return;
+        if (typeof openAct === "function") { try { openAct(c.dataset.f); } catch {} }
       }));
       on("#sh", el => {
         const url = location.origin + location.pathname + "#/game", text = Lg(`Ik haalde ${score} punten in Wapperman (Left of the Dial 2026). Kun jij dit verbeteren?`, `I scored ${score} in Wapperman (Left of the Dial 2026). Can you beat it?`);
@@ -439,9 +439,9 @@ const leaderboard = (() => {
     if (root) return;
     if (!document.getElementById("wg-style")) { const st = document.createElement("style"); st.id = "wg-style"; st.textContent = CSS; document.head.appendChild(st); }
     root = document.createElement("div"); root.className = "wg";
-    root.innerHTML = `<canvas></canvas><div class="wg-hud"><div><div class="wg-score">0</div><div class="wg-best"></div><div class="wg-combo"></div></div><div class="wg-btns"><button class="wg-snd" aria-label="Geluid"></button><button class="wg-x" aria-label="Sluiten">✕</button></div></div><div class="wg-ov"></div>`;
+    root.innerHTML = `<canvas></canvas><div class="wg-hud"><div><div class="wg-score">0</div><div class="wg-best"></div><div class="wg-combo"></div><div class="wg-dash"><span>DASH</span><b><i></i></b></div></div><div class="wg-btns"><button class="wg-snd" aria-label="Geluid"></button><button class="wg-x" aria-label="Sluiten">✕</button></div></div><div class="wg-ov"></div>`;
     document.body.appendChild(root);
-    cv = root.querySelector("canvas"); cx = cv.getContext("2d"); scoreEl = root.querySelector(".wg-score"); bestEl = root.querySelector(".wg-best"); comboEl = root.querySelector(".wg-combo"); ov = root.querySelector(".wg-ov"); sndEl = root.querySelector(".wg-snd");
+    cv = root.querySelector("canvas"); cx = cv.getContext("2d"); scoreEl = root.querySelector(".wg-score"); bestEl = root.querySelector(".wg-best"); comboEl = root.querySelector(".wg-combo"); dashEl = root.querySelector(".wg-dash"); ov = root.querySelector(".wg-ov"); sndEl = root.querySelector(".wg-snd");
     prevOverflow = [document.documentElement.style.overflow, document.body.style.overflow];
     document.documentElement.style.overflow = document.body.style.overflow = "hidden";
     sprites = [makeSprite(false), makeSprite(true)]; mouseX = null; keyDir = touchDir = 0; active = null; last = 0; x = 0; obstacles = []; pickups = []; tokens = []; particles = []; pops = []; def = 0; night = false;
