@@ -1,16 +1,17 @@
 /* Wapperman v4 – gedeelde topscores + verplichte naam.
    STAP 1: maak een gratis Supabase-project, voer de SQL uit (zie handleiding) en vul hieronder URL en "anon public" key in.
    Laat je ze leeg, dan werkt alles nog steeds, maar staan de scores alleen op dit apparaat. */
-const LB = { url: "https://kqaacbzeaokkdceirdfj.supabase.co/rest/v1/", key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxYWFjYnplYW9ra2RjZWlyZGZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0Mzc0MDIsImV4cCI6MjEwNzAxMzQwMn0.ActIR4sojnRWQyC_kJdN6BUl2u2q5BnY3cW57N8Cthw" };   // bv. url: "https://abcd1234.supabase.co", key: "eyJ..."
+const LB = { url: "https://kqaacbzeaokkdceirdfj.supabase.co", key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxYWFjYnplYW9ra2RjZWlyZGZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0Mzc0MDIsImV4cCI6MjEwNzAxMzQwMn0.ActIR4sojnRWQyC_kJdN6BUl2u2q5BnY3cW57N8Cthw" };   // bv. url: "https://abcd1234.supabase.co", key: "eyJ..."
 
 const leaderboard = (() => {
   const LOCAL = "lotd-wapperman-scores", CACHE = "lotd-wapperman-top-cache", PEND = "lotd-wapperman-pending";
+  let lastErr = "";
   const online = () => !!(LB.url && LB.key);
   const rd = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch { return d; } };
   const wr = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
   async function api(path, opt) {
-    const r = await fetch(LB.url.replace(/\/$/, "") + "/rest/v1/" + path, { cache: "no-store", ...opt, headers: { apikey: LB.key, Authorization: "Bearer " + LB.key, "Content-Type": "application/json", ...((opt && opt.headers) || {}) } });
-    if (!r.ok) throw new Error("HTTP " + r.status); return r;
+    const r = await fetch(LB.url.replace(/\/rest\/v1\/?$/, "").replace(/\/$/, "") + "/rest/v1/" + path, { cache: "no-store", ...opt, headers: { apikey: LB.key, ...(LB.key.startsWith("eyJ") ? { Authorization: "Bearer " + LB.key } : {}), "Content-Type": "application/json", ...((opt && opt.headers) || {}) } });
+    if (!r.ok) { let m = ""; try { m = (await r.json()).message || ""; } catch {} lastErr = "HTTP " + r.status + (m ? " – " + m : ""); throw new Error(lastErr); } lastErr = ""; return r;
   }
   async function flush() {                       // eerder mislukte scores alsnog versturen
     const p = rd(PEND, []); if (!p.length) return; const rest = [];
@@ -33,7 +34,7 @@ const leaderboard = (() => {
     try { await api("rpc/submit_score", { method: "POST", body: JSON.stringify({ p_name: name, p_score: score }) }); return { ok: true, source: "online" }; }
     catch { const p = rd(PEND, []); p.push({ name, score }); wr(PEND, p); return { ok: false, queued: true, source: "cache" }; }
   }
-  return { getTopScores, submitScore, online };
+  return { getTopScores, submitScore, online, err: () => lastErr };
 })();
 
 (() => {
@@ -330,7 +331,7 @@ const leaderboard = (() => {
     state = "top"; lock = performance.now() + 250;
     showT(`<h2>Top 10</h2><p>Laden…</p>`);
     const { list, source } = await leaderboard.getTopScores(); if (state !== "top") return;
-    const note = res && res.queued ? Lg("Geen verbinding: je score wordt later verstuurd.", "No connection: your score will be sent later.")
+    const note = res && res.queued ? Lg("Geen verbinding: je score wordt later verstuurd.", "No connection: your score will be sent later.") + (leaderboard.err() ? " [" + leaderboard.err() + "]" : "")
       : source === "local" ? Lg("Let op: deze scores staan alleen op dit apparaat.", "Note: these scores are stored on this device only.")
       : source === "cache" ? Lg("Offline: laatst bekende stand.", "Offline: last known standings.") : "";
     const mark = me ? list.findIndex(r => r.name.toLowerCase() === me.name.toLowerCase() && r.score === me.score) : -1;
