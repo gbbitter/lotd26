@@ -1,4 +1,4 @@
-/* Wapperman v4 – gedeelde topscores + verplichte naam.
+/* Wapperman v5 – combo, dash, bands ontdekken, wind/regen-golven, slow-mo, gedeelde topscores.
    STAP 1: maak een gratis Supabase-project, voer de SQL uit (zie handleiding) en vul hieronder URL en "anon public" key in.
    Laat je ze leeg, dan werkt alles nog steeds, maar staan de scores alleen op dit apparaat. */
 const LB = { url: "https://kqaacbzeaokkdceirdfj.supabase.co", key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxYWFjYnplYW9ra2RjZWlyZGZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0Mzc0MDIsImV4cCI6MjEwNzAxMzQwMn0.ActIR4sojnRWQyC_kJdN6BUl2u2q5BnY3cW57N8Cthw" };   // bv. url: "https://abcd1234.supabase.co", key: "eyJ..."
@@ -44,7 +44,7 @@ const leaderboard = (() => {
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-  const EN = { "Ontwijk de logo's, ook met je armen. Pak de blauwe ster voor een schild. Houd links of rechts op je scherm ingedrukt. Op desktop: muis of pijltjestoetsen.": "Dodge the logos, arms included. Grab the blue star for a shield. Hold the left or right side of your screen. On desktop: mouse or arrow keys.", "Nieuw record!": "New record!", "Af!": "Game over!", "Logo's ontweken:": "Logos dodged:", "Opnieuw spelen": "Play again", "Naam": "Name", "Laden…": "Loading…", "Opnieuw proberen": "Try again", "Opslaan in Top 10": "Save to Top 10", "Bekijk Top 10": "View Top 10", "Nog geen scores": "No scores yet", "Spelen": "Play", "Terug": "Back", "Pauze": "Paused", "Verder": "Resume", "SCHILD WEG": "SHIELD GONE", "SCHILD!": "SHIELD!", "NIEUW RECORD!": "NEW RECORD!" };
+  const EN = { "Ontwijk de logo's, ook met je armen. Pak de blauwe ster voor een schild. Houd links of rechts op je scherm ingedrukt. Op desktop: muis of pijltjestoetsen.": "Dodge the logos, arms included. Grab the blue star for a shield. Hold the left or right side of your screen. On desktop: mouse or arrow keys.", "Nieuw record!": "New record!", "Af!": "Game over!", "Logo's ontweken:": "Logos dodged:", "Opnieuw spelen": "Play again", "Naam": "Name", "Laden…": "Loading…", "Opnieuw proberen": "Try again", "Opslaan in Top 10": "Save to Top 10", "Bekijk Top 10": "View Top 10", "Nog geen scores": "No scores yet", "Spelen": "Play", "Terug": "Back", "Pauze": "Paused", "Verder": "Resume", "SCHILD WEG": "SHIELD GONE", "SCHILD!": "SHIELD!", "NIEUW RECORD!": "NEW RECORD!", "Ontwijk de logo's, ook met je armen. Houd links of rechts op je scherm ingedrukt. Dubbel tikken = dash. Pak de ster voor een schild, de radio-dial voor slow-mo en de vinyls om bands te ontdekken. Dicht langs een logo geeft combo-punten.": "Dodge the logos, arms included. Hold the left or right side of the screen. Double-tap = dash. Grab the star for a shield, the radio dial for slow-mo and the records to discover bands. Near misses build a combo.", "Desktop: muis of pijltjestoetsen, spatie = dash.": "Desktop: mouse or arrow keys, space = dash.", "Houd links of rechts op je scherm ingedrukt. Dubbel tikken = dash. Pak de ster voor een schild, de radio-dial voor slow-mo en de vinyls om bands te ontdekken. Dicht langs een logo geeft combo-punten.": "Hold the left or right side of the screen. Double-tap = dash. Grab the star for a shield, the radio dial for slow-mo and the records to discover bands. Near misses build a combo.", "Max combo:": "Max combo:", "Bands ontdekt": "Bands discovered", "Tik om bij je favorieten te zetten": "Tap to add to your favorites", "Deel je score": "Share your score", "COMBO WEG": "COMBO LOST", "DIAL: SLOW-MO": "DIAL: SLOW-MO", "WIND ←": "WIND ←", "WIND →": "WIND →", "REGEN!": "RAIN!", "OVERLEEFD +25": "SURVIVED +25", "DASH": "DASH", "Gekopieerd": "Copied" };
   const Lg = (nl, en) => window.LOTD_LANG === "en" ? en : nl;
   const tr = s => { if (window.LOTD_LANG !== "en") return s; let o = String(s); for (const k in EN) o = o.split(k).join(EN[k]); return o; };
   const rnd = (a, b) => a + Math.random() * (b - a), clamp = (v, a, b) => Math.max(a, Math.min(b, v)), lerp = (a, b, t) => a + (b - a) * t;
@@ -56,8 +56,15 @@ const leaderboard = (() => {
     fillStart: .35, fillGain: .009, fillMax: .8,      // kans dat een baan (buiten de opening) gevuld is
     zigAfter: 25, diagAfter: 28,                      // vanaf welke seconde zigzag- en diagonale logo's komen
     nearPx: 10, nearBonus: 5,                         // "net gemist" marge en bonuspunten
-    mile: 250, nightEvery: 400                        // mijlpaal en dag/nacht-wissel (punten)
+    mile: 250, nightEvery: 400,                       // mijlpaal en dag/nacht-wissel (punten)
+    dashTime: .22, dashCd: 3, dashSpeed: 2.4,         // dash: duur (s, ook onkwetsbaar), wachttijd, snelheid t.o.v. normaal
+    comboWindow: 4.5, comboStep: 3, comboMax: 5,      // combo: seconden om door te gaan, acties per niveau, max vermenigvuldiger
+    slowScale: .55, slowTime: 5,                      // radio-dial: tempo en duur
+    tokenPts: 10, tokenEvery: [6, 9],                 // vinyl (band ontdekken): punten en interval (s)
+    eventFirst: 32, eventMin: 26, eventMax: 38,       // eerste golf (wind/regen) en tijd tussen golven (s)
+    windPush: .3, windTime: 5, regenTime: 4.5, warnTime: 1.7
   };
+  const STAGES = [["Woensdag", 0], ["Donderdag", 500], ["Vrijdag", 1000], ["Zaterdag", 1500], ["Afterparty", 2250]];
   const PAL = {
     day: { bg: "#fff", ink: "#111", paper: "#fff", lane: "#e6e6e6", gfill: "#f0f0f0", base: "#555" },
     night: { bg: "#0b0b0b", ink: "#fff", paper: "#0b0b0b", lane: "#262626", gfill: "#161616", base: "#bbb" }
@@ -90,6 +97,8 @@ const leaderboard = (() => {
 .wg li i{font-style:normal;width:28px;opacity:.5}
 .wg li span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wg li.me{background:${BLUE};color:#fff}
+.wg-combo{font-size:18px;font-weight:900;color:#0000ff;margin-top:6px;min-height:24px;letter-spacing:.02em}.wg.night .wg-combo{color:#7b7bff}.wg-combo i{display:block;height:4px;background:currentColor;margin-top:3px;transform-origin:left}
+.wg-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:0 0 16px}.wg-chip{border:2px solid #000;background:#fff;color:#000;font:inherit;font-size:14px;font-weight:700;padding:10px 12px;min-height:44px;border-radius:0;cursor:pointer}.wg-chip.on{background:#0000ff;color:#fff;border-color:#0000ff}
 .wg-q{font-weight:700}.wg-note{font-size:13px;border:2px solid #000;padding:8px;margin:0 0 14px}`;
 
   let root, cv, cx, scoreEl, bestEl, ov, sndEl, ro, raf, last = 0, sprites, prevOverflow, ac = null;
@@ -97,7 +106,8 @@ const leaderboard = (() => {
   let state = "start", score = 0, best = Number(store.get(BEST_KEY) || 0), lock = 0, muted = store.get(MUTE_KEY) === "1";
   let x = 0, vel = 0, clock = 0, elapsed = 0, spawnT = 0, diagT = 0, pickupT = 0, prevGap = 2, hitT = 0, def = 0, shakeT = 0, flash = 0;
   let bonus = 0, dodged = 0, shield = 0, inv = 0, night = false, nextMile = T.mile, recShown = false, bestAtStart = 0, isRec = false;
-  let obstacles = [], pickups = [], particles = [], pops = [], keyDir = 0, touchDir = 0, active = null, mouseX = null;
+  let obstacles = [], pickups = [], tokens = [], particles = [], pops = [], keyDir = 0, touchDir = 0, active = null, mouseX = null;
+  let combo = 0, comboT = 0, mult = 1, maxMult = 1, found = [], slow = 0, dashT = 0, dashCd = 0, dashDir = 1, lastDir = 1, lastTap = { t: 0, d: 0 }, tokenT = 5, evT = 0, evKind = null, evPhase = "", evClock = 0, windDir = 1, comboEl;
 
   /* ---------- geluid (kleine synth, geen bestanden) ---------- */
   function beep(f, d = .08, type = "square", v = .05, slide = 0) {
@@ -145,15 +155,23 @@ const leaderboard = (() => {
   function start() {
     state = "playing"; elapsed = 0; spawnT = .6; diagT = 4; pickupT = 12; hitT = 0; def = 0; shakeT = 0; flash = 0;
     bonus = 0; dodged = 0; shield = 0; inv = 0; night = false; nextMile = T.mile; recShown = false; isRec = false; bestAtStart = best;
-    obstacles = []; pickups = []; particles = []; pops = []; x = W / 2; vel = 0; touchDir = 0; active = null; prevGap = Math.floor((lanes - 3) / 2);
+    obstacles = []; pickups = []; tokens = []; particles = []; pops = []; x = W / 2; vel = 0; touchDir = 0; active = null; prevGap = Math.floor((lanes - 3) / 2);
+    combo = 0; comboT = 0; mult = 1; maxMult = 1; found = []; slow = 0; dashT = 0; dashCd = 0; tokenT = 5; evT = T.eventFirst; evKind = null; evPhase = ""; evClock = 0; renderCombo();
     root.classList.remove("night"); hide(); setScore(0); beep(520, .06, "square", .04, 400);
   }
   const speedNow = () => T.speedStart + Math.min(T.speedMax, elapsed * T.speedGain);
   const intervalNow = () => Math.max(T.rowMin, T.rowStart - elapsed * T.rowGain);
   const lsize = () => Math.min(laneW * .8, 60 * s);
+  const isRegen = () => evKind === "regen" && evPhase === "on", isWind = () => evKind === "wind" && evPhase === "on";
+  function renderCombo() { if (!comboEl) return; if (mult > 1) { comboEl.innerHTML = "COMBO x" + mult + '<i style="transform:scaleX(' + clamp(comboT / T.comboWindow, 0, 1).toFixed(2) + ')"></i>'; } else comboEl.innerHTML = ""; }
+  function gain(n) { combo += n; comboT = T.comboWindow; const m = Math.min(T.comboMax, 1 + Math.floor(combo / T.comboStep)); if (m > mult) pop("COMBO x" + m, x, groundY - 150 * s, 20, BLUE); mult = m; maxMult = Math.max(maxMult, mult); }
+  function dash(dir) {
+    if (state !== "playing" || dashCd > 0) return;
+    dashDir = dir || lastDir || 1; dashT = T.dashTime; dashCd = T.dashCd; inv = Math.max(inv, T.dashTime + .1); burst(x, groundY - 20 * s, 10); beep(260, .14, "triangle", .06, 520);
+  }
 
   function spawnRow() {
-    const sp = speedNow(), iv = intervalNow(), size = lsize(), gw = 3;
+    const R = isRegen(), sp = speedNow() * (R ? 1.1 : 1), iv = intervalNow() * (R ? .6 : 1), size = lsize() * (R ? .72 : 1), gw = 3;
     const reach = Math.max(1, Math.floor(maxV * iv / laneW * .6));
     const g = clamp(prevGap + Math.round(rnd(-reach, reach)), 0, lanes - gw); prevGap = g;
     const fill = Math.min(T.fillMax, T.fillStart + elapsed * T.fillGain);
@@ -163,7 +181,13 @@ const leaderboard = (() => {
       if (elapsed > T.zigAfter && Math.min(Math.abs(l - g), Math.abs(l - (g + gw - 1))) >= 2 && Math.random() < .4) { o.bx = o.x; o.zig = 1; o.w = rnd(2.2, 3.2); o.ph = rnd(0, 6); o.amp = laneW * .55; }
       obstacles.push(o);
     }
-    if (pickupT <= 0 && !shield) { pickups.push({ x: (g + gw / 2) * laneW, y: -size - 14, speed: sp, r: 16 * s }); pickupT = rnd(14, 20); }
+    if (pickupT <= 0 && !(shield && slow > 0)) { const type = !shield && Math.random() < .55 ? "shield" : "dial"; pickups.push({ x: (g + gw / 2) * laneW, y: -size - 14, speed: sp, r: 16 * s, type }); pickupT = rnd(13, 19); }
+    tokenT -= iv;
+    if (tokenT <= 0 && typeof ACTS !== "undefined" && ACTS.length) {
+      const pool = ACTS.filter(a => !a.cancelled && !found.some(f => f.id === a.id)), a = pool.length ? pool[(Math.random() * pool.length) | 0] : null;
+      if (a) { const far = x < (g + gw / 2) * laneW ? gw - .5 : .5; tokens.push({ x: (g + far) * laneW, y: -size - 14, speed: sp, r: 13 * s, act: a, ph: rnd(0, 6) }); }
+      tokenT = rnd(T.tokenEvery[0], T.tokenEvery[1]);
+    }
   }
   function spawnDiag() {
     const size = lsize() * 1.1, left = Math.random() < .5, sp = speedNow() * .8;
@@ -190,17 +214,23 @@ const leaderboard = (() => {
 
   function update(dt) {
     elapsed += dt; setScoreIfChanged();
-    const dir = touchDir || keyDir; let want = 0;
-    if (dir) want = dir * maxV; else if (mouseX !== null) want = clamp((mouseX - x) * 10, -maxV, maxV);
-    vel += (want - vel) * Math.min(1, 18 * dt); x = clamp(x + vel * dt, 30 * s, W - 30 * s);
+    const dir = touchDir || keyDir; let want = 0; const sdt = dt * (slow > 0 ? T.slowScale : 1);
+    if (dir) { want = dir * maxV; lastDir = dir; } else if (mouseX !== null) want = clamp((mouseX - x) * 10, -maxV, maxV);
+    if (isWind()) want += windDir * maxV * T.windPush;
+    if (dashT > 0) { dashT -= dt; vel = dashDir * maxV * T.dashSpeed; } else vel += (want - vel) * Math.min(1, 18 * dt);
+    x = clamp(x + vel * dt, 30 * s, W - 30 * s); dashCd = Math.max(0, dashCd - dt); slow = Math.max(0, slow - dt);
+    if (comboT > 0) { comboT -= dt; if (comboT <= 0 && mult > 1) pop("COMBO WEG", x, groundY - 150 * s, 16); if (comboT <= 0) { combo = 0; mult = 1; } } renderCombo();
+    /* golven: wind / regen met waarschuwing */
+    if (!evKind) { evT -= dt; if (evT <= 0) { evKind = Math.random() < .5 ? "wind" : "regen"; evPhase = "warn"; evClock = T.warnTime; windDir = Math.random() < .5 ? -1 : 1; pop(evKind === "wind" ? (windDir < 0 ? "WIND ←" : "WIND →") : "REGEN!", W / 2, H * .24, 34, BLUE); beep(440, .12, "sawtooth", .05); setTimeout(() => beep(440, .12, "sawtooth", .05), 180); } }
+    else { evClock -= dt; if (evClock <= 0) { if (evPhase === "warn") { evPhase = "on"; evClock = evKind === "wind" ? T.windTime : T.regenTime; } else { evKind = null; evPhase = ""; evT = rnd(T.eventMin, T.eventMax); bonus += 25; pop("OVERLEEFD +25", W / 2, H * .24, 22, BLUE); beep(700, .08, "square", .05); } } }
     const G = geom(x, groundY, clock, 0);
-    spawnT -= dt; pickupT -= dt; diagT -= dt;
-    if (spawnT <= 0) { spawnRow(); spawnT += intervalNow(); }
+    spawnT -= sdt; pickupT -= sdt; diagT -= sdt;
+    if (spawnT <= 0) { spawnRow(); spawnT += intervalNow() * (isRegen() ? .6 : 1); }
     if (elapsed > T.diagAfter && diagT <= 0) { spawnDiag(); diagT = rnd(3.5, 6) - Math.min(2, elapsed / 60); }
     for (let i = obstacles.length - 1; i >= 0; i--) {
-      const o = obstacles[i]; o.age += dt; o.y += o.speed * dt; o.rot += o.spin * dt;
+      const o = obstacles[i]; o.age += sdt; o.y += o.speed * sdt; o.rot += o.spin * sdt;
       if (o.zig) o.x = o.bx + Math.sin(o.age * o.w + o.ph) * o.amp;
-      if (o.vx) o.x += o.vx * dt;
+      if (o.vx) o.x += o.vx * sdt;
       if (inv <= 0) {
         const g = gapTo(o.x, o.y, o.size * .4, G);
         if (g < 0) {
@@ -209,20 +239,35 @@ const leaderboard = (() => {
         }
         if (g < T.nearPx) o.near = true;
       }
-      if (o.near && !o.paid && o.y > groundY - 50 * s) { o.paid = true; bonus += T.nearBonus; pop("+" + T.nearBonus, x, groundY - 140 * s, 16, BLUE); beep(900, .04, "triangle", .04); }
+      if (o.near && !o.paid && o.y > groundY - 50 * s) { o.paid = true; const pts = T.nearBonus * mult; bonus += pts; gain(1); pop("+" + pts, x, groundY - 140 * s, 16, BLUE); beep(900 + mult * 60, .04, "triangle", .04); }
       if (o.y > groundY + 20 * s || o.x < -90 || o.x > W + 90) { dodged++; obstacles.splice(i, 1); }
     }
     for (let i = pickups.length - 1; i >= 0; i--) {
-      const p = pickups[i]; p.y += p.speed * dt;
-      if (gapTo(p.x, p.y, p.r, G) < 0) { shield = 1; burst(p.x, p.y, 10); pop("SCHILD!", x, groundY - 130 * s, 20, BLUE); beep(520, .09, "square", .05, 500); pickups.splice(i, 1); }
+      const p = pickups[i]; p.y += p.speed * sdt;
+      if (gapTo(p.x, p.y, p.r, G) < 0) {
+        burst(p.x, p.y, 10);
+        if (p.type === "dial") { slow = T.slowTime; pop("DIAL: SLOW-MO", x, groundY - 130 * s, 20, BLUE); beep(700, .25, "sine", .06, -450); }
+        else { shield = 1; pop("SCHILD!", x, groundY - 130 * s, 20, BLUE); beep(520, .09, "square", .05, 500); }
+        pickups.splice(i, 1); try { navigator.vibrate && navigator.vibrate(25); } catch {}
+      }
       else if (p.y > groundY + 20 * s) pickups.splice(i, 1);
+    }
+    for (let i = tokens.length - 1; i >= 0; i--) {
+      const k = tokens[i]; k.y += k.speed * sdt;
+      if (gapTo(k.x, k.y, k.r, G) < 0) {
+        const pts = T.tokenPts * mult; bonus += pts; gain(2); found.push(k.act); burst(k.x, k.y, 12);
+        pop(k.act.name, x, groundY - 160 * s, 18, BLUE); pop("+" + pts, x, groundY - 135 * s, 14); beep(784, .06, "square", .04); setTimeout(() => beep(1046, .09, "square", .04), 70); try { navigator.vibrate && navigator.vibrate(20); } catch {}
+        tokens.splice(i, 1);
+      } else if (k.y > groundY + 20 * s) tokens.splice(i, 1);
     }
     inv = Math.max(0, inv - dt);
     const n = Math.floor(score / T.nightEvery) % 2 === 1;
     if (n !== night) { night = n; root.classList.toggle("night", n); flash = .3; }
     while (score >= nextMile) {
       pop(String(nextMile), W / 2, H * .3, 54); flash = .25; beep(660, .07, "square", .05); setTimeout(() => beep(880, .1, "square", .05), 80);
-      if (typeof ACTS !== "undefined" && ACTS.length) pop(ACTS[(Math.random() * ACTS.length) | 0].name, W / 2, H * .3 + 40, 18);
+      const st = STAGES.find(z => z[1] === nextMile && z[1] > 0);
+      if (st) pop(st[0], W / 2, H * .3 + 44, 24, BLUE);
+      else if (typeof ACTS !== "undefined" && ACTS.length) pop(ACTS[(Math.random() * ACTS.length) | 0].name, W / 2, H * .3 + 40, 18);
       nextMile += T.mile;
     }
     if (!recShown && bestAtStart > 0 && score > bestAtStart) { recShown = true; pop("NIEUW RECORD!", W / 2, H * .42, 26, BLUE); beep(880, .12, "square", .05, 400); }
@@ -274,7 +319,12 @@ const leaderboard = (() => {
     cx.fillStyle = P.ink; cx.fillRect(0, groundY + 9 * s, W, 4); cx.fillStyle = P.gfill; cx.fillRect(0, groundY + 13 * s, W, H);
     const spr = night ? sprites[1] : sprites[0];
     for (const o of obstacles) { cx.save(); cx.translate(o.x, o.y); cx.rotate(o.rot); cx.drawImage(spr, -o.size / 2, -o.size / 2, o.size, o.size); cx.restore(); }
-    for (const p of pickups) { cx.fillStyle = BLUE; cx.beginPath(); cx.arc(p.x, p.y, p.r, 0, 7); cx.fill(); cx.strokeStyle = "#fff"; cx.lineWidth = 2.5; cx.beginPath(); cx.arc(p.x, p.y, p.r - 3, 0, 7); cx.stroke(); cx.fillStyle = "#fff"; star(p.x, p.y, p.r * .6); }
+    for (const p of pickups) {
+      if (p.type === "dial") { cx.fillStyle = "#fff"; cx.beginPath(); cx.arc(p.x, p.y, p.r, 0, 7); cx.fill(); cx.strokeStyle = BLUE; cx.lineWidth = 3.5; cx.beginPath(); cx.arc(p.x, p.y, p.r - 1.5, 0, 7); cx.stroke(); const a = -2.4 + Math.sin(clock * 3 + p.x) * .7; cx.lineWidth = 3; cx.beginPath(); cx.moveTo(p.x, p.y); cx.lineTo(p.x + Math.cos(a) * p.r * .7, p.y + Math.sin(a) * p.r * .7); cx.stroke(); cx.fillStyle = BLUE; cx.beginPath(); cx.arc(p.x, p.y, 3, 0, 7); cx.fill(); }
+      else { cx.fillStyle = BLUE; cx.beginPath(); cx.arc(p.x, p.y, p.r, 0, 7); cx.fill(); cx.strokeStyle = "#fff"; cx.lineWidth = 2.5; cx.beginPath(); cx.arc(p.x, p.y, p.r - 3, 0, 7); cx.stroke(); cx.fillStyle = "#fff"; star(p.x, p.y, p.r * .6); }
+    }
+    for (const k of tokens) { const wob = Math.sin(clock * 4 + k.ph) * 2; cx.fillStyle = P.ink; cx.beginPath(); cx.arc(k.x, k.y + wob, k.r, 0, 7); cx.fill(); cx.strokeStyle = P.paper; cx.lineWidth = 1.5; for (const rr of [.78, .58]) { cx.beginPath(); cx.arc(k.x, k.y + wob, k.r * rr, 0, 7); cx.stroke(); } cx.fillStyle = BLUE; cx.beginPath(); cx.arc(k.x, k.y + wob, k.r * .34, 0, 7); cx.fill(); cx.fillStyle = P.paper; cx.beginPath(); cx.arc(k.x, k.y + wob, 1.8, 0, 7); cx.fill(); }
+    if (isWind() && state === "playing") { cx.strokeStyle = BLUE; cx.lineWidth = 2; cx.globalAlpha = .35; for (let i = 0; i < 14; i++) { const yy = (i * 97 + clock * 260) % H, xx = ((i * 131 + clock * 700 * windDir) % (W + 120) + W + 120) % (W + 120) - 60; cx.beginPath(); cx.moveTo(xx, yy); cx.lineTo(xx + 46 * windDir, yy); cx.stroke(); } cx.globalAlpha = 1; }
     if (inv > 0 && state === "playing") cx.globalAlpha = Math.floor(clock * 14) % 2 ? .35 : 1;
     wapper(x, groundY, clock, def, P); cx.globalAlpha = 1;
     if (shield && state === "playing") { cx.strokeStyle = BLUE; cx.lineWidth = 3; cx.globalAlpha = .6 + Math.sin(clock * 8) * .3; cx.beginPath(); cx.ellipse(x, groundY - 62 * s, 58 * s, 84 * s, 0, 0, 7); cx.stroke(); cx.globalAlpha = 1; }
@@ -283,6 +333,11 @@ const leaderboard = (() => {
     for (const p of pops) { cx.globalAlpha = Math.min(1, (p.life - p.t) * 2.5); cx.font = `900 ${p.size}px "Arial Black",Arial,sans-serif`; cx.lineWidth = 4; cx.strokeStyle = P.paper; cx.strokeText(p.txt, p.x, p.y - p.t * 30); cx.fillStyle = p.col || P.ink; cx.fillText(p.txt, p.x, p.y - p.t * 30); }
     cx.globalAlpha = 1;
     if (flash > 0) { cx.fillStyle = `rgba(0,0,255,${Math.min(.3, flash)})`; cx.fillRect(0, 0, W, H); }
+    if (state === "playing") {
+      if (slow > 0) { cx.strokeStyle = BLUE; cx.lineWidth = 6; cx.globalAlpha = .5 + Math.sin(clock * 6) * .2; cx.strokeRect(3, 3, W - 6, H - 6); cx.globalAlpha = 1; }
+      const bw = 96 * s, bx = 12, by = H - 17 * s, rdy = dashCd <= 0; cx.fillStyle = P.lane; cx.fillRect(bx, by, bw, 7 * s); cx.fillStyle = rdy ? BLUE : P.base; cx.fillRect(bx, by, bw * (1 - dashCd / T.dashCd), 7 * s);
+      cx.font = `800 ${10 * s}px Arial,sans-serif`; cx.textAlign = "left"; cx.textBaseline = "bottom"; cx.fillStyle = rdy ? BLUE : P.base; cx.fillText(tr("DASH") + (rdy ? " ✓" : ""), bx, by - 2); cx.textAlign = "center"; cx.textBaseline = "middle";
+    }
     cx.restore();
   }
   function fx(dt) {
@@ -305,12 +360,23 @@ const leaderboard = (() => {
   function on(sel, fn) { const el = ov.querySelector(sel); if (el) el.addEventListener("click", () => { if (performance.now() < lock) return; fn(el); }); }
   function showStart() {
     state = "start"; bestEl.textContent = "Record " + best;
-    showT(`<h2>Wapperman</h2><p>Ontwijk de logo's, ook met je armen. Pak de blauwe ster voor een schild. Houd links of rechts op je scherm ingedrukt. Op desktop: muis of pijltjestoetsen.</p><button class="wg-btn" id="a">Start</button><button class="wg-btn alt" id="b">Top 10</button>`,
+    showT(`<h2>Wapperman</h2><p>Ontwijk de logo's, ook met je armen. Houd links of rechts op je scherm ingedrukt. Dubbel tikken = dash. Pak de ster voor een schild, de radio-dial voor slow-mo en de vinyls om bands te ontdekken. Dicht langs een logo geeft combo-punten.</p><p style="font-size:13px;opacity:.7">Desktop: muis of pijltjestoetsen, spatie = dash.</p><button class="wg-btn" id="a">Start</button><button class="wg-btn alt" id="b">Top 10</button>`,
       () => { on("#a", start); on("#b", () => showTop()); });
   }
   function gameOver() {
     state = "over"; lock = performance.now() + 600; bestEl.textContent = "Record " + best;
-    showT(`<h2>${isRec ? "Nieuw record!" : "Af!"}</h2><p>Score <b>${score}</b> · Record <b>${best}</b><br>Logo's ontweken: <b>${dodged}</b></p><p class="wg-q" id="qm"></p><div id="sbox"><input id="n" maxlength="16" placeholder="Naam" autocomplete="off" enterkeyhint="done" aria-label="Naam"><button class="wg-btn" id="sv" disabled>Opslaan in Top 10</button></div><button class="wg-btn alt" id="r">Opnieuw spelen</button><button class="wg-btn alt" id="t">Bekijk Top 10</button>`, () => {
+    const chips = found.length ? `<p class="wg-q">Bands ontdekt</p><div class="wg-chips">${found.slice(0, 8).map(f => `<button class="wg-chip ${typeof isFav === "function" && isFav(f.id) ? "on" : ""}" data-f="${esc(f.id)}" data-n="${esc(f.name)}">${typeof isFav === "function" && isFav(f.id) ? "✓ " : "+ "}${esc(f.name)}</button>`).join("")}</div><p style="font-size:13px;opacity:.7;margin-top:-8px">Tik om bij je favorieten te zetten</p>` : "";
+    showT(`<h2>${isRec ? "Nieuw record!" : "Af!"}</h2><p>Score <b>${score}</b> · Record <b>${best}</b><br>Logo's ontweken: <b>${dodged}</b> · Max combo: <b>x${maxMult}</b></p>${chips}<p class="wg-q" id="qm"></p><div id="sbox"><input id="n" maxlength="16" placeholder="Naam" autocomplete="off" enterkeyhint="done" aria-label="Naam"><button class="wg-btn" id="sv" disabled>Opslaan in Top 10</button></div><button class="wg-btn alt" id="r">Opnieuw spelen</button><button class="wg-btn alt" id="t">Bekijk Top 10</button><button class="wg-btn alt" id="sh">Deel je score</button>`, () => {
+      ov.querySelectorAll(".wg-chip").forEach(c => c.addEventListener("click", () => {
+        if (performance.now() < lock || typeof isFav !== "function" || typeof saveFavs !== "function") return;
+        const id = c.dataset.f, was = isFav(id); try { favs = was ? favs.filter(z => z !== id) : [...favs, id]; saveFavs(); } catch { return; }
+        c.classList.toggle("on", !was); c.textContent = (!was ? "✓ " : "+ ") + c.dataset.n;
+      }));
+      on("#sh", el => {
+        const url = location.origin + location.pathname + "#/game", text = Lg(`Ik haalde ${score} punten in Wapperman (Left of the Dial 2026). Kun jij dit verbeteren?`, `I scored ${score} in Wapperman (Left of the Dial 2026). Can you beat it?`);
+        if (navigator.share) navigator.share({ title: "Wapperman", text, url }).catch(() => {});
+        else if (navigator.clipboard) navigator.clipboard.writeText(text + " " + url).then(() => { el.textContent = Lg("Gekopieerd", "Copied"); }).catch(() => {});
+      });
       const n = ov.querySelector("#n"), sv = ov.querySelector("#sv"), qm = ov.querySelector("#qm"), box = ov.querySelector("#sbox");
       n.value = ""; sv.disabled = true;
       n.addEventListener("input", () => { sv.disabled = !n.value.trim(); });
@@ -344,8 +410,9 @@ const leaderboard = (() => {
   function steer(e) { const r = cv.getBoundingClientRect(); touchDir = e.clientX < r.left + r.width / 2 ? -1 : 1; }
   function onDown(e) {
     if (state !== "playing" || e.target.closest(".wg-btns")) return;
-    if (e.pointerType === "mouse") { mouseX = e.clientX - cv.getBoundingClientRect().left; return; }
+    if (e.pointerType === "mouse") { mouseX = e.clientX - cv.getBoundingClientRect().left; const nw = performance.now(); if (nw - lastTap.t < 320) { dash(mouseX < x ? -1 : 1); lastTap = { t: 0, d: 0 }; } else lastTap = { t: nw, d: 0 }; return; }
     e.preventDefault(); active = e.pointerId; try { root.setPointerCapture(e.pointerId); } catch {} steer(e);
+    const nw = performance.now(); if (touchDir === lastTap.d && nw - lastTap.t < 320) { dash(touchDir); lastTap = { t: 0, d: 0 }; } else lastTap = { t: nw, d: touchDir };
   }
   function onMove(e) {
     if (state !== "playing") return;
@@ -356,7 +423,7 @@ const leaderboard = (() => {
   function onKeyDown(e) {
     if (e.target && /INPUT|BUTTON|TEXTAREA/.test(e.target.tagName)) return;
     const l = ["ArrowLeft", "a", "A"].includes(e.key), r = ["ArrowRight", "d", "D"].includes(e.key);
-    if (state === "playing") { if (l) { keyDir = -1; mouseX = null; } if (r) { keyDir = 1; mouseX = null; } }
+    if (state === "playing") { if (l) { keyDir = -1; mouseX = null; } if (r) { keyDir = 1; mouseX = null; } if ([" ", "Shift", "ArrowUp", "w", "W"].includes(e.key)) { e.preventDefault(); dash(keyDir || lastDir); } }
     else if ((e.key === "Enter" || e.key === " ") && (state === "start" || state === "over") && performance.now() > lock) { e.preventDefault(); start(); }
   }
   function onKeyUp(e) { if (["ArrowLeft", "a", "A", "ArrowRight", "d", "D"].includes(e.key)) keyDir = 0; }
@@ -372,12 +439,12 @@ const leaderboard = (() => {
     if (root) return;
     if (!document.getElementById("wg-style")) { const st = document.createElement("style"); st.id = "wg-style"; st.textContent = CSS; document.head.appendChild(st); }
     root = document.createElement("div"); root.className = "wg";
-    root.innerHTML = `<canvas></canvas><div class="wg-hud"><div><div class="wg-score">0</div><div class="wg-best"></div></div><div class="wg-btns"><button class="wg-snd" aria-label="Geluid"></button><button class="wg-x" aria-label="Sluiten">✕</button></div></div><div class="wg-ov"></div>`;
+    root.innerHTML = `<canvas></canvas><div class="wg-hud"><div><div class="wg-score">0</div><div class="wg-best"></div><div class="wg-combo"></div></div><div class="wg-btns"><button class="wg-snd" aria-label="Geluid"></button><button class="wg-x" aria-label="Sluiten">✕</button></div></div><div class="wg-ov"></div>`;
     document.body.appendChild(root);
-    cv = root.querySelector("canvas"); cx = cv.getContext("2d"); scoreEl = root.querySelector(".wg-score"); bestEl = root.querySelector(".wg-best"); ov = root.querySelector(".wg-ov"); sndEl = root.querySelector(".wg-snd");
+    cv = root.querySelector("canvas"); cx = cv.getContext("2d"); scoreEl = root.querySelector(".wg-score"); bestEl = root.querySelector(".wg-best"); comboEl = root.querySelector(".wg-combo"); ov = root.querySelector(".wg-ov"); sndEl = root.querySelector(".wg-snd");
     prevOverflow = [document.documentElement.style.overflow, document.body.style.overflow];
     document.documentElement.style.overflow = document.body.style.overflow = "hidden";
-    sprites = [makeSprite(false), makeSprite(true)]; mouseX = null; keyDir = touchDir = 0; active = null; last = 0; x = 0; obstacles = []; pickups = []; particles = []; pops = []; def = 0; night = false;
+    sprites = [makeSprite(false), makeSprite(true)]; mouseX = null; keyDir = touchDir = 0; active = null; last = 0; x = 0; obstacles = []; pickups = []; tokens = []; particles = []; pops = []; def = 0; night = false;
     sndEl.textContent = muted ? "🔇" : "🔊";
     sndEl.addEventListener("click", () => { muted = !muted; store.set(MUTE_KEY, muted ? "1" : "0"); sndEl.textContent = muted ? "🔇" : "🔊"; if (!muted) beep(660, .06); });
     resize(); ro = new ResizeObserver(resize); ro.observe(root);
@@ -397,4 +464,5 @@ const leaderboard = (() => {
     root.remove(); root = null; state = "start";
   }
   window.WappermanGame = { mount, unmount };
+  if (window.__WG_TEST) window.__WG_API = { get: () => ({ state, x, W, H, s, groundY, laneW, obstacles, pickups, tokens, score, elapsed, mult, found, slow, dashCd, evKind, evPhase, windDir, maxV }), setKey: d => { keyDir = d; }, dash, start };
 })();
