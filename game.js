@@ -179,7 +179,7 @@ const leaderboard = (() => {
     if (pickupT <= 0 && !(shield && slow > 0)) { const type = !shield && Math.random() < .55 ? "shield" : "dial"; pickups.push({ x: (g + gw / 2) * laneW, y: -size - 14, speed: sp, r: 16 * s, type }); pickupT = rnd(13, 19); }
     tokenT -= iv;
     if (tokenT <= 0 && typeof ACTS !== "undefined" && ACTS.length) {
-      const pool = ACTS.filter(a => !a.cancelled && !found.some(f => f.id === a.id)), a = pool.length ? pool[(Math.random() * pool.length) | 0] : null;
+      const pool = ACTS.filter(a => !a.cancelled && !a.after && a.genre !== "Extra" && !found.some(f => f.id === a.id)), a = pool.length ? pool[(Math.random() * pool.length) | 0] : null;
       if (a) { const far = x < (g + gw / 2) * laneW ? gw - .5 : .5; tokens.push({ x: (g + far) * laneW, y: -size - 14, speed: sp, r: 13 * s, act: a, ph: rnd(0, 6) }); }
       tokenT = rnd(T.tokenEvery[0], T.tokenEvery[1]);
     }
