@@ -250,11 +250,22 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
   const accLine = n => { const r = ACC.find(x => n.startsWith(x[0])); if (!r) return ""; const note = L(r[2], r[3]); return "♿ " + (r[1] ? L("Rolstoeltoegankelijk", "Wheelchair accessible") : L("Niet rolstoeltoegankelijk", "Not wheelchair accessible")) + (note ? " · " + note : ""); };
 
   /* ---- loopafstand (alleen als lineup.json "coords" bevat) ---- */
-  const DEF_COORDS = {"Annabel": [51.92536, 4.47601], "Arminius": [51.91494, 4.47371], "Baanhof": [51.91282, 4.48025], "Bird": [51.92671, 4.47881], "Barrio": [51.9256, 4.478], "De Doelen": [51.92182, 4.47329], "Mono": [51.92858, 4.47827], "Paradijskerk": [51.9169, 4.4725], "Reijngoud": [51.9285, 4.47811], "Remastered": [51.91051, 4.4828], "Rotown": [51.91694, 4.47167], "Sahara": [51.92525, 4.4759], "Salsability": [51.9246, 4.4779], "Stalles": [51.9167, 4.4712], "TR": [51.91998, 4.4741], "Uniek": [51.9187, 4.47], "V11": [51.91717, 4.48452], "V2_": [51.9145, 4.4707], "Waalse Kerk": [51.91384, 4.47991], "Worm": [51.915, 4.47]}, ADDR = {"Annabel": "Schiestraat 20", "Arminius": "Museumpark 3", "Baanhof": "Baan 159", "Bird": "Raampoortstraat 24-28", "Barrio": "Teilingerstraat 19B", "De Doelen": "Schouwburgplein 50", "Mono": "Vijverhofstraat 15", "Paradijskerk": "Nieuwe Binnenweg 25", "Reijngoud": "Vijverhofstraat 10", "Remastered": "Willemsplein 79", "Rotown": "Nieuwe Binnenweg 19", "Sahara": "Schiestraat 18", "Salsability": "Delftsestraat 9", "Stalles": "Nieuwe Binnenweg 11A", "TR": "Schouwburgplein 25", "Uniek": "Mauritsweg 34", "V11": "Wijnhaven t/o 101", "V2_": "Eendrachtsstraat 10", "Waalse Kerk": "Pierre Baylestraat 1", "Worm": "Boomgaardsstraat 71"};
+  const DEF_COORDS = {"Annabel": [51.92536, 4.47601], "Arminius": [51.91494, 4.47371], "Baanhof": [51.91282, 4.48025], "Bird": [51.92671, 4.47881], "Barrio": [51.9256, 4.478], "De Doelen": [51.92182, 4.47329], "Mono": [51.92858, 4.47827], "Paradijskerk": [51.9169, 4.4725], "Reijngoud": [51.9285, 4.47811], "Remastered": [51.91051, 4.4828], "Rotown": [51.91694, 4.47167], "Sahara": [51.92525, 4.4759], "Salsability": [51.9246, 4.4779], "Stalles": [51.9167, 4.4712], "TR": [51.91998, 4.4741], "Uniek": [51.9187, 4.47], "V11": [51.91717, 4.48452], "V2_": [51.9145, 4.4707], "Waalse Kerk": [51.91384, 4.47991], "Worm": [51.915, 4.47]}, ADDR = {"Time is the New Space": "Schiekade 185", "Tramhuis": "Hermesplantsoen 3", "Zondebok en Zwarte Schaap": "Witte de Withstraat 96", "Annabel": "Schiestraat 20", "Arminius": "Museumpark 3", "Baanhof": "Baan 159", "Bird": "Raampoortstraat 24-28", "Barrio": "Teilingerstraat 19B", "De Doelen": "Schouwburgplein 50", "Mono": "Vijverhofstraat 15", "Paradijskerk": "Nieuwe Binnenweg 25", "Reijngoud": "Vijverhofstraat 10", "Remastered": "Willemsplein 79", "Rotown": "Nieuwe Binnenweg 19", "Sahara": "Schiestraat 18", "Salsability": "Delftsestraat 9", "Stalles": "Nieuwe Binnenweg 11A", "TR": "Schouwburgplein 25", "Uniek": "Mauritsweg 34", "V11": "Wijnhaven t/o 101", "V2_": "Eendrachtsstraat 10", "Waalse Kerk": "Pierre Baylestraat 1", "Worm": "Boomgaardsstraat 71"};
   let cached = LS.get("lotd-lineup", null), coords = Object.assign({}, DEF_COORDS, (cached && cached.coords) || {});
   const baseName = n => n.replace(/ (Up|Down|WBH|Foyer|1|2)( & (Up|Down|2))?$/, "");
   const coordOf = n => coords[n] || coords[baseName(n)];
   const addrOf = n => ADDR[n] || ADDR[baseName(n)] || "";
+  /* ---- ontbrekende coördinaten opzoeken via adres (eenmalig, daarna bewaard) ---- */
+  const GEOQ = { "Time is the New Space": "Schiekade 185, 3013 BR Rotterdam", "Tramhuis": "Hermesplantsoen 3, 3014 GW Rotterdam", "Zondebok en Zwarte Schaap": "Witte de Withstraat 96, 3012 LC Rotterdam" };
+  (function geoMissing() {
+    const store = LS.get("lotd-geo", {}) || {};
+    Object.keys(GEOQ).forEach(n => {
+      if (store[n]) { if (!coords[n]) coords[n] = store[n]; return; }
+      if (coords[n] || !navigator.onLine) return;
+      fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=nl&q=" + encodeURIComponent(GEOQ[n]), { headers: { Accept: "application/json" } })
+        .then(r => r.json()).then(j => { if (!j || !j[0]) return; const c = [+(+j[0].lat).toFixed(5), +(+j[0].lon).toFixed(5)]; coords[n] = c; store[n] = c; LS.set("lotd-geo", store); if (route().p === "map") render(true); }).catch(() => {});
+    });
+  })();
   const distM = (p, q) => { const R = 6371000, r = Math.PI / 180, dl = (q[0] - p[0]) * r, dg = (q[1] - p[1]) * r, h = Math.sin(dl / 2) ** 2 + Math.cos(p[0] * r) * Math.cos(q[0] * r) * Math.sin(dg / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };
   const routeUrl = c => "https://www.google.com/maps/dir/?api=1&travelmode=walking&destination=" + c[0] + "," + c[1];
   const walk = (a, b) => { const p = coordOf(venue(a.venueId).name), q2 = coordOf(venue(b.venueId).name); if (!p || !q2) return null; if (a.venueId === b.venueId) return 1; const R = 6371000, r = Math.PI / 180, dl = (q2[0] - p[0]) * r, dg = (q2[1] - p[1]) * r, h = Math.sin(dl / 2) ** 2 + Math.cos(p[0] * r) * Math.cos(q2[0] * r) * Math.sin(dg / 2) ** 2; return Math.max(1, Math.ceil(2 * R * Math.asin(Math.sqrt(h)) * 1.3 / 80)); };
@@ -314,7 +325,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     const uniq = a => [...new Set(a.filter(Boolean))];
     favs = uniq(favBefore.map(mapId)); stars = uniq((silent ? LS.get("lotd-stars", []) : stars).map(mapId)).filter(isFav); friend.ids = uniq(friend.ids.map(mapId));
     hiddenVenues = LS.get("lotd-hidden-venues", []).filter(id => VENUES.some(v => v.id === id)); const sh = sharedFromHash(); if (sh) sharedIds = sh;
-    saveFavs(); saveStars(); saveFriend(); coords = Object.assign({}, DEF_COORDS, j.coords || {});
+    saveFavs(); saveStars(); saveFriend(); coords = Object.assign({}, DEF_COORDS, LS.get("lotd-geo", {}), j.coords || {});
     const ch = []; favBefore.forEach(id => { const o = oldById.get(id); if (!o) return; const nid = mapId(id), n = nid && act(nid);
       if (!n) ch.push({ o, txt: L("staat niet meer in het programma", "is no longer in the program")});
       else if (n.cancelled && !o.cancelled) ch.push({ o, txt: L("vervalt", "is cancelled")});
