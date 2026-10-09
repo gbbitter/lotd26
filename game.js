@@ -1,7 +1,7 @@
 /* Wapperman v4 – gedeelde topscores + verplichte naam.
    STAP 1: maak een gratis Supabase-project, voer de SQL uit (zie handleiding) en vul hieronder URL en "anon public" key in.
    Laat je ze leeg, dan werkt alles nog steeds, maar staan de scores alleen op dit apparaat. */
-const LB = { url: "", key: "" };   // bv. url: "https://abcd1234.supabase.co", key: "eyJ..."
+const LB = { url: "https://kqaacbzeaokkdceirdfj.supabase.co/rest/v1/", key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxYWFjYnplYW9ra2RjZWlyZGZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0Mzc0MDIsImV4cCI6MjEwNzAxMzQwMn0.ActIR4sojnRWQyC_kJdN6BUl2u2q5BnY3cW57N8Cthw" };   // bv. url: "https://abcd1234.supabase.co", key: "eyJ..."
 
 const leaderboard = (() => {
   const LOCAL = "lotd-wapperman-scores", CACHE = "lotd-wapperman-top-cache", PEND = "lotd-wapperman-pending";
