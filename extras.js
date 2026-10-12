@@ -315,6 +315,10 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     const tools = document.createElement("div"); tools.className = "tb-tools";
     tools.innerHTML = `<span class="tb-off" id="tb-off" hidden>Offline</span><button class="tb-btn" data-go="/search" data-tb-search aria-label="Zoeken"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button><button class="tb-btn" data-menu aria-label="Menu"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="19" cy="12" r="2.2"/></svg></button>`;
     bar.appendChild(home); bar.appendChild(h2); bar.appendChild(tools); }
+  /* lopende balk bovenaan (vervangt de stilstaande header:before) */
+  { const hd = document.querySelector("header"), t = document.createElement("div"); t.className = "lotd-ticker"; t.setAttribute("aria-hidden", "true");
+    const one = "LEFT OF THE DIAL 2026 \u2022 21 / 22 / 23 / 24 OCTOBER \u2022 ROTTERDAM \u2022 SOLD OUT \u2022 ";
+    t.innerHTML = `<div class="lt-track"><span>${one.repeat(3)}</span><span>${one.repeat(3)}</span></div>`; if (hd) hd.prepend(t); }
   const paintCtl = () => { ctl.querySelectorAll("[data-lang]").forEach(b => b.classList.toggle("on", b.dataset.lang === lang)); ctl.querySelector("[data-aa]").classList.toggle("on", big); };
   function setLang(l) { lang = l; window.LOTD_LANG = l; localStorage.setItem("lotd-lang", l); document.documentElement.lang = l; setDays(); paintCtl(); paintStatus(); render(true); }
 
@@ -647,7 +651,12 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
   document.addEventListener("keydown", e => { if (e.key === "Escape") { if (sheet) { sheet = null; renderModal(); } else if (genreOpen) { genreOpen = false; renderModal(); render(true); } } });
 
   const css = document.createElement("style");
-  css.textContent = `html.big{width:auto!important;padding:0!important;border:0!important;border-radius:0!important;min-height:0!important;color:inherit!important;font-weight:inherit!important}
+  css.textContent = `header:before{content:none!important;display:none!important}
+.lotd-ticker{position:absolute;left:0;right:0;top:0;height:34px;background:#050505;color:#fff;overflow:hidden;display:flex;align-items:center;z-index:1}
+.lt-track{display:flex;flex:none;white-space:nowrap;animation:lotdTick 40s linear infinite;will-change:transform}.lt-track span{flex:none;font:11px Arial,Helvetica,sans-serif;letter-spacing:.12em;padding-right:0}
+@keyframes lotdTick{from{transform:translate3d(0,0,0)}to{transform:translate3d(-50%,0,0)}}
+@media (prefers-reduced-motion:reduce){.lt-track{animation:none}}
+html.big{width:auto!important;padding:0!important;border:0!important;border-radius:0!important;min-height:0!important;color:inherit!important;font-weight:inherit!important}
 #statusbar{display:none!important}body:has(#modal .ov) #lotd-status{display:none!important}
 html.big{--labw:132px}html.big .lab{font-size:13px!important}html.big .lab.long{font-size:12px!important}html.big .lab.xlong{font-size:11px!important}
 [data-filtersheet] .sheet-actions button{min-height:48px;font-size:15px!important;font-weight:700}
