@@ -299,18 +299,38 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
   }
 
   /* ---- statusbalk (offline, updates, mededelingen, installeer-tip) ---- */
-  const bar = document.createElement("div"); bar.id = "lotd-status"; bar.setAttribute("role", "status"); document.querySelector("header").after(bar);
+  const bar = document.createElement("div"); bar.id = "lotd-status"; bar.setAttribute("role", "status"); document.body.appendChild(bar);
   const S = {}, PRIO = { update: 5, changes: 4, notice: 3, offline: 2, install: 1, saved: 0 };
   const post = (k, p) => { S[k] = p; paintStatus(); }, drop = k => { delete S[k]; paintStatus(); };
   function paintStatus() {
     const k = Object.keys(S).sort((a, b) => PRIO[b] - PRIO[a])[0];
+    { const off = document.getElementById("tb-off"); if (off) off.hidden = navigator.onLine !== false; }
     if (!k) { bar.className = ""; bar.innerHTML = ""; return; }
-    const p = S[k]; bar.className = "on" + (k === "offline" ? " off" : "");
+    const p = S[k]; bar.className = "on" + (k === "offline" ? " off" : ""); clearTimeout(paintStatus.t); if (k === "offline" || k === "install" || k === "saved") paintStatus.t = setTimeout(() => { if (k === "install") LS.set("lotd-install-x", true); drop(k); }, k === "install" ? 12000 : 6000);
+    const off = document.getElementById("tb-off"); if (off) off.hidden = navigator.onLine !== false;
     bar.innerHTML = `<span>${p.text()}${k !== "offline" && navigator.onLine === false ? " · Offline" : ""}</span>${p.btn ? `<button data-st-act="${k}">${p.btn()}</button>` : ""}${p.x ? `<button class="sx" data-st-x="${k}" aria-label="Sluiten">✕</button>` : ""}`; trNode(bar);
   }
-  const ctl = document.createElement("div"); ctl.id = "lotd-ctl"; ctl.innerHTML = `<button data-lang="nl">NL</button><button data-lang="en">EN</button><button data-aa aria-label="Tekstgrootte / Text size">Aa</button>`; { const h2 = document.getElementById("title"), bar = document.createElement("div"); bar.className = "titlebar"; h2.parentNode.insertBefore(bar, h2); bar.appendChild(h2); bar.appendChild(ctl); }
+  const ctl = document.createElement("div"); ctl.id = "lotd-ctl"; ctl.innerHTML = `<button data-lang="nl">NL</button><button data-lang="en">EN</button><button data-aa aria-label="Tekstgrootte / Text size">Aa</button>`; { const h2 = document.getElementById("title"), bar = document.createElement("div"); bar.className = "titlebar"; h2.parentNode.insertBefore(bar, h2);
+    const lg = document.querySelector(".brandbar .lotd-mark"), home = document.createElement("button"); home.className = "tb-logo"; home.setAttribute("data-go", "/"); home.setAttribute("aria-label", "Timetable"); if (lg) home.appendChild(lg.cloneNode(true));
+    const tools = document.createElement("div"); tools.className = "tb-tools";
+    tools.innerHTML = `<span class="tb-off" id="tb-off" hidden>Offline</span><button class="tb-btn" data-go="/search" data-tb-search aria-label="Zoeken"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button><button class="tb-btn" data-menu aria-label="Menu"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="19" cy="12" r="2.2"/></svg></button>`;
+    bar.appendChild(home); bar.appendChild(h2); bar.appendChild(tools); }
   const paintCtl = () => { ctl.querySelectorAll("[data-lang]").forEach(b => b.classList.toggle("on", b.dataset.lang === lang)); ctl.querySelector("[data-aa]").classList.toggle("on", big); };
   function setLang(l) { lang = l; window.LOTD_LANG = l; localStorage.setItem("lotd-lang", l); document.documentElement.lang = l; setDays(); paintCtl(); paintStatus(); render(true); }
+
+  /* ---- menu (taal, tekstgrootte, installeren, delen) ---- */
+  const menuHtml = () => {
+    const inst = standaloneApp() ? "" : `<button class="mn-row" data-install>${L("Installeer de app", "Install the app")}<small>${iosDevice() ? L("Tik op Deel en kies ‘Zet op beginscherm’", "Tap Share, then ‘Add to Home Screen’") : L("Snel openen vanaf je beginscherm, ook offline", "Open from your home screen, also offline")}</small></button>`;
+    return `<div data-menusheet><h2>Menu</h2>
+      <div class="mn-lab">${L("Taal", "Language")}</div><div class="mn-seg"><button class="${lang === "nl" ? "on" : ""}" data-lang="nl" aria-pressed="${lang === "nl"}">Nederlands</button><button class="${lang === "en" ? "on" : ""}" data-lang="en" aria-pressed="${lang === "en"}">English</button></div>
+      <div class="mn-lab">${L("Tekstgrootte", "Text size")}</div><div class="mn-seg"><button class="${big ? "" : "on"}" data-aa-set="0" aria-pressed="${!big}">${L("Normaal", "Normal")}</button><button class="${big ? "on" : ""} mn-big" data-aa-set="1" aria-pressed="${big}">${L("Groot", "Large")}</button></div>
+      <div class="mn-list">${inst}<button class="mn-row" data-share-app>${L("Deel deze app", "Share this app")}<small>lotd.gijsbitter.nl</small></button><a class="mn-row" href="https://leftofthedial.nl" target="_blank" rel="noopener">leftofthedial.nl ↗<small>${L("Tickets, nieuws en meer", "Tickets, news and more")}</small></a></div>
+      <p class="mn-meta">${navigator.onLine === false ? L("Offline · ", "Offline · ") : ""}${L("Tijden bijgewerkt: ", "Times updated: ")}${fmtDate()}</p></div>`;
+  };
+  const standaloneApp = () => navigator.standalone || matchMedia("(display-mode: standalone)").matches;
+  const iosDevice = () => /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const openMenu = () => { sheet = menuHtml(); renderModal(); };
+  const refreshMenu = () => { if (sheet && sheet.indexOf("data-menusheet") > -1) { sheet = menuHtml(); renderModal(); } };
 
   /* ---- offline-indicator ---- */
   let meta = { updated: (cached && cached.updated) || "2026-09-27T12:00:00" };
@@ -385,12 +405,10 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     const notes = [a.endUnknown ? `<p>${L("Start direct na de laatste band van die avond. Eindtijd nog niet bekend.", "Starts straight after the last band of the night. End time not announced.")}</p>` : "", a.cancelled ? `<p class="clash">${L("Vervallen", "Cancelled")}</p>` : "", cl ? `<p class="clash">${cl}</p>` : "", hint ? `<p>${hint}</p>` : "", isFriend(a.id) ? `<p>${L("Je vriend wil dit ook zien", "Your friend wants to see this too")}</p>` : "", nx ? `<p>${nx}</p>` : ""].join("");
     const alt = ACTS.filter(x => x.name === a.name && x.id !== a.id).sort((x, y) => DAYS.findIndex(d2 => d2.id === x.day) - DAYS.findIndex(d2 => d2.id === y.day) || byTime(x, y));
     const rows = [
-      c0 ? `<a class="m-row" href="${routeUrl(c0)}" target="_blank" rel="noopener">${sv(SI.pin)}<span><b>${L("Route naar", "Route to")} ${v.name}</b>${addrOf(v.name) ? `<small>${addrOf(v.name)}, Rotterdam</small>` : ""}</span></a>` : "",
-      c0 ? `<button class="m-row" data-here="${c0[0]},${c0[1]}">${sv(SI.walk)}<span><b>${L("Looptijd vanaf mijn locatie", "Walking time from my location")}</b><small>${L("Tik om je locatie te gebruiken", "Tap to use your location")}</small></span></button>` : "",
-      acc ? `<div class="m-row">${sv(SI.acc)}<span><b>${acc.replace("♿ ", "")}</b></span></div>` : "",
+      c0 ? `<div class="m-row m-route"><a href="${routeUrl(c0)}" target="_blank" rel="noopener">${sv(SI.pin)}<span><b>${L("Route", "Directions")}</b>${addrOf(v.name) ? `<small>${addrOf(v.name)}</small>` : ""}</span></a><button class="m-walk" data-here="${c0[0]},${c0[1]}">${sv(SI.walk, 18)}<b>${L("Looptijd", "Walk time")}</b></button></div>` : "",
       ...alt.map(x => `<button class="m-row" data-open="${x.id}">${sv(SI.cal)}<span><b>${L("Speelt ook", "Also playing")}: ${dayOf(x.day).label} · ${x.start}</b><small>${venue(x.venueId).name}</small></span></button>`)
     ].join("");
-    m.innerHTML = `<div class="ov"><div class="sheet act-sheet" role="dialog" aria-modal="true" aria-label="${a.name}"><div class="grab"></div><button class="x" data-close aria-label="Sluiten">✕</button>${sub ? `<div class="m-sub">${sub}</div>` : ""}<h2>${a.cancelled ? `<s>${a.name}</s>` : a.name}</h2>${url ? `<a class="lnk info" href="${url}" target="_blank" rel="noopener">Meer info op leftofthedial.nl ↗</a>` : ""}<div class="m-when"><b>${timeTxt(a)}</b><span>${d.label} · <i class="dot" style="background:${v.color}"></i>${v.name}</span></div>${notes ? `<div class="m-note">${notes}</div>` : ""}<div class="m-rows">${rows}</div><div class="rate"><button class="r-must ${mustOn ? "on" : ""}" data-must="${a.id}" aria-pressed="${mustOn}">${dial("must", 22)}${L("Moet ik zien", "Must-see")}</button><button class="r-int ${intOn ? "on" : ""}" data-int="${a.id}" aria-pressed="${intOn}">${dial("int", 22)}${L("Interessant", "Interesting")}</button></div></div></div>`;
+    m.innerHTML = `<div class="ov"><div class="sheet act-sheet" role="dialog" aria-modal="true" aria-label="${a.name}"><div class="grab"></div><button class="x" data-close aria-label="Sluiten">✕</button>${sub ? `<div class="m-sub">${sub}</div>` : ""}<h2>${a.cancelled ? `<s>${a.name}</s>` : a.name}</h2>${url ? `<a class="lnk info" href="${url}" target="_blank" rel="noopener">Meer info op leftofthedial.nl ↗</a>` : ""}<div class="m-when"><b>${timeTxt(a)}</b><span>${d.label} · <i class="dot" style="background:${v.color}"></i>${v.name}</span>${acc ? `<small class="m-acc">${sv(SI.acc, 16)}${acc.replace("♿ ", "")}</small>` : ""}</div>${notes ? `<div class="m-note">${notes}</div>` : ""}<div class="m-rows">${rows}</div><div class="rate"><button class="r-must ${mustOn ? "on" : ""}" data-must="${a.id}" aria-pressed="${mustOn}">${dial("must", 22)}${L("Moet ik zien", "Must-see")}</button><button class="r-int ${intOn ? "on" : ""}" data-int="${a.id}" aria-pressed="${intOn}">${dial("int", 22)}${L("Interessant", "Interesting")}</button></div></div></div>`;
     trNode(m);
   };
 
@@ -404,13 +422,26 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     tt.scrollTo({ left: Math.max(0, x), behavior: smooth ? "smooth" : "auto" }); return true;
   }
   let autoNowDone = "";
+  const onFavPage = () => route().p === "favorites";
+  const filterCount = () => (favOnly && !onFavPage() ? 1 : 0) + (selGenres.length ? 1 : 0) + (hiddenVenues.length ? 1 : 0) + (friend.on && friend.ids.length ? 1 : 0);
+  const filterHtml = () => {
+    const sw = (on, attr, t, sub) => `<button class="fl-row" ${attr} role="switch" aria-checked="${on}"><span><b>${t}</b>${sub ? `<small>${sub}</small>` : ""}</span><i class="fl-sw${on ? " on" : ""}" aria-hidden="true"></i></button>`;
+    const go = (attr, t, sub) => `<button class="fl-row" ${attr}><span><b>${t}</b><small>${sub}</small></span><i class="fl-chev" aria-hidden="true">›</i></button>`;
+    const shownV = VENUES.length - hiddenVenues.length;
+    return `<div data-filtersheet><h2>Filter</h2>
+      ${onFavPage() ? "" : sw(favOnly, "data-fl-fav", L("Alleen mijn favorieten", "Only my favourites"), L("Moet ik zien en Interessant", "Must-see and Interesting"))}
+      ${friend.ids.length ? sw(friend.on, "data-fl-friend", L("Lijst van je vriend tonen", "Show your friend's list"), `${friend.ids.length} acts`) : ""}
+      ${go("data-fl-genres", "Genre", selGenres.length ? selGenres.map(cap).join(", ") : L("Alle genres", "All genres"))}
+      ${go("data-fl-venues", L("Locaties", "Venues"), hiddenVenues.length ? L(`${shownV} van ${VENUES.length} zichtbaar`, `${shownV} of ${VENUES.length} shown`) : L("Alle locaties", "All venues"))}
+      <div class="sheet-actions"><button data-filter-clear>${L("Wis alles", "Clear all")}</button><button data-close-sheet>${L("Klaar", "Done")}</button></div></div>`;
+  };
   /* ---- timetable ---- */
   vTimetable = function (onlyFavs) {
     const ids = sharedReadOnly && sharedIds ? sharedIds : null, f = festNow();
     const gOk = a => !selGenres.length || (a.genres || []).some(g => selGenres.includes(g));
     const list = ACTS.filter(a => a.day === day && (!onlyFavs || isFav(a.id)) && (!ids || ids.includes(a.id)) && !hiddenVenues.includes(a.venueId) && gOk(a));
     const today = dayOf(day).date === f.ds, jump = today ? `<button class="to-now" data-to-now>${sv(SI.walk, 18)}${L("Naar nu", "Jump to now")}</button>` : "";
-    const segHtml = `<div class="seg" role="tablist" aria-label="Kies een festivaldag">${DAYS.map(x => `<button class="${x.id === day ? "on" : ""}" data-day="${x.id}" role="tab" aria-selected="${x.id === day}">${x.label}</button>`).join("")}</div><div class="tt-tools">${jump}<button class="${favOnly || sharedReadOnly ? "on" : ""}" data-fav-only>${sharedReadOnly ? "Gedeelde lijst" : "♡ Alleen favorieten"}</button><button class="${selGenres.length ? "on" : ""}" data-genres>Genre${selGenres.length ? " · " + selGenres.length : ""}</button>${friend.ids.length ? `<button class="${friend.on ? "on" : ""}" data-friend>Vriend · ${friend.ids.length}</button>` : ""}<button class="venue-btn" data-venues>Locaties${hiddenVenues.length ? ` · ${VENUES.length - hiddenVenues.length}` : ""}</button></div>`;
+    const segHtml = `<div class="seg" role="tablist" aria-label="Kies een festivaldag">${DAYS.map(x => `<button class="${x.id === day ? "on" : ""}" data-day="${x.id}" role="tab" aria-selected="${x.id === day}">${x.label}</button>`).join("")}</div><div class="tt-tools">${jump}${sharedReadOnly ? `<button class="on" data-fav-only>${L("Gedeelde lijst ✕", "Shared list ✕")}</button>` : ""}<button class="flt-btn${filterCount() ? " on" : ""}" data-filter><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>Filter${filterCount() ? ` · ${filterCount()}` : ""}</button>${filterCount() ? `<button class="flt-clear" data-filter-clear aria-label="${L("Filters wissen", "Clear filters")}">${L("Wis", "Clear")}</button>` : ""}</div>`;
     if (!list.length) return segHtml + `<div class="empty">${selGenres.length ? "Geen acts met dit genre op deze dag." : onlyFavs ? (favs.length ? "Geen favorieten op deze dag." : "Nog geen favorieten.<br>Tik op het hartje bij een act om hem hier te zien.") : "Geen acts."}</div>`;
     const start = Math.floor(Math.min(...list.map(a => mins(a.start))) / 60) * 60, end = Math.ceil(Math.max(...list.map(a => mins(a.end))) / 60) * 60, hours = (end - start) / 60, W = hours * PPH;
     let ticks = ""; for (let i = 0; i <= hours; i++) ticks += `<div class="tick" style="left:${i * PPH}px">${String((start / 60 + i) % 24).padStart(2, "0")}:00</div>`;
@@ -426,7 +457,8 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
   vFavs = function () {
     const banner = sharedIds && !sharedReadOnly ? `<div class="share-banner"><b>Favorieten van een vriend</b><button data-view-shared>Bekijk</button><button data-compare-shared>Vergelijk met mijn lijst</button><button data-add-shared>Toevoegen aan mijn favorieten</button></div>` : "";
     const both = friend.on && friend.ids.length ? ACTS.filter(a => isFav(a.id) && friend.ids.includes(a.id) && !a.cancelled).sort((x, y) => DAYS.findIndex(d => d.id === x.day) - DAYS.findIndex(d => d.id === y.day) || byTime(x, y)) : [];
-    return banner + `<div class="list"><button class="share-btn" data-share>Deel mijn favorieten</button><button class="share-btn" data-ics-all>${L("Zet mijn favorieten in je agenda (.ics)", "Add my favorites to your calendar (.ics)")}</button>${friend.ids.length ? `<button class="share-btn" data-friend-clear>${L("Vriendenlijst wissen", "Clear friend's list")}</button>` : ""}${both.length ? `<div class="grp">${L("Jullie allebei", "You both want to see")} (${both.length})</div>${both.map(a => row(a)).join("")}` : ""}</div>` + vTimetable(true) + updLine();
+    const nF = ACTS.filter(a => isFav(a.id)).length, nS = ACTS.filter(a => isStar(a.id)).length;
+    return banner + `<div class="list"><div class="fav-bar"><span><b>${nF}</b> ${L(nF === 1 ? "favoriet" : "favorieten", nF === 1 ? "favourite" : "favourites")}${nS ? ` · <b>${nS}</b> ${L("moet ik zien", "must-see")}` : ""}</span>${friend.ids.length ? `<button data-friend-clear>${L("Vriend wissen", "Clear friend")}</button>` : ""}${nF ? `<button class="fav-share" data-share><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M5 14v6h14v-6"/></svg>${L("Delen", "Share")}</button>` : ""}</div>${both.length ? `<div class="grp">${L("Jullie allebei", "You both want to see")} (${both.length})</div>${both.map(a => row(a)).join("")}` : ""}</div>` + vTimetable(true) + updLine();
   };
 
   /* ---- zoeken ---- */
@@ -506,8 +538,9 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     main.innerHTML = r.p === "search" ? vSearch() : r.p === "favorites" ? vFavs() : r.p === "act" ? vAct(r.id) : r.p === "now" ? vNowView() : r.p === "game" ? `<div id="wapperman-root"></div>` : r.p === "map" ? vMapView() : vTimetable(favOnly);
     if (r.p !== "map") killMap();
     if (r.p === "game") WappermanGame.mount(); else if (r.p === "map") { trNode(main); initMap(); } else trNode(main);
+    { const sb = document.querySelector("[data-tb-search]"); if (sb) sb.classList.toggle("on", r.p === "search"); }
     const tab = r.p === "act" ? (sessionStorage.getItem("from") || "tt") : r.p, icon = { tt: "tt", now: "clock", search: "se", favorites: "fa", game: "game", map: "map" }, nav = document.getElementById("nav");
-    nav.innerHTML = [["tt", "Timetable", "/"], ["now", L("Nu", "Now"), "/now"], ["map", L("Kaart", "Map"), "/map"], ["search", L("Zoeken", "Search"), "/search"], ["favorites", L("Favorieten", "Favorites"), "/favorites"], ["game", "Wapperman", "/game"]].map(([k, l, h]) => `<button class="${tab === k ? "on" : ""}" data-go="${h}" aria-current="${tab === k ? "page" : "false"}">${ico[icon[k]] || "◉"}${l}</button>`).join("");
+    nav.innerHTML = [["tt", "Timetable", "/"], ["now", L("Nu", "Now"), "/now"], ["map", L("Kaart", "Map"), "/map"], ["favorites", L("Favorieten", "Favorites"), "/favorites"], ["game", "Wapperman", "/game"]].map(([k, l, h]) => `<button class="${tab === k ? "on" : ""}" data-go="${h}" aria-current="${tab === k ? "page" : "false"}">${ico[icon[k]] || "◉"}${l}</button>`).join("");
     if (!keep && (r.p === "tt" || r.p === "favorites") && main.querySelector(".tt .now") && autoNowDone !== day + r.p) { autoNowDone = day + r.p; scrollToNow(false); }
     if (keep) { main.scrollTop = sc[0]; const tt = main.querySelector(".tt"); if (tt) { tt.scrollLeft = sc[1]; tt.scrollTop = sc[2]; } }
     if (r.p === "search" && !keep) { const i = document.getElementById("q"); if (i && q) i.focus(); }
@@ -576,6 +609,16 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     if (c("[data-close-genres]")) { stop(); genreOpen = false; renderModal(); render(true); return; }
     if (c("[data-no-genres]")) { stop(); selGenres = []; document.getElementById("modal").innerHTML = genreSheet(); skipModal = true; render(true); skipModal = false; return; }
     const gc = c("[data-genre]"); if (gc) { stop(); const g = gc.dataset.genre; selGenres = gc.checked ? [...selGenres, g] : selGenres.filter(x => x !== g); skipModal = true; render(true); skipModal = false; return; }
+    if (c("[data-menu]")) { stop(); openMenu(); return; }
+    { const b = c("[data-aa-set]"); if (b) { stop(); big = b.dataset.aaSet === "1"; localStorage.setItem("lotd-big", big ? "1" : "0"); document.documentElement.classList.toggle("big", big); paintCtl(); refreshMenu(); return; } }
+    if (c("[data-install]")) { stop(); if (deferred) { deferred.prompt(); } else if (!iosDevice()) { sheet = `<h2>${L("Installeer de app", "Install the app")}</h2><p>${L("Open het browsermenu (⋮) en kies ‘App installeren’ of ‘Toevoegen aan startscherm’.", "Open the browser menu (⋮) and choose ‘Install app’ or ‘Add to Home screen’.")}</p>`; renderModal(); } return; }
+    if (c("[data-share-app]")) { stop(); const u = location.origin + "/"; if (navigator.share) navigator.share({ title: "Left of the Dial 2026 · Timetable", url: u }).catch(() => {}); else if (navigator.clipboard) navigator.clipboard.writeText(u).then(() => { post("saved", { text: () => L("Link gekopieerd", "Link copied"), x: true }); }); return; }
+    if (c("[data-filter]")) { stop(); sheet = filterHtml(); renderModal(); return; }
+    if (c("[data-filter-clear]")) { stop(); if (!onFavPage()) favOnly = false; selGenres = []; hiddenVenues = []; saveVenues(); if (friend.on && friend.ids.length) { friend.on = false; saveFriend(); } if (sheet && sheet.indexOf("data-filtersheet") > -1) sheet = filterHtml(); render(true); return; }
+    if (c("[data-fl-fav]")) { stop(); favOnly = !favOnly; sheet = filterHtml(); render(true); return; }
+    if (c("[data-fl-friend]")) { stop(); friend.on = !friend.on; saveFriend(); sheet = filterHtml(); render(true); return; }
+    if (c("[data-fl-genres]")) { stop(); sheet = null; genreOpen = true; renderModal(); return; }
+    if (c("[data-fl-venues]")) { stop(); sheet = null; venueOpen = true; renderModal(); return; }
     if (c("[data-to-now]")) { stop(); scrollToNow(true); return; }
     if (c("[data-now-fav]")) { stop(); nowFav = true; render(true); return; }
     if (c("[data-now-all]")) { stop(); nowFav = false; render(true); return; }
@@ -596,7 +639,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     if (c("[data-friend]")) { stop(); friend.on = !friend.on; saveFriend(); render(true); return; }
     if (c("[data-friend-clear]")) { stop(); friend = { ids: [], on: true }; saveFriend(); render(true); return; }
     if (c("[data-compare-shared]")) { stop(); friend = { ids: (sharedIds || []).slice(), on: true }; saveFriend(); sharedIds = null; sharedReadOnly = false; history.replaceState(null, "", location.pathname + location.search + "#/favorites"); render(); return; }
-    const lg = c("[data-lang]"); if (lg) { stop(); setLang(lg.dataset.lang); return; }
+    const lg = c("[data-lang]"); if (lg) { stop(); setLang(lg.dataset.lang); refreshMenu(); return; }
     if (c("[data-aa]")) { stop(); big = !big; localStorage.setItem("lotd-big", big ? "1" : "0"); document.documentElement.classList.toggle("big", big); paintCtl(); return; }
     const sa = c("[data-st-act]"); if (sa) { stop(); const p = S[sa.dataset.stAct]; if (p && p.fn) p.fn(); return; }
     const sx = c("[data-st-x]"); if (sx) { stop(); const k = sx.dataset.stX; if (k === "notice") LS.set("lotd-notice-x", S[k].key); if (k === "install") LS.set("lotd-install-x", true); drop(k); return; }
@@ -604,7 +647,30 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
   document.addEventListener("keydown", e => { if (e.key === "Escape") { if (sheet) { sheet = null; renderModal(); } else if (genreOpen) { genreOpen = false; renderModal(); render(true); } } });
 
   const css = document.createElement("style");
-  css.textContent = `.tt-tools{flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none}.tt-tools::-webkit-scrollbar{display:none}.tt-tools>button{flex:none;white-space:nowrap;flex-direction:row!important;gap:6px}.to-now{background:#1717ff!important;color:#fff!important;border-color:#1717ff!important;display:inline-flex;align-items:center;gap:6px;font-weight:700}.to-now .ico2{flex:none}
+  css.textContent = `html.big{width:auto!important;padding:0!important;border:0!important;border-radius:0!important;min-height:0!important;color:inherit!important;font-weight:inherit!important}
+#statusbar{display:none!important}body:has(#modal .ov) #lotd-status{display:none!important}
+html.big{--labw:132px}html.big .lab{font-size:13px!important}html.big .lab.long{font-size:12px!important}html.big .lab.xlong{font-size:11px!important}
+[data-filtersheet] .sheet-actions button{min-height:48px;font-size:15px!important;font-weight:700}
+header .brandbar{display:none!important}header{padding-bottom:0!important}
+.titlebar{display:flex!important;align-items:center!important;gap:10px!important;flex-wrap:nowrap!important;padding:8px 0 10px;margin-top:30px}
+.tb-logo{flex:none;width:44px;height:44px;padding:0;border:0;background:none;border-radius:50%}.tb-logo img{width:44px!important;height:44px!important;margin:0!important;border-radius:50%;display:block}
+header .titlebar h2{flex:1;min-width:0;margin:0!important;font-size:28px!important;line-height:1.05!important;letter-spacing:-.03em!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-tools{display:flex;align-items:center;gap:6px;flex:none}.tb-btn{width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:#fff;color:#000;border:2px solid #000;padding:0}.tb-btn.on{background:#000;color:#fff}.tb-btn:active{background:#1717ff;color:#fff;border-color:#1717ff}
+.tb-off{font:700 11px Arial,sans-serif;background:#444;color:#fff;padding:4px 7px;letter-spacing:.04em;text-transform:uppercase}.tb-off[hidden]{display:none}
+@media(min-width:700px){header .titlebar h2{font-size:36px!important}.tb-logo,.tb-logo img{width:52px!important;height:52px!important}}
+#lotd-status{position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:1500;max-width:520px;margin:0 auto;box-shadow:0 6px 20px rgba(0,0,0,.28);padding:12px 14px!important;animation:lotdToast .22s ease-out}
+@keyframes lotdToast{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
+.tt-tools{gap:8px!important}.flt-btn{display:inline-flex!important;align-items:center;gap:6px}.flt-btn.on{background:#000!important;color:#fff!important;border-color:#000!important}.flt-clear{border:0!important;background:none!important;text-decoration:underline;padding:8px 6px!important}
+.fl-row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:14px 0;min-height:60px;background:none;border:0;border-top:1px solid #ddd;color:#000}.fl-row span{flex:1;min-width:0}.fl-row b{display:block;font-size:17px}.fl-row small{display:block;font-size:14px;color:#555;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fl-sw{flex:none;width:48px;height:28px;border:2px solid #000;background:#fff;position:relative}.fl-sw:after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;background:#000;transition:left .15s}.fl-sw.on{background:#1717ff;border-color:#1717ff}.fl-sw.on:after{left:23px;background:#fff}.fl-chev{flex:none;font-style:normal;font-size:26px;line-height:1}
+[data-filtersheet] .sheet-actions{margin-top:16px}
+.mn-lab{font:700 13px Arial,sans-serif;text-transform:uppercase;letter-spacing:.06em;color:#555;margin:16px 0 6px}.mn-seg{display:flex;border:2px solid #000}.mn-seg button{flex:1;min-height:48px;background:#fff;color:#000;border:0;font-size:16px;font-weight:700}.mn-seg button+button{border-left:2px solid #000}.mn-seg button.on{background:#000;color:#fff}.mn-seg .mn-big{font-size:19px}
+.mn-list{margin-top:18px}.mn-row{display:block;width:100%;text-align:left;padding:13px 0;min-height:56px;background:none;border:0;border-top:1px solid #ddd;color:#000;font-size:17px;font-weight:700;text-decoration:none}.mn-row small{display:block;font-size:14px;font-weight:400;color:#555;margin-top:2px}.mn-meta{font-size:13px!important;color:#666;margin-top:12px!important}
+.fav-bar{display:flex;align-items:center;gap:8px;padding:12px 0 6px;font-size:15px}.fav-bar span{flex:1;min-width:0}.fav-bar button{min-height:44px;padding:0 12px;border:2px solid #000;background:#fff;color:#000;font-weight:700;font-size:15px;display:inline-flex;align-items:center;gap:6px}.fav-bar .fav-share{background:#000;color:#fff}
+.m-route{display:flex!important;align-items:center;gap:10px}.m-route a{flex:1;min-width:0;display:flex;gap:12px;align-items:flex-start;color:inherit;text-decoration:none}.m-route a b{color:#1717ff;text-decoration:underline}.m-walk{flex:none;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 12px;border:2px solid #1717ff;background:#fff;color:#1717ff;font-size:14px}.m-walk b{font-size:14px}
+.m-when .m-acc{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:14px;color:#333;font-weight:400}.m-when .m-acc .ico2{flex:none}
+nav button{font-size:12px!important}
+.tt-tools{flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none}.tt-tools::-webkit-scrollbar{display:none}.tt-tools>button{flex:none;white-space:nowrap;flex-direction:row!important;gap:6px}.to-now{background:#1717ff!important;color:#fff!important;border-color:#1717ff!important;display:inline-flex;align-items:center;gap:6px;font-weight:700}.to-now .ico2{flex:none}
 .nn{padding-top:10px}.nn-top{display:flex;align-items:center;gap:12px;margin:4px 0 10px}.nn-clock{display:flex;flex-direction:column;line-height:1.1}.nn-clock b{font-size:28px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}.nn-clock span{font-size:13px;color:#555}.nn-filter{margin-left:auto;display:flex;border:2px solid #000}.nn-filter button{min-height:44px;padding:0 12px;background:#fff;color:#000;border:0;font-size:14px;font-weight:700}.nn-filter button.on{background:#000;color:#fff}
 .nn-loc{display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;margin:0 0 14px;padding:10px 12px;border:2px solid #1717ff;background:#fff;color:#000;text-align:left;font-size:15px}.nn-loc .ico2{color:#1717ff;flex:none}.nn-loc span{flex:1}.nn-loc small{display:block;font-size:13px;color:#555;margin-top:2px}.nn-loc b{color:#1717ff}.nn-loc.on{background:#1717ff;color:#fff}.nn-loc.on .ico2{color:#fff}.nn-loc.on button{min-height:40px;min-width:44px;background:#fff;color:#1717ff;border:0;font-weight:700;font-size:15px}
 .nn-card{border:2px solid #000;margin:0 0 12px;background:#fff}.nn-card.at{border-color:#1717ff;box-shadow:0 0 0 2px #1717ff}.nn-head{display:flex;align-items:center;gap:8px;width:100%;padding:10px 12px;background:#000;color:#fff;border:0;text-align:left;min-height:48px}.nn-card.at .nn-head{background:#1717ff}.nn-head h3{margin:0;font-size:18px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nn-dist{font-size:13px;font-weight:700;white-space:nowrap;background:#fff;color:#000;padding:3px 7px}.nn-dist.here{color:#1717ff}.nn-chev{font-size:22px;line-height:1;opacity:.8}
@@ -646,8 +712,8 @@ body{font-size:16px}header:before{font-size:11px!important}.brandcopy p{font-siz
 .item .t b{font-size:17px!important}.item .t span{font-size:14px!important}.meta{font-size:15px!important}.pill{font-size:13px!important;padding:6px 10px!important}
 .seg button{font-size:15px!important}.tt-tools button{font-size:14px!important;min-height:44px!important}.oth{font-size:15px!important;min-height:48px}.grp{font-size:13px!important}
 nav button{font-size:11px!important;letter-spacing:0!important;min-width:0;padding-left:0!important;padding-right:0!important}.upd{font-size:13px!important}#lotd-status{font-size:14px!important}#lotd-status button{min-height:44px!important}.det p,.sheet p{font-size:17px!important}.now-btn{font-size:13px!important;min-height:40px}
-@media (max-width:420px){.titlebar{flex-wrap:wrap}#lotd-ctl{margin-bottom:0}header h2{margin-bottom:10px!important}}
-html.big body{font-size:19px}html.big .act b{font-size:18px!important}html.big .act span,html.big .act .g{font-size:14px!important}html.big .item .t b{font-size:20px!important}html.big .item .t span,html.big .meta{font-size:16px!important}html.big .seg button,html.big .tt-tools button,html.big .oth{font-size:17px!important}html.big .lab,html.big .tick{font-size:14px!important}:root{--labw:112px}@media(min-width:700px){:root{--labw:120px}}.lab{width:var(--labw)!important;box-sizing:border-box;gap:6px;padding:0 6px!important}.lab .dot{flex:none;margin:0!important}.lab-t{min-width:0;overflow-wrap:break-word}.lab.long{letter-spacing:0!important;font-size:11px!important}.lab.xlong{font-size:10px!important}html.big .lab.long{font-size:12px!important}.tt .act .live{left:auto;right:4px;top:4px}
+
+html.big body{font-size:19px}html.big .act b{font-size:18px!important}html.big .act span,html.big .act .g{font-size:14px!important}html.big .item .t b{font-size:20px!important}html.big .item .t span,html.big .meta{font-size:16px!important}html.big .seg button,html.big .tt-tools button,html.big .oth{font-size:17px!important}html.big .tick{font-size:14px!important}:root{--labw:112px}@media(min-width:700px){:root{--labw:120px}}.lab{width:var(--labw)!important;box-sizing:border-box;gap:6px;padding:0 6px!important}.lab .dot{flex:none;margin:0!important}.lab-t{min-width:0;overflow-wrap:break-word}.lab.long{letter-spacing:0!important;font-size:11px!important}.lab.xlong{font-size:10px!important}html.big .lab.long{font-size:12px!important}.tt .act .live{left:auto;right:4px;top:4px}
 html.big .row{height:104px}html.big .pill,html.big .checkrow{font-size:15px!important}html.big nav button{font-size:13px!important}`;
   document.head.appendChild(css);
 
