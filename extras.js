@@ -314,13 +314,35 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     const lg = document.querySelector(".brandbar .lotd-mark"), home = document.createElement("button"); home.className = "tb-logo"; home.setAttribute("data-go", "/"); home.setAttribute("aria-label", "Timetable"); if (lg) home.appendChild(lg.cloneNode(true));
     const tools = document.createElement("div"); tools.className = "tb-tools";
     tools.innerHTML = `<span class="tb-off" id="tb-off" hidden>Offline</span><button class="tb-btn" data-go="/search" data-tb-search aria-label="Zoeken"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button><button class="tb-btn" data-menu aria-label="Menu"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="19" cy="12" r="2.2"/></svg></button>`;
-    bar.appendChild(home); bar.appendChild(h2); bar.appendChild(tools); }
+    const tw = document.createElement("div"); tw.className = "tb-title"; tw.appendChild(h2); const sub = document.createElement("div"); sub.className = "tb-sub"; sub.id = "tb-sub"; sub.setAttribute("aria-live", "off"); tw.appendChild(sub);
+    bar.appendChild(home); bar.appendChild(tw); bar.appendChild(tools); }
+  /* aftellen tot het festival / live-teller tijdens het festival */
+  const nowOffset = getNow().getTime() - Date.now();
+  const atLocal = (ds, hm) => { const [h, m] = hm.split(":").map(Number); const d = new Date(ds + "T00:00:00"); d.setMinutes(h * 60 + m + (h < 6 ? 1440 : 0)); return d; };
+  function paintSub() {
+    const el = document.getElementById("tb-sub"); if (!el) return;
+    const first = ACTS.filter(a => a.day === DAYS[0].id && !a.cancelled).sort(byTime)[0], lastDay = DAYS[DAYS.length - 1], lastAct = ACTS.filter(a => a.day === lastDay.id).sort((x, y) => mins(y.end) - mins(x.end))[0];
+    if (!first || !lastAct) { el.textContent = ""; return; }
+    const now = Date.now() + nowOffset, start = atLocal(DAYS[0].date, first.start).getTime(), end = atLocal(lastDay.date, lastAct.end).getTime();
+    const p2 = n => String(n).padStart(2, "0");
+    if (now < start) {
+      let t = Math.floor((start - now) / 1000); const d = Math.floor(t / 86400); t -= d * 86400; const h = Math.floor(t / 3600); t -= h * 3600; const m = Math.floor(t / 60), sec = t - m * 60;
+      el.innerHTML = `<span class="cd-lab">${L("Nog", "Starts in")}</span><b>${d}</b>${L("d", "d")} <b>${p2(h)}</b>${L("u", "h")} <b>${p2(m)}</b>m <b>${p2(sec)}</b>s`; el.className = "tb-sub cd";
+      el.setAttribute("aria-label", L(`Nog ${d} dagen, ${h} uur en ${m} minuten tot het festival`, `${d} days, ${h} hours and ${m} minutes until the festival`));
+    } else if (now <= end) {
+      const live = ACTS.filter(a => !a.cancelled && isLive(a)).length, f = festNow(), d = DAYS.find(x => x.date === f.ds);
+      const nxt = d ? ACTS.filter(a => a.day === d.id && !a.cancelled && mins(a.start) > f.m).sort(byTime)[0] : null;
+      el.className = "tb-sub is-live"; el.removeAttribute("aria-label");
+      el.innerHTML = live ? `<i class="live-dot"></i>${d ? d.label + " · " : ""}${L(`${live} ${live === 1 ? "band" : "bands"} live`, `${live} ${live === 1 ? "band" : "bands"} live`)}` : nxt ? `${d.label} · ${L("eerstvolgende om", "next at")} ${nxt.start}` : (() => { const nd = DAYS[DAYS.findIndex(x => d && x.id === d.id) + 1], fa = nd && ACTS.filter(a => a.day === nd.id && !a.cancelled).sort(byTime)[0]; return fa ? `${nd.label} · ${L("vanaf", "from")} ${fa.start}` : L("Tot morgen!", "See you tomorrow!"); })();
+    } else { el.className = "tb-sub"; el.textContent = L("Tot volgend jaar!", "See you next year!"); }
+  }
+  setInterval(paintSub, 1000); setTimeout(paintSub, 0);
   /* lopende balk bovenaan (vervangt de stilstaande header:before) */
   { const hd = document.querySelector("header"), t = document.createElement("div"); t.className = "lotd-ticker"; t.setAttribute("aria-hidden", "true");
     const one = "LEFT OF THE DIAL 2026 \u2022 21 / 22 / 23 / 24 OCTOBER \u2022 ROTTERDAM \u2022 SOLD OUT \u2022 ";
     t.innerHTML = `<div class="lt-track"><span>${one.repeat(3)}</span><span>${one.repeat(3)}</span></div>`; if (hd) hd.prepend(t); }
   const paintCtl = () => { ctl.querySelectorAll("[data-lang]").forEach(b => b.classList.toggle("on", b.dataset.lang === lang)); ctl.querySelector("[data-aa]").classList.toggle("on", big); };
-  function setLang(l) { lang = l; window.LOTD_LANG = l; localStorage.setItem("lotd-lang", l); document.documentElement.lang = l; setDays(); paintCtl(); paintStatus(); render(true); }
+  function setLang(l) { setTimeout(paintSub, 0); lang = l; window.LOTD_LANG = l; localStorage.setItem("lotd-lang", l); document.documentElement.lang = l; setDays(); paintCtl(); paintStatus(); render(true); }
 
   /* ---- menu (taal, tekstgrootte, installeren, delen) ---- */
   const menuHtml = () => {
@@ -651,7 +673,13 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
   document.addEventListener("keydown", e => { if (e.key === "Escape") { if (sheet) { sheet = null; renderModal(); } else if (genreOpen) { genreOpen = false; renderModal(); render(true); } } });
 
   const css = document.createElement("style");
-  css.textContent = `header:before{content:none!important;display:none!important}
+  css.textContent = `header .titlebar h2{text-transform:uppercase!important;letter-spacing:-.01em!important}
+.tb-title{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}.tb-title h2{flex:none!important}
+.tb-sub{font:700 13px/1.2 Arial,Helvetica,sans-serif;color:#1717ff;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;min-height:16px}.tb-sub b{font-size:15px}.tb-sub .cd-lab{margin-right:5px}
+.tb-sub .live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#1717ff;margin-right:6px;vertical-align:1px;animation:lotdPulse 1.4s ease-in-out infinite}
+@keyframes lotdPulse{50%{opacity:.25}}@media (prefers-reduced-motion:reduce){.tb-sub .live-dot{animation:none}}
+html.big .tb-sub{font-size:15px}html.big .tb-sub b{font-size:17px}
+header:before{content:none!important;display:none!important}
 .lotd-ticker{position:absolute;left:0;right:0;top:0;height:34px;background:#050505;color:#fff;overflow:hidden;display:flex;align-items:center;z-index:1}
 .lt-track{display:flex;flex:none;white-space:nowrap;animation:lotdTick 40s linear infinite;will-change:transform}.lt-track span{flex:none;font:11px Arial,Helvetica,sans-serif;letter-spacing:.12em;padding-right:0}
 @keyframes lotdTick{from{transform:translate3d(0,0,0)}to{transform:translate3d(-50%,0,0)}}
