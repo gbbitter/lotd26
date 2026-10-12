@@ -394,13 +394,23 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     trNode(m);
   };
 
+  /* naar het huidige moment scrollen (volgt ook de testtijd ?now=) */
+  function scrollToNow(smooth) {
+    const tt = document.querySelector("#main .tt"), line = tt && tt.querySelector(".now"); if (!tt) return false;
+    const labw = (tt.querySelector(".row .lab") || {}).offsetWidth || 110;
+    let x;
+    if (line) x = line.offsetLeft - labw - Math.min(90, (tt.clientWidth - labw) * 0.25);
+    else { const f = festNow(), first = tt.querySelector(".tick"); x = first && f.m > 720 ? tt.scrollWidth : 0; }
+    tt.scrollTo({ left: Math.max(0, x), behavior: smooth ? "smooth" : "auto" }); return true;
+  }
+  let autoNowDone = "";
   /* ---- timetable ---- */
   vTimetable = function (onlyFavs) {
     const ids = sharedReadOnly && sharedIds ? sharedIds : null, f = festNow();
     const gOk = a => !selGenres.length || (a.genres || []).some(g => selGenres.includes(g));
     const list = ACTS.filter(a => a.day === day && (!onlyFavs || isFav(a.id)) && (!ids || ids.includes(a.id)) && !hiddenVenues.includes(a.venueId) && gOk(a));
-    const today = dayOf(day).date === f.ds, jump = today ? `<button class="now-btn" data-now>Nu</button>` : "";
-    const segHtml = `<div class="seg" role="tablist" aria-label="Kies een festivaldag">${DAYS.map(x => `<button class="${x.id === day ? "on" : ""}" data-day="${x.id}" role="tab" aria-selected="${x.id === day}">${x.label}</button>`).join("")}</div><div class="tt-tools"><button class="${favOnly || sharedReadOnly ? "on" : ""}" data-fav-only>${sharedReadOnly ? "Gedeelde lijst" : "♡ Alleen favorieten"}</button><button class="${selGenres.length ? "on" : ""}" data-genres>Genre${selGenres.length ? " · " + selGenres.length : ""}</button>${friend.ids.length ? `<button class="${friend.on ? "on" : ""}" data-friend>Vriend · ${friend.ids.length}</button>` : ""}<button class="venue-btn" data-venues>Locaties${hiddenVenues.length ? ` · ${VENUES.length - hiddenVenues.length}` : ""}</button></div>`;
+    const today = dayOf(day).date === f.ds, jump = today ? `<button class="to-now" data-to-now>${sv(SI.walk, 18)}${L("Naar nu", "Jump to now")}</button>` : "";
+    const segHtml = `<div class="seg" role="tablist" aria-label="Kies een festivaldag">${DAYS.map(x => `<button class="${x.id === day ? "on" : ""}" data-day="${x.id}" role="tab" aria-selected="${x.id === day}">${x.label}</button>`).join("")}</div><div class="tt-tools">${jump}<button class="${favOnly || sharedReadOnly ? "on" : ""}" data-fav-only>${sharedReadOnly ? "Gedeelde lijst" : "♡ Alleen favorieten"}</button><button class="${selGenres.length ? "on" : ""}" data-genres>Genre${selGenres.length ? " · " + selGenres.length : ""}</button>${friend.ids.length ? `<button class="${friend.on ? "on" : ""}" data-friend>Vriend · ${friend.ids.length}</button>` : ""}<button class="venue-btn" data-venues>Locaties${hiddenVenues.length ? ` · ${VENUES.length - hiddenVenues.length}` : ""}</button></div>`;
     if (!list.length) return segHtml + `<div class="empty">${selGenres.length ? "Geen acts met dit genre op deze dag." : onlyFavs ? (favs.length ? "Geen favorieten op deze dag." : "Nog geen favorieten.<br>Tik op het hartje bij een act om hem hier te zien.") : "Geen acts."}</div>`;
     const start = Math.floor(Math.min(...list.map(a => mins(a.start))) / 60) * 60, end = Math.ceil(Math.max(...list.map(a => mins(a.end))) / 60) * 60, hours = (end - start) / 60, W = hours * PPH;
     let ticks = ""; for (let i = 0; i <= hours; i++) ticks += `<div class="tick" style="left:${i * PPH}px">${String((start / 60 + i) % 24).padStart(2, "0")}:00</div>`;
@@ -409,7 +419,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
         return `<button class="act ${a.after ? "after " : ""}${isStar(a.id) ? "must" : isFav(a.id) ? "int" : ""} ${isFav(a.id) ? "fav" : ""} ${a.cancelled ? "cancel" : ""}" style="left:${l}px;width:${w - 3}px;background:${v.color}" data-open="${a.id}"${cl ? ' aria-label="Overlapt met favorieten"' : ""}>${isFav(a.id) ? `<i class="h">${mark(a.id)}</i>` : ""}${cl ? '<i class="clash-marker" title="Overlap met een favoriet" aria-hidden="true">!</i>' : ""}${isLive(a) && !a.cancelled ? '<em class="live">NU</em>' : ""}${isFriend(a.id) ? '<i class="fr"></i>' : ""}<b>${a.name}</b><span>${timeTxt(a)}</span><span class="g">${a.cancelled ? L("Vervallen", "Cancelled") : tagX(a)}</span></button>`; }).join("");
       return `<div class="row"><div class="lab${(n => n >= 12 ? " long xlong" : n >= 10 ? " long" : "")(Math.max(...v.name.split(/\s+/).map(w => w.length)))}"><i class="dot" style="background:${v.color}"></i><span class="lab-t" lang="nl">${v.name}</span></div><div class="track" style="width:${W}px;background-size:${PPH}px 100%">${acts}</div></div>`; }).join("");
     const now = today && f.m >= start && f.m <= end ? `<div class="now" style="left:calc(var(--labw) + ${(f.m - start) / 60 * PPH}px)"></div>` : "";
-    return segHtml + `<div class="tt-wrap">${jump}<div class="tt"><div class="tt-in" style="width:calc(var(--labw) + ${W}px)"><div class="hrow"><div class="lab"></div><div class="trackh" style="width:${W}px">${ticks}</div></div>${rows}${now}</div></div></div>`;
+    return segHtml + `<div class="tt-wrap"><div class="tt"><div class="tt-in" style="width:calc(var(--labw) + ${W}px)"><div class="hrow"><div class="lab"></div><div class="trackh" style="width:${W}px">${ticks}</div></div>${rows}${now}</div></div></div>`;
   };
 
   /* ---- favorieten-pagina (agenda, vriend, jullie allebei) ---- */
@@ -498,6 +508,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     if (r.p === "game") WappermanGame.mount(); else if (r.p === "map") { trNode(main); initMap(); } else trNode(main);
     const tab = r.p === "act" ? (sessionStorage.getItem("from") || "tt") : r.p, icon = { tt: "tt", now: "clock", search: "se", favorites: "fa", game: "game", map: "map" }, nav = document.getElementById("nav");
     nav.innerHTML = [["tt", "Timetable", "/"], ["now", L("Nu", "Now"), "/now"], ["map", L("Kaart", "Map"), "/map"], ["search", L("Zoeken", "Search"), "/search"], ["favorites", L("Favorieten", "Favorites"), "/favorites"], ["game", "Wapperman", "/game"]].map(([k, l, h]) => `<button class="${tab === k ? "on" : ""}" data-go="${h}" aria-current="${tab === k ? "page" : "false"}">${ico[icon[k]] || "◉"}${l}</button>`).join("");
+    if (!keep && (r.p === "tt" || r.p === "favorites") && main.querySelector(".tt .now") && autoNowDone !== day + r.p) { autoNowDone = day + r.p; scrollToNow(false); }
     if (keep) { main.scrollTop = sc[0]; const tt = main.querySelector(".tt"); if (tt) { tt.scrollLeft = sc[1]; tt.scrollTop = sc[2]; } }
     if (r.p === "search" && !keep) { const i = document.getElementById("q"); if (i && q) i.focus(); }
   };
@@ -565,6 +576,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     if (c("[data-close-genres]")) { stop(); genreOpen = false; renderModal(); render(true); return; }
     if (c("[data-no-genres]")) { stop(); selGenres = []; document.getElementById("modal").innerHTML = genreSheet(); skipModal = true; render(true); skipModal = false; return; }
     const gc = c("[data-genre]"); if (gc) { stop(); const g = gc.dataset.genre; selGenres = gc.checked ? [...selGenres, g] : selGenres.filter(x => x !== g); skipModal = true; render(true); skipModal = false; return; }
+    if (c("[data-to-now]")) { stop(); scrollToNow(true); return; }
     if (c("[data-now-fav]")) { stop(); nowFav = true; render(true); return; }
     if (c("[data-now-all]")) { stop(); nowFav = false; render(true); return; }
     if (c("[data-nowloc-refresh]")) { stop(); askHere(true); render(true); return; }
@@ -592,7 +604,8 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
   document.addEventListener("keydown", e => { if (e.key === "Escape") { if (sheet) { sheet = null; renderModal(); } else if (genreOpen) { genreOpen = false; renderModal(); render(true); } } });
 
   const css = document.createElement("style");
-  css.textContent = `.nn{padding-top:10px}.nn-top{display:flex;align-items:center;gap:12px;margin:4px 0 10px}.nn-clock{display:flex;flex-direction:column;line-height:1.1}.nn-clock b{font-size:28px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}.nn-clock span{font-size:13px;color:#555}.nn-filter{margin-left:auto;display:flex;border:2px solid #000}.nn-filter button{min-height:44px;padding:0 12px;background:#fff;color:#000;border:0;font-size:14px;font-weight:700}.nn-filter button.on{background:#000;color:#fff}
+  css.textContent = `.tt-tools{flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none}.tt-tools::-webkit-scrollbar{display:none}.tt-tools>button{flex:none;white-space:nowrap;flex-direction:row!important;gap:6px}.to-now{background:#1717ff!important;color:#fff!important;border-color:#1717ff!important;display:inline-flex;align-items:center;gap:6px;font-weight:700}.to-now .ico2{flex:none}
+.nn{padding-top:10px}.nn-top{display:flex;align-items:center;gap:12px;margin:4px 0 10px}.nn-clock{display:flex;flex-direction:column;line-height:1.1}.nn-clock b{font-size:28px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}.nn-clock span{font-size:13px;color:#555}.nn-filter{margin-left:auto;display:flex;border:2px solid #000}.nn-filter button{min-height:44px;padding:0 12px;background:#fff;color:#000;border:0;font-size:14px;font-weight:700}.nn-filter button.on{background:#000;color:#fff}
 .nn-loc{display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;margin:0 0 14px;padding:10px 12px;border:2px solid #1717ff;background:#fff;color:#000;text-align:left;font-size:15px}.nn-loc .ico2{color:#1717ff;flex:none}.nn-loc span{flex:1}.nn-loc small{display:block;font-size:13px;color:#555;margin-top:2px}.nn-loc b{color:#1717ff}.nn-loc.on{background:#1717ff;color:#fff}.nn-loc.on .ico2{color:#fff}.nn-loc.on button{min-height:40px;min-width:44px;background:#fff;color:#1717ff;border:0;font-weight:700;font-size:15px}
 .nn-card{border:2px solid #000;margin:0 0 12px;background:#fff}.nn-card.at{border-color:#1717ff;box-shadow:0 0 0 2px #1717ff}.nn-head{display:flex;align-items:center;gap:8px;width:100%;padding:10px 12px;background:#000;color:#fff;border:0;text-align:left;min-height:48px}.nn-card.at .nn-head{background:#1717ff}.nn-head h3{margin:0;font-size:18px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nn-dist{font-size:13px;font-weight:700;white-space:nowrap;background:#fff;color:#000;padding:3px 7px}.nn-dist.here{color:#1717ff}.nn-chev{font-size:22px;line-height:1;opacity:.8}
 .nn-act{display:flex;align-items:center;gap:10px;width:100%;padding:11px 12px;background:#fff;color:#000;border:0;border-top:1px solid #ddd;text-align:left;min-height:56px;border-left:6px solid transparent}.nn-act:first-of-type{border-top:0}.nn-act.must{border-left-color:#1717ff}.nn-act.int{border-left-color:#a9baff}.nn-tag{flex:none;min-width:50px;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;color:#555}.nn-act.nn-live .nn-tag{color:#fff;background:#1717ff;text-align:center;padding:3px 0;letter-spacing:.06em}.nn-main{flex:1;min-width:0}.nn-main b{display:block;font-size:17px;line-height:1.25}.nn-act:not(.nn-live) .nn-main b{font-weight:600}.nn-main small{display:block;font-size:13px;color:#555}.nn-fav{font-style:normal;margin-left:6px;font-size:14px;color:#000}.nn-fav.must{color:#1717ff}.nn-bar{display:block;height:4px;background:#e3e6ff;margin-top:6px}.nn-bar i{display:block;height:100%;background:#1717ff}.nn-rest{flex:none;font-size:13px;color:#333;text-align:right;white-space:nowrap}.nn-act.nn-live .nn-rest{font-weight:700;color:#000}
