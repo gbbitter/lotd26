@@ -380,7 +380,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     const oldById = new Map(ACTS.map(a => [a.id, { ...a, vn: venue(a.venueId).name }])), sigOld = ACTS.map(a => a.id + a.end + (a.cancelled ? "x" : "")).join();
     const favBefore = silent ? LS.get("lotd-favs", []) : favs.slice(), canc = (j.cancelled || []).map(c => c.split("|"));
     const fresh = buildActs(j.raw); fresh.forEach(a => { decorate(a); a.cancelled = canc.some(([n, dd]) => norm(n) === norm(a.name) && (!dd || dd === a.day)); });
-    ACTS.length = 0; fresh.forEach(a => ACTS.push(a)); addAfter(j.after);
+    ACTS.length = 0; fresh.forEach(a => ACTS.push(a)); addAfter(j.after); if (Array.isArray(j.food_tips) && j.food_tips.length) { window.__lotdFoodTips = j.food_tips; if (window.__lotdFoodApply) window.__lotdFoodApply(); }
     const mapId = id => { if (act(id)) return id; const o = oldById.get(id); if (!o) return null; const c = ACTS.filter(a => norm(a.name) === norm(o.name) && venue(a.venueId).name === o.vn && a.day === o.day).sort((x, y) => Math.abs(mins(x.start) - mins(o.start)) - Math.abs(mins(y.start) - mins(o.start))); return c.length ? c[0].id : null; };
     const uniq = a => [...new Set(a.filter(Boolean))];
     favs = uniq(favBefore.map(mapId)); stars = uniq((silent ? LS.get("lotd-stars", []) : stars).map(mapId)).filter(isFav); friend.ids = uniq(friend.ids.map(mapId));
@@ -578,7 +578,8 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
       : `<button class="nn-loc off" data-nowloc>${sv(SI.pin, 20)}<span><b>${L("Sorteer op wat het dichtst bij is", "Sort by what's nearest")}</b><small>${hereErr === "denied" ? L("Locatietoegang is geweigerd. Sta het toe in je browserinstellingen.", "Location access was denied. Allow it in your browser settings.") : L("Tik om je locatie te gebruiken. Die blijft op je telefoon.", "Tap to use your location. It stays on your phone.")}</small></span></button>`;
     const head = vHead(`<i class="live-dot"></i>`, `LIVE · ${hhmm(f.m)}${demo ? " · TEST" : ""}`, L("Hier wil je zijn.", "This is where you want to be."), `${dayCap(d.id)} · ${L("nu & straks", "now & next")}`) + `<div class="nn-top"><div class="nn-filter" role="group" aria-label="Filter"><button class="${nowFav ? "" : "on"}" data-now-all aria-pressed="${!nowFav}">${L("Alles", "All")}</button><button class="${nowFav ? "on" : ""}" data-now-fav aria-pressed="${nowFav}">${L("Mijn favorieten", "My favourites")}</button></div></div>${locBar}`;
     const empty = `<div class="empty">${nowFav ? L("Geen favorieten nu of in de komende 3 uur.", "No favourites now or in the next 3 hours.") : L("Het is even rustig. Niets nu of in de komende 3 uur.", "It's quiet. Nothing now or in the next 3 hours.")}</div>`;
-    return `<div class="list nn">${head}${cards || empty}</div>${updLine()}`;
+    if (!FOOD.length && foodState === "idle") setTimeout(() => loadFood().then(() => { if (nowIdle()) render(true); }), 0);
+    return `<div class="list nn">${head}${foodNudge(f, d)}${cards || empty}</div>${updLine()}`;
   }
 
   /* ---- hoofdweergave ---- */
@@ -613,7 +614,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     return `<div class="m-sub">${L("Locatie", "Location")}</div><h2>${g.name}</h2>${g.c ? `<a class="m-row" href="${routeUrl(g.c)}" target="_blank" rel="noopener">${sv(SI.pin)}<span><b>${L("Route hierheen", "Directions")}</b>${addr ? `<small>${addr}, Rotterdam</small>` : ""}</span></a>` : ""}${seg}<div class="m-list">${rows}</div>`;
   };
   const openMapSheet = n => { mapVen = n; if (!mapDay) mapDay = defMapDay(); sheet = mapSheet(); sheet && (sheet = '<div data-mapsheet>' + sheet + '</div>'); renderModal(); };
-  const vMapView = () => vHead(sv(SI.pin, 14), "ROTTERDAM", L("Van podium naar podium.", "From stage to stage."), L("Alle locaties op één plek. Tik op een logo voor de lineup.", "All venues in one place. Tap a logo for the line-up.")) + `<div class="mapwrap" id="mapwrap"><div id="lmap" aria-label="${L("Kaart met alle locaties", "Map of all venues")}"></div><div class="mapbtns"><button data-maploc aria-label="${L("Mijn locatie", "My location")}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2" fill="currentColor"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg></button><button data-mapfit aria-label="${L("Alles tonen", "Show all")}">${sv(SI.pin, 24)}</button></div><div class="mapnote" id="mapnote"></div></div><div class="venue-dir">${mapGroups().sort((x, y) => x.name.localeCompare(y.name)).map(g => `<div class="vd-item"><button data-mapven="${g.name.replace(/"/g, "&quot;")}"><span class="vd-name">${g.name}</span><small>${addrOf(g.name) || "Rotterdam"}</small></button>${g.c ? `<a href="${routeUrl(g.c)}" target="_blank" rel="noopener" aria-label="${L("Looproute naar", "Walking route to")} ${g.name}">${L("Looproute", "Route")} ${sv(SI.ext, 14)}</a>` : ""}</div>`).join("")}</div>${updLine()}`;
+  const vMapView = () => (mapMode === "food" ? vHead(sv(SI.pin, 14), "ROTTERDAM", L("Eten tussen de bands door.", "Food between the bands."), L("Snelle hap, friet en streetfood rond de zalen.", "Quick bites, fries and street food around the venues.")) : vHead(sv(SI.pin, 14), "ROTTERDAM", L("Van podium naar podium.", "From stage to stage."), L("Alle locaties op één plek. Tik op een logo voor de lineup.", "All venues in one place. Tap a logo for the line-up."))) + `<div class="map-tog" role="tablist" aria-label="${L("Kaartweergave", "Map view")}"><button class="${mapMode === "venues" ? "on" : ""}" data-mapmode="venues" role="tab" aria-selected="${mapMode === "venues"}">${L("Locaties", "Venues")}</button><button class="${mapMode === "food" ? "on" : ""}" data-mapmode="food" role="tab" aria-selected="${mapMode === "food"}">${L("Eten", "Food")}</button></div><div class="mapwrap${mapMode === "food" ? " food" : ""}" id="mapwrap"><div id="lmap" aria-label="${L("Kaart met alle locaties", "Map of all venues")}"></div><div class="mapbtns"><button data-maploc aria-label="${L("Mijn locatie", "My location")}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2" fill="currentColor"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg></button><button data-mapfit aria-label="${L("Alles tonen", "Show all")}">${sv(SI.pin, 24)}</button></div><div class="mapnote" id="mapnote"></div></div>${mapMode === "food" ? foodPanel() : ""}<div class="venue-dir"${mapMode === "food" ? " hidden" : ""}>${mapGroups().sort((x, y) => x.name.localeCompare(y.name)).map(g => `<div class="vd-item"><button data-mapven="${g.name.replace(/"/g, "&quot;")}"><span class="vd-name">${g.name}</span><small>${addrOf(g.name) || "Rotterdam"}</small></button>${g.c ? `<a href="${routeUrl(g.c)}" target="_blank" rel="noopener" aria-label="${L("Looproute naar", "Walking route to")} ${g.name}">${L("Looproute", "Route")} ${sv(SI.ext, 14)}</a>` : ""}</div>`).join("")}</div>${updLine()}`;
   const loadLeaflet = () => new Promise((ok, no) => {
     if (window.L && window.L.map) return ok();
     if (!document.getElementById("lf-css")) { const l = document.createElement("link"); l.id = "lf-css"; l.rel = "stylesheet"; l.href = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"; document.head.appendChild(l); }
@@ -624,6 +625,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
   const initMap = () => {
     killMap(); const tok = ++mapTok, wrap = document.getElementById("mapwrap"), main = document.getElementById("main"); if (!wrap) return;
     wrap.style.height = Math.round(Math.max(300, Math.min(main.clientHeight * 0.62, 520))) + "px";
+    if (mapMode === "food") loadFood().then(() => { if (route().p === "map" && mapMode === "food") { paintFoodList(); drawFoodLayer(); } });
     const groups = mapGroups(), miss = groups.filter(g => !g.c);
     if (miss.length) document.getElementById("mapnote").textContent = L("Nog geen kaartpositie: ", "No map position yet: ") + miss.map(g => g.name).join(", ");
     loadLeaflet().then(() => {
@@ -638,7 +640,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
         const ic = Lf.divIcon({ className: "lotd-pin", html: `<span class="pin"><img src="${LOGO}" alt="" onerror="this.remove()"><i>LOTD</i></span><em>${g.name}</em>`, iconSize: [46, 46], iconAnchor: [23, 23] });
         const mk = Lf.marker(g.c, { icon: ic, title: g.name, keyboard: true, alt: g.name }).addTo(lmap); mk.on("click", () => openMapSheet(g.name)); pts.push(g.c);
       });
-      lmap._fit = () => pts.length && lmap.fitBounds(pts, { padding: [30, 30], maxZoom: 17 }); lmap._fit();
+      lmap._fit = () => pts.length && lmap.fitBounds(pts, { padding: [30, 30], maxZoom: 17 }); lmap._fit(); drawFoodLayer();
       const zc = () => { const z = lmap.getZoom(); wrap.classList.toggle("zl", z >= 15); }; lmap.on("zoomend", zc); zc();
       setTimeout(() => lmap && lmap.invalidateSize(), 200);
     }).catch(() => { if (tok === mapTok) mapFallback(); });
@@ -650,7 +652,155 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     if ((b = c("[data-mapday]"))) { stop(); mapDay = b.getAttribute("data-mapday"); sheet = '<div data-mapsheet>' + mapSheet() + '</div>'; renderModal(); return; }
     if ((b = c("[data-mapven]"))) { stop(); openMapSheet(b.getAttribute("data-mapven")); return; }
     if (c("[data-mapfit]")) { stop(); lmap && lmap._fit && lmap._fit(); return; }
-    if (c("[data-maploc]")) { stop(); if (!navigator.geolocation || !lmap) return; navigator.geolocation.getCurrentPosition(p => { const ll = [p.coords.latitude, p.coords.longitude]; if (userDot) userDot.setLatLng(ll); else userDot = window.L.circleMarker(ll, { radius: 8, color: "#fff", weight: 3, fillColor: "#1717ff", fillOpacity: 1 }).addTo(lmap); lmap.setView(ll, Math.max(lmap.getZoom(), 15)); }, () => { const n = document.getElementById("mapnote"); if (n) n.textContent = L("Locatie niet beschikbaar. Sta locatietoegang toe.", "Location unavailable. Allow location access."); }, { enableHighAccuracy: true, timeout: 10000 }); return; }
+    if (c("[data-maploc]")) { stop(); if (!navigator.geolocation || !lmap) return; navigator.geolocation.getCurrentPosition(p => { const ll = [p.coords.latitude, p.coords.longitude]; here = { c: ll, t: Date.now() }; if (mapMode === "food") paintFoodList(); if (userDot) userDot.setLatLng(ll); else userDot = window.L.circleMarker(ll, { radius: 8, color: "#fff", weight: 3, fillColor: "#1717ff", fillOpacity: 1 }).addTo(lmap); lmap.setView(ll, Math.max(lmap.getZoom(), 15)); }, () => { const n = document.getElementById("mapnote"); if (n) n.textContent = L("Locatie niet beschikbaar. Sta locatietoegang toe.", "Location unavailable. Allow location access."); }, { enableHighAccuracy: true, timeout: 10000 }); return; }
+  }, true);
+
+  /* ==== ETEN: snelle eetplekken rond de zalen (OpenStreetMap + LOTD-tips) ==== */
+  const FOOD_TIPS_DEF = [
+    { name: "Bram Ladage", match: "bram ladage", cat: "friet", nl: "Hét Rotterdamse frietadres. Meerdere vestigingen in het centrum.", en: "The Rotterdam fries institution. Several outlets downtown." },
+    { name: "Mama Hong", match: "mama hong", addr: "Hoogstraat, Rotterdam", cat: "azie", nl: "Vietnamese loempia's en bánh mì, al sinds 1982.", en: "Vietnamese spring rolls and bánh mì, since 1982." },
+    { name: "Hung Kee", match: "hung kee", addr: "Witte de Withstraat 61B, 3012 BN Rotterdam", cat: "azie", nl: "Kip peper-zout. Ook laat nog open, vlak bij V2_ en Worm.", en: "Salt and pepper chicken. Open late, close to V2_ and Worm." },
+    { name: "Sranang", match: "sranang", addr: "Nieuwe Binnenweg 211A, Rotterdam", cat: "broodjes", nl: "Surinaamse broodjes, probeer de kip kerrie. Al 40 jaar een begrip.", en: "Surinamese sandwiches, try the chicken curry. A local favourite for 40 years." },
+    { name: "Panzerò", match: "panzer", addr: "Botersloot 50A, Rotterdam", cat: "broodjes", nl: "Streetfood uit Puglia: puccia en panzerotti. Bij de Markthal.", en: "Street food from Puglia: puccia and panzerotti. By the Markthal." },
+    { name: "Guliano", match: "gulian|giulian", addr: "Meent 31A, Rotterdam", cat: "broodjes", nl: "Bistecca-focaccia met truffelmayo. Vooral overdag open.", en: "Bistecca focaccia with truffle mayo. Mostly open in the daytime." },
+    { name: "Markthal", match: "^markthal", addr: "Dominee Jan Scharpstraat 298, Rotterdam", cat: "hal", nl: "Overdekte foodhal met tientallen snelle kraampjes. Sluit vroeg op de avond.", en: "Covered food hall with dozens of quick stalls. Closes early in the evening." },
+    { name: "Bazar", match: "^bazar", addr: "Witte de Withstraat 16, Rotterdam", cat: "oost", nl: "Midden-Oosterse klassiekers, snel op tafel. Zitten, maar vlot.", en: "Middle Eastern classics, served fast. Sit-down but quick." }
+  ];
+  let foodTips = Array.isArray(window.__lotdFoodTips) ? window.__lotdFoodTips : FOOD_TIPS_DEF.slice();
+  const FOOD_CATS = [["all", "Alles", "All"], ["friet", "Friet & snacks", "Fries & snacks"], ["burger", "Burger", "Burgers"], ["pizza", "Pizza", "Pizza"], ["oost", "Falafel & shoarma", "Falafel & shawarma"], ["azie", "Aziatisch", "Asian"], ["broodjes", "Broodjes", "Sandwiches"], ["kip", "Kip", "Chicken"]];
+  const CAT_RX = [["pizza", /pizza/], ["burger", /burger|hamburger/], ["kip", /chicken|kip|wings/], ["oost", /kebab|doner|döner|shawarma|shoarma|falafel|turkish|lebanese|middle_eastern|syrian|arab|greek|gyros|persian|moroccan/], ["azie", /chinese|japanese|sushi|thai|vietnam|asian|noodle|ramen|korean|indonesian|dumpling|wok|poke|indian|bao/], ["broodjes", /sandwich|bagel|bakery|surinam|roti|sub|deli|panini|toast|caribbean/], ["friet", /friture|fries|chips|french_fries|snack|dutch|frites|friet|kapsalon/]];
+  const FOOD_KEY = "lotd-food2", FOOD_TTL = 864e5;
+  let FOOD = [], foodState = "idle", mapMode = LS.get("lotd-map-mode", "venues") === "food" ? "food" : "venues", foodQ = "", foodCat = "all", foodOpenOnly = false, foodVeg = false, foodShow = 40, foodLayer = null;
+  const catOf = t => { const s = ((t.cuisine || "") + " " + (t.name || "")).toLowerCase(); for (const [k, rx] of CAT_RX) if (rx.test(s)) return k; return t.amenity === "food_court" ? "hal" : "overig"; };
+  const catName = k => { const c = FOOD_CATS.find(x => x[0] === k); return c ? L(c[1], c[2]) : k === "hal" ? L("Foodhal", "Food hall") : L("Snel eten", "Quick bites"); };
+  /* openingstijden (OSM opening_hours, de gangbare vormen); onbekend = null */
+  const DD = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+  function ohParse(oh) {
+    if (!oh) return null; oh = oh.trim(); if (oh === "24/7") return { all: true };
+    const week = {}; DD.forEach(d => week[d] = null);
+    for (let rule of oh.split(";")) {
+      rule = rule.trim(); if (!rule) continue;
+      if (/\b(PH|SH)\b/.test(rule) && !/^(Mo|Tu|We|Th|Fr|Sa|Su)/.test(rule)) continue;
+      rule = rule.replace(/,?\s*(PH|SH)\b(\s*off)?/g, "");
+      const m = rule.match(/^((?:(?:Mo|Tu|We|Th|Fr|Sa|Su)(?:\s*-\s*(?:Mo|Tu|We|Th|Fr|Sa|Su))?\s*,?\s*)+)?\s*(.*)$/); if (!m) return null;
+      let days = [];
+      if (m[1]) { for (const part of m[1].split(",").map(x => x.trim()).filter(Boolean)) { const [a, b] = part.split("-").map(x => x.trim()); const ia = DD.indexOf(a), ib = b ? DD.indexOf(b) : ia; if (ia < 0 || ib < 0) return null; for (let i = ia; ; i = (i + 1) % 7) { days.push(DD[i]); if (i === ib) break; } } }
+      else days = DD.slice();
+      const tp = m[2].trim();
+      if (/^(off|closed)$/i.test(tp)) { days.forEach(d => week[d] = []); continue; }
+      const ranges = []; for (const r of tp.split(",").map(x => x.trim()).filter(Boolean)) { const t = r.match(/^(\d{1,2}):(\d\d)\s*-\s*(\d{1,2}):(\d\d)\+?$/); if (!t) return null; ranges.push([+t[1] * 60 + +t[2], +t[3] * 60 + +t[4]]); }
+      if (!ranges.length) return null; days.forEach(d => week[d] = ranges);
+    }
+    return { week };
+  }
+  const hm = m => String(Math.floor((m % 1440) / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
+  function ohState(oh) {
+    const p = ohParse(oh); if (!p) return { open: null };
+    if (p.all) return { open: true, allDay: true };
+    const n = getNow(), dow = n.getDay(), m = n.getHours() * 60 + n.getMinutes(), today = p.week[DD[dow]], yest = p.week[DD[(dow + 6) % 7]];
+    if (yest) for (const [a, b] of yest) if (b <= a && m < b) return { open: true, until: b };
+    if (today) for (const [a, b] of today) { const e = b <= a ? b + 1440 : b; if (m >= a && m < e) return { open: true, until: e }; }
+    if (today && today.length) { const nx = today.filter(([a]) => a > m).sort((x, y) => x[0] - y[0])[0]; if (nx) return { open: false, from: nx[0] }; }
+    if (today === null && yest === null && !Object.values(p.week).some(Boolean)) return { open: null };
+    return { open: false };
+  }
+  const stateTxt = st => st.open === true ? (st.allDay ? L("24 uur open", "Open 24 hours") : L(`Open tot ${hm(st.until)}`, `Open until ${hm(st.until)}`)) : st.open === false ? (st.from != null ? L(`Dicht · opent ${hm(st.from)}`, `Closed · opens ${hm(st.from)}`) : L("Nu dicht", "Closed now")) : L("Tijden onbekend", "Hours unknown");
+  /* ophalen + cache */
+  function buildFood(elements) {
+    const out = [], seen = new Set();
+    for (const e of elements || []) {
+      const t = e.tags || {}, lat = e.lat || (e.center && e.center.lat), lon = e.lon || (e.center && e.center.lon);
+      if (!t.name || !lat || !lon) continue; const key = t.name.toLowerCase() + "|" + lat.toFixed(4) + lon.toFixed(4); if (seen.has(key)) continue; seen.add(key);
+      out.push({ id: e.type[0] + e.id, name: t.name, c: [+lat, +lon], cat: catOf({ cuisine: t.cuisine, name: t.name, amenity: t.amenity }), cuisine: (t.cuisine || "").replace(/_/g, " ").replace(/;/g, ", "), oh: t.opening_hours || "", veg: /yes|only/.test(t["diet:vegetarian"] || "") || /yes|only/.test(t["diet:vegan"] || ""), vegan: /yes|only/.test(t["diet:vegan"] || ""), addr: [t["addr:street"], t["addr:housenumber"]].filter(Boolean).join(" ") });
+    }
+    return out;
+  }
+  function mergeTips(list) {
+    const geo = LS.get("lotd-foodgeo", {}) || {};
+    list.forEach(f => { delete f.tip; });
+    for (const tp of foodTips) {
+      const rx = new RegExp(tp.match || tp.name, "i"), hits = list.filter(f => rx.test(f.name));
+      if (hits.length) hits.forEach(f => { f.tip = tp; if (tp.cat && f.cat === "overig") f.cat = tp.cat; });
+      else { const c = geo[tp.name]; list.push({ id: "tip-" + tp.name, name: tp.name, c: c || null, cat: tp.cat || "overig", cuisine: "", oh: tp.oh || "", veg: false, addr: (tp.addr || "").replace(/, \d{4} ?[A-Z]{2}/, "").replace(/, Rotterdam$/, ""), tip: tp }); }
+    }
+    return list;
+  }
+  function geoTips() {
+    const geo = LS.get("lotd-foodgeo", {}) || {}, todo = foodTips.filter(tp => tp.addr && !geo[tp.name] && FOOD.some(f => f.id === "tip-" + tp.name)); if (!todo.length || navigator.onLine === false) return;
+    let k = 0; const next = () => { if (k >= todo.length) return; const tp = todo[k++];
+      fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=nl&bounded=1&viewbox=4.38,51.98,4.58,51.86&q=" + encodeURIComponent(tp.addr), { headers: { Accept: "application/json" } }).then(r => r.json()).then(j => { if (j && j[0]) { geo[tp.name] = [+(+j[0].lat).toFixed(5), +(+j[0].lon).toFixed(5)]; LS.set("lotd-foodgeo", geo); const f = FOOD.find(x => x.id === "tip-" + tp.name); if (f) f.c = geo[tp.name]; } }).catch(() => {}).then(() => setTimeout(next, 1100)); };
+    next();
+  }
+  const FOOD_Q = `[out:json][timeout:25];(nwr["amenity"="fast_food"](51.903,4.455,51.935,4.495);nwr["amenity"="food_court"](51.903,4.455,51.935,4.495);nwr["amenity"="restaurant"]["cuisine"~"pizza|kebab|burger|falafel|shawarma|noodle|ramen|dumpling|friture|fries|sandwich|chicken|surinamese|vietnamese|poke|bagel"](51.903,4.455,51.935,4.495););out center tags;`;
+  function loadFood(force) {
+    const cached = LS.get(FOOD_KEY, null);
+    if (cached && cached.list && !FOOD.length) { FOOD = mergeTips(cached.list.slice()); foodState = "ok"; }
+    if (!force && cached && Date.now() - cached.t < FOOD_TTL) { if (!FOOD.length) FOOD = mergeTips(cached.list.slice()); foodState = "ok"; geoTips(); return Promise.resolve(); }
+    if (foodState === "loading") return Promise.resolve(); if (navigator.onLine === false) { if (!FOOD.length) { FOOD = mergeTips([]); foodState = "offline"; } return Promise.resolve(); }
+    foodState = FOOD.length ? "ok" : "loading";
+    const urls = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter"];
+    const tryUrl = i => fetch(urls[i] + "?data=" + encodeURIComponent(FOOD_Q)).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).catch(e => { if (i + 1 < urls.length) return tryUrl(i + 1); throw e; });
+    return tryUrl(0).then(j => { const list = buildFood(j.elements); if (list.length) { LS.set(FOOD_KEY, { t: Date.now(), list }); FOOD = mergeTips(list.slice()); foodState = "ok"; } else if (!FOOD.length) { FOOD = mergeTips([]); foodState = "ok"; } geoTips(); })
+      .catch(() => { if (!FOOD.length) { FOOD = mergeTips([]); foodState = "error"; } });
+  }
+  const nearestVenue = c => { let best = null; mapGroups().forEach(g => { if (!g.c) return; const d = distM(c, g.c); if (!best || d < best.d) best = { name: g.name, d }; }); return best; };
+  const foodFiltered = () => { const q = fold(foodQ.trim()); return FOOD.filter(f => (foodCat === "all" || f.cat === foodCat) && (!foodVeg || f.veg) && (!q || fold([f.name, f.cuisine, catName(f.cat), f.addr].join(" ")).includes(q)) && (!foodOpenOnly || ohState(f.oh).open === true)); };
+  const foodSort = list => list.map(f => ({ f, d: f.c && here ? distM(here.c, f.c) : null, st: ohState(f.oh) })).sort((a, b) => (a.d != null && b.d != null ? a.d - b.d : 0) || (!!b.f.tip - !!a.f.tip) || ((b.st.open === true) - (a.st.open === true)) || a.f.name.localeCompare(b.f.name));
+  const fItem = ({ f, d, st }) => { const nv = !d && f.c ? nearestVenue(f.c) : null, where = d != null ? distTxt(d) : nv ? L(`${walkMin(nv.d)} min van ${nv.name}`, `${walkMin(nv.d)} min from ${nv.name}`) : (f.addr || "Rotterdam");
+    return `<button class="fd-item${f.tip ? " tip" : ""}" data-food="${esc(f.id)}"><span class="fd-ico" aria-hidden="true">${f.tip ? "★" : catIcon(f.cat)}</span><span class="fd-main"><b>${esc(f.name)}${f.tip ? `<em class="fd-tip">LOTD-tip</em>` : ""}</b><small>${catName(f.cat)}${f.cuisine && f.cat === "overig" ? " · " + esc(f.cuisine) : ""}${f.veg ? " · " + L("vega", "veggie") : ""} · ${where}</small></span><span class="fd-st ${st.open === true ? "o" : st.open === false ? "c" : "u"}">${st.open === true ? (st.allDay ? "24/7" : L("tot ", "till ") + hm(st.until)) : st.open === false ? L("dicht", "closed") : "?"}</span></button>`; };
+  const catIcon = k => ({ friet: "🍟", burger: "🍔", pizza: "🍕", oost: "🥙", azie: "🥡", broodjes: "🥪", kip: "🍗", hal: "🏛" }[k] || "🍽");
+  const foodListHtml = () => {
+    if (foodState === "loading" && !FOOD.length) return `<p class="fd-empty">${L("Eetplekken laden…", "Loading places to eat…")}</p>`;
+    const all = foodSort(foodFiltered()), shown = all.slice(0, foodShow);
+    const note = foodState === "error" ? `<p class="fd-note">${L("Kon de eetplekken niet laden. Alleen de LOTD-tips worden getoond.", "Couldn't load places to eat. Showing LOTD tips only.")} <button class="lnk" data-food-retry>${L("Opnieuw", "Retry")}</button></p>` : foodState === "offline" ? `<p class="fd-note">${L("Offline: alleen de LOTD-tips.", "Offline: LOTD tips only.")}</p>` : "";
+    return note + `<p class="fd-count">${all.length} ${L(all.length === 1 ? "plek" : "plekken", all.length === 1 ? "place" : "places")}${here ? L(" · dichtstbij eerst", " · nearest first") : ` · <button class="lnk" data-food-loc>${L("Sorteer op mijn locatie", "Sort by my location")}</button>`}</p>` + (shown.length ? shown.map(fItem).join("") : `<p class="fd-empty">${L("Niets gevonden. Probeer een ander filter.", "Nothing found. Try another filter.")}</p>`) + (all.length > shown.length ? `<button class="fd-more" data-food-more>${L(`Toon meer (${all.length - shown.length})`, `Show more (${all.length - shown.length})`)}</button>` : "") + `<p class="fd-src">${L("Bron: OpenStreetMap-bijdragers. Openingstijden kunnen afwijken.", "Source: OpenStreetMap contributors. Opening hours may differ.")}</p>`;
+  };
+  const foodPanel = () => `<div class="fd-panel"><div class="fd-search"><input id="fq" type="search" placeholder="${L("Zoek friet, pizza, falafel…", "Search fries, pizza, falafel…")}" value="${esc(foodQ)}" autocomplete="off"></div><div class="fd-chips" role="group" aria-label="${L("Soort eten", "Type of food")}"><button class="${foodOpenOnly ? "on" : ""}" data-food-open aria-pressed="${foodOpenOnly}">${L("Nu open", "Open now")}</button><button class="${foodVeg ? "on" : ""}" data-food-veg aria-pressed="${foodVeg}">${L("Vega", "Veggie")}</button>${FOOD_CATS.map(([k, nl, en]) => `<button class="${foodCat === k ? "on" : ""}" data-food-cat="${k}" aria-pressed="${foodCat === k}">${k === "all" ? L(nl, en) : catIcon(k) + " " + L(nl, en)}</button>`).join("")}</div><div id="food-list">${foodListHtml()}</div></div>`;
+  const paintFoodList = () => { const el = document.getElementById("food-list"); if (el) { el.innerHTML = foodListHtml(); trNode(el); } };
+  const foodSheet = f => {
+    const st = ohState(f.oh), nv = f.c ? nearestVenue(f.c) : null, d = f.c && here ? distM(here.c, f.c) : null;
+    return `<div data-foodsheet><div class="m-sub">${catName(f.cat)}${f.cuisine ? " · " + esc(f.cuisine) : ""}</div><h2>${esc(f.name)}</h2>${f.tip ? `<div class="fd-tipbox"><b>LOTD-tip</b>${esc(L(f.tip.nl, f.tip.en))}</div>` : ""}
+      <div class="fd-stbig ${st.open === true ? "o" : st.open === false ? "c" : "u"}">${stateTxt(st)}</div>
+      ${f.c ? `<div class="m-row m-route">${sv(SI.pin)}<a href="${routeUrl(f.c)}" target="_blank" rel="noopener"><b>${esc(f.addr || f.name)}</b><small>${d != null ? distTxt(d) + " · " : ""}${nv ? L(`${walkMin(nv.d)} min lopen van ${nv.name}`, `${walkMin(nv.d)} min walk from ${nv.name}`) : "Rotterdam"} · ${L("route", "directions")} ↗</small></a><button class="m-walk" data-here="${f.c[0]},${f.c[1]}">${sv(SI.foot, 18)}<b>${L("Looptijd", "Walk time")}</b></button></div>` : `<p>${esc(f.addr || "")}</p>`}
+      ${f.oh ? `<p class="fd-oh">${esc(f.oh)}</p>` : ""}${f.veg ? `<p class="fd-oh">${f.vegan ? L("Veganistische opties", "Vegan options") : L("Vegetarische opties", "Vegetarian options")}</p>` : ""}</div>`;
+  };
+  const openFood = id => { const f = FOOD.find(x => x.id === id); if (!f) return; sheet = foodSheet(f); renderModal(); if (lmap && f.c) lmap.setView(f.c, Math.max(lmap.getZoom(), 16)); };
+  function drawFoodLayer() {
+    if (!lmap || !window.L) return; const Lf = window.L;
+    if (foodLayer) { try { lmap.removeLayer(foodLayer); } catch (e) {} foodLayer = null; }
+    document.getElementById("mapwrap") && document.getElementById("mapwrap").classList.toggle("food", mapMode === "food");
+    if (mapMode !== "food") return;
+    foodLayer = Lf.layerGroup();
+    foodFiltered().filter(f => f.c).forEach(f => { const st = ohState(f.oh); const ic = Lf.divIcon({ className: "fd-pin" + (f.tip ? " tip" : "") + (st.open === false ? " closed" : ""), html: `<span>${f.tip ? "★" : catIcon(f.cat)}</span>`, iconSize: [30, 30], iconAnchor: [15, 15] });
+      Lf.marker(f.c, { icon: ic, title: f.name, alt: f.name, keyboard: true }).on("click", () => openFood(f.id)).addTo(foodLayer); });
+    foodLayer.addTo(lmap);
+  }
+  /* "Tijd voor eten?" in Nu & straks */
+  function foodNudge(f, d) {
+    if (!d || !FOOD.length) return "";
+    const mine = ACTS.filter(a => a.day === d.id && isFav(a.id) && !a.cancelled).sort(byTime);
+    if (!mine.length || mine.some(a => mins(a.start) <= f.m && mins(a.end) > f.m)) return "";
+    const nxt = mine.find(a => mins(a.start) > f.m); if (!nxt) return "";
+    const gap = mins(nxt.start) - f.m; if (gap < 45) return "";
+    const vc = coordOf(venue(nxt.venueId).name); if (!vc) return "";
+    const cand = FOOD.filter(x => x.c && ohState(x.oh).open !== false).map(x => { const dv = distM(x.c, vc), du = here ? distM(here.c, x.c) : 0, st = ohState(x.oh); return { x, dv, score: dv + du * .7 + (st.open === true ? 0 : 250) - (x.tip ? 120 : 0) }; }).filter(o => o.dv < 900).sort((a, b) => a.score - b.score).slice(0, 3);
+    if (!cand.length) return "";
+    const vn = baseName(venue(nxt.venueId).name);
+    return `<section class="fd-nudge"><div class="fd-nh"><span>${L("Tijd voor eten?", "Time to eat?")}</span><b>${gap} min</b></div><p>${L(`Je hebt ${gap} minuten tot <strong>${esc(nxt.name)}</strong> in ${esc(vn)}. Snelle plekken in de buurt:`, `You have ${gap} minutes until <strong>${esc(nxt.name)}</strong> at ${esc(vn)}. Quick bites nearby:`)}</p>${cand.map(o => { const st = ohState(o.x.oh); return `<button class="fd-item${o.x.tip ? " tip" : ""}" data-food="${esc(o.x.id)}"><span class="fd-ico" aria-hidden="true">${o.x.tip ? "★" : catIcon(o.x.cat)}</span><span class="fd-main"><b>${esc(o.x.name)}</b><small>${catName(o.x.cat)} · ${L(`${walkMin(o.dv)} min van ${vn}`, `${walkMin(o.dv)} min from ${vn}`)}</small></span><span class="fd-st ${st.open === true ? "o" : "u"}">${st.open === true ? L("tot ", "till ") + hm(st.until) : "?"}</span></button>`; }).join("")}<button class="fd-more" data-food-map>${L("Meer eten op de kaart →", "More food on the map →")}</button></section>`;
+  }
+  window.__lotdFoodApply = () => { foodTips = window.__lotdFoodTips; if (FOOD.length) FOOD = mergeTips(FOOD.filter(f => !String(f.id).startsWith("tip-"))); };
+  document.addEventListener("input", e => { if (e.target.id !== "fq") return; e.stopImmediatePropagation(); foodQ = e.target.value; foodShow = 40; paintFoodList(); drawFoodLayer(); }, true);
+  document.addEventListener("click", e => {
+    const tg = e.target, c = sel => tg.closest && tg.closest(sel), stop = () => e.stopImmediatePropagation(); let b;
+    if ((b = c("[data-mapmode]"))) { stop(); mapMode = b.dataset.mapmode; LS.set("lotd-map-mode", mapMode); if (mapMode === "food") loadFood().then(() => { if (route().p === "map") { paintFoodList(); drawFoodLayer(); } }); render(true); return; }
+    if ((b = c("[data-food]"))) { stop(); if (sheet) { sheet = null; } openFood(b.dataset.food); return; }
+    if ((b = c("[data-food-cat]"))) { stop(); foodCat = b.dataset.foodCat; foodShow = 40; document.querySelectorAll("[data-food-cat]").forEach(x => { x.classList.toggle("on", x === b); x.setAttribute("aria-pressed", String(x === b)); }); paintFoodList(); drawFoodLayer(); return; }
+    if ((b = c("[data-food-open]"))) { stop(); foodOpenOnly = !foodOpenOnly; b.classList.toggle("on", foodOpenOnly); b.setAttribute("aria-pressed", String(foodOpenOnly)); paintFoodList(); drawFoodLayer(); return; }
+    if ((b = c("[data-food-veg]"))) { stop(); foodVeg = !foodVeg; b.classList.toggle("on", foodVeg); b.setAttribute("aria-pressed", String(foodVeg)); paintFoodList(); drawFoodLayer(); return; }
+    if (c("[data-food-more]")) { stop(); foodShow += 40; paintFoodList(); return; }
+    if (c("[data-food-retry]")) { stop(); foodState = "idle"; loadFood(true).then(() => { paintFoodList(); drawFoodLayer(); }); paintFoodList(); return; }
+    if (c("[data-food-loc]")) { stop(); if (!navigator.geolocation) return; navigator.geolocation.getCurrentPosition(p => { here = { c: [p.coords.latitude, p.coords.longitude], t: Date.now() }; paintFoodList(); }, () => {}, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }); return; }
+    if (c("[data-food-map]")) { stop(); mapMode = "food"; LS.set("lotd-map-mode", "food"); go("/map"); return; }
   }, true);
 
   /* ---- klikken (vóór de bestaande afhandeling) ---- */

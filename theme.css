@@ -344,3 +344,58 @@ html.big body .act-sheet .m-w-r small, html.big body .act-sheet .m-w-l small { f
   html body .vh-lab .live-dot { animation: none; }
   html body .sheet { animation: none !important; }
 }
+
+/* ---------- eten ---------- */
+html body .map-tog { display: flex; margin: 0 20px 14px; border: 1px solid var(--hair); border-radius: 6px; overflow: hidden; background: var(--paper); }
+html body .map-tog button { flex: 1; min-height: 44px; border: 0; background: var(--paper); color: var(--ink); font: 600 15px var(--font); }
+html body .map-tog button + button { border-left: 1px solid var(--hair); }
+html body .map-tog button.on { background: var(--ink); color: #fff; }
+html body .mapwrap.food .lotd-pin .pin { width: 24px !important; height: 24px !important; margin: 11px !important; opacity: .55; font-size: 6px !important; line-height: 20px !important; }
+html body .mapwrap.food .lotd-pin em { display: none !important; }
+html body .fd-pin { background: none !important; border: 0 !important; }
+html body .fd-pin span { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; background: #fff; border: 2px solid var(--blue); box-shadow: 0 2px 6px rgba(20,20,20,.25); font-size: 15px; line-height: 1; }
+html body .fd-pin.tip span { background: #ff3d9a; border-color: #fff; color: #fff; font-size: 16px; font-weight: 800; }
+html body .fd-pin.closed span { opacity: .45; border-color: #9a9aa4; }
+html body .fd-panel { padding: 14px 16px 4px; background: var(--paper); }
+html body .fd-search input { width: 100%; height: 46px; border: 1px solid var(--hair); border-radius: 6px; padding: 0 14px; font: 500 16px var(--font); background: var(--paper); box-sizing: border-box; }
+html body .fd-search input:focus { border-color: var(--blue); outline: 2px solid var(--blue); }
+html body .fd-chips { display: flex; gap: 6px; overflow-x: auto; padding: 10px 0 6px; scrollbar-width: none; }
+html body .fd-chips::-webkit-scrollbar { display: none; }
+html body .fd-chips button { flex: none; min-height: 38px; padding: 0 12px; border: 1px solid var(--hair); border-radius: 19px; background: var(--paper); color: var(--ink); font: 600 14px var(--font); white-space: nowrap; }
+html body .fd-chips button.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+html body .fd-count { margin: 6px 0 2px; font: 500 12.5px var(--font); color: var(--muted-ink); }
+html body .fd-count .lnk { font-size: 12.5px; padding: 0; }
+html body .fd-item { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; padding: 10px 0; border: 0; border-bottom: 1px solid var(--hair); background: none; color: var(--ink); text-align: left; }
+html body .fd-item:active { background: var(--blue-soft); }
+html body .fd-ico { flex: none; width: 38px; height: 38px; border-radius: 50%; background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 19px; }
+html body .fd-item.tip .fd-ico { background: #ff3d9a; color: #fff; font-weight: 800; font-size: 18px; }
+html body .fd-main { flex: 1; min-width: 0; }
+html body .fd-main b { display: block; font: 700 19px/1.1 var(--display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+html body .fd-main small { display: block; margin-top: 3px; font-size: 12.5px; color: var(--muted-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+html body .fd-tip { font: 700 9.5px/1 var(--font); font-style: normal; letter-spacing: .05em; text-transform: uppercase; background: #ff3d9a; color: #fff; padding: 3px 5px; border-radius: 3px; margin-left: 7px; vertical-align: 3px; }
+html body .fd-st { flex: none; font: 700 11.5px var(--font); padding: 5px 7px; border-radius: 3px; white-space: nowrap; }
+html body .fd-st.o { background: #e3f6e8; color: #116b2f; }
+html body .fd-st.c { background: #f1f1f4; color: #6b6b73; }
+html body .fd-st.u { background: #f1f1f4; color: #6b6b73; }
+html body .fd-more { display: block; width: 100%; min-height: 46px; margin: 12px 0 4px; border: 1px solid var(--hair); border-radius: 6px; background: var(--paper); color: var(--blue); font: 600 15px var(--font); }
+html body .fd-empty, html body .fd-note { padding: 14px 0; font-size: 14px; color: var(--muted-ink); }
+html body .fd-src { margin: 12px 0 4px; font-size: 11.5px; color: var(--muted-ink); }
+html body .fd-tipbox { background: #fdeef5; border-left: 3px solid #ff3d9a; border-radius: 3px; padding: 10px 12px; margin: 4px 0 12px; font: 500 14.5px/1.4 var(--font); }
+html body .fd-tipbox b { display: block; font: 700 11px var(--font); letter-spacing: .06em; text-transform: uppercase; color: #c2186b; margin-bottom: 3px; }
+html body .fd-stbig { display: inline-block; font: 700 14px var(--font); padding: 6px 10px; border-radius: 4px; margin: 0 0 6px; }
+html body .fd-stbig.o { background: #e3f6e8; color: #116b2f; }
+html body .fd-stbig.c, html body .fd-stbig.u { background: #f1f1f4; color: #55555f; }
+html body [data-foodsheet] .m-row { border-top: 1px solid var(--hair) !important; }
+html body [data-foodsheet] .m-route a { flex: 1; min-width: 0; color: var(--ink); text-decoration: none; display: block !important; }
+html body [data-foodsheet] .m-route a b, html body [data-foodsheet] .m-route a small { display: block !important; }
+html body [data-foodsheet] .m-route a small { margin-top: 2px; font-size: 12.5px !important; }
+html body [data-foodsheet] .m-route a b { color: var(--ink) !important; text-decoration: none !important; }
+html body [data-foodsheet] .m-route a small { color: var(--blue) !important; }
+html body .fd-oh { font-size: 13px !important; color: var(--muted-ink); margin: 8px 0 0 !important; }
+html body .fd-nudge { border: 1px solid var(--hair); border-radius: 6px; overflow: hidden; margin: 0 0 14px; background: var(--paper); }
+html body .fd-nh { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #ff3d9a; color: #fff; font: 700 12px var(--font); letter-spacing: .06em; text-transform: uppercase; }
+html body .fd-nh b { font: 800 18px var(--display); letter-spacing: .02em; }
+html body .fd-nudge > p { margin: 10px 12px 2px; font-size: 14px; line-height: 1.4; }
+html body .fd-nudge .fd-item { padding-left: 12px; padding-right: 12px; }
+html body .fd-nudge .fd-more { width: calc(100% - 24px); margin: 10px 12px 12px; }
+@media (min-width: 700px) { html body .map-tog { margin: 0 32px 16px; max-width: 420px; } html body .fd-panel { padding: 16px 32px 4px; } }
