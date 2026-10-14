@@ -134,12 +134,12 @@ const leaderboard = (() => {
 .wg-mis{border:1px solid #e2e2e8;border-radius:6px;background:#fff;margin:0 0 16px;overflow:hidden}
 .wg-mis .wg-mis-h{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#141414;color:#fff;font:700 12px/1 "Barlow",Arial,sans-serif;letter-spacing:.07em;text-transform:uppercase}
 .wg-mis .wg-mis-h b{color:#c6d0ff;letter-spacing:.02em}
-.wg-mis li{display:flex!important;align-items:center;gap:10px;padding:11px 12px!important;border-bottom:1px solid #ececf1!important;font-size:15px!important}
+.wg-mis ol{margin:0!important}.wg-mis li{display:flex!important;align-items:center;gap:10px;padding:11px 12px!important;border-bottom:1px solid #ececf1!important;font-size:15px!important}
 .wg-mis li:last-child{border-bottom:0!important}
 .wg-mis li i{flex:none;width:22px!important;height:22px;border-radius:50%;border:2px solid #c9c9d2;opacity:1!important;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:13px;color:#fff}
 .wg-mis li.ok i{background:#1717ff;border-color:#1717ff}
 .wg-mis li.ok span{color:#5e5e66;text-decoration:line-through}
-.wg-mis li.now{background:#eef0ff}
+.wg-mis li.wg-now{background:#eef0ff}
 .wg-mis li small{margin-left:auto;font:600 12px "Barlow",Arial,sans-serif;color:#1717ff;white-space:nowrap}
 .wg-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:58px;margin:0 0 8px;border:0;background:#1717ff;color:#fff;font:800 22px/1 "Barlow Condensed",Arial,sans-serif;letter-spacing:.04em;text-transform:uppercase;border-radius:6px;touch-action:manipulation;cursor:pointer}
 .wg-btn:active{transform:scale(.985);background:#0f0fd0}
@@ -526,7 +526,7 @@ const leaderboard = (() => {
     combo: `<svg viewBox="0 0 36 36"><rect width="36" height="36" rx="6" fill="#1717ff"/><text x="18" y="24" font-family="Arial Black,Arial" font-weight="900" font-size="14" fill="#fff" text-anchor="middle">x5</text></svg>`
   };
   const misHtml = () => { const mis = missionsToday(), dn = prof.mis.done.filter(Boolean).length;
-    return `<div class="wg-mis"><div class="wg-mis-h"><span>${Lg("Missies van vandaag", "Today's missions")}</span><b>★ ${dn}/3</b></div><ol>${mis.map((m, i) => `<li class="${prof.mis.done[i] ? "ok" : ""}${misDoneRun.includes(i) ? " now" : ""}"><i>${prof.mis.done[i] ? "✓" : ""}</i><span>${esc(misText(m))}</span>${misDoneRun.includes(i) ? "<small>+★</small>" : ""}</li>`).join("")}</ol></div>`; };
+    return `<div class="wg-mis"><div class="wg-mis-h"><span>${Lg("Missies van vandaag", "Today's missions")}</span><b>★ ${dn}/3</b></div><ol>${mis.map((m, i) => `<li class="${prof.mis.done[i] ? "ok" : ""}${misDoneRun.includes(i) ? " wg-now" : ""}"><i>${prof.mis.done[i] ? "✓" : ""}</i><span>${esc(misText(m))}</span>${misDoneRun.includes(i) ? "<small>+★</small>" : ""}</li>`).join("")}</ol></div>`; };
   function showStart() {
     state = "start"; bestEl.textContent = "Record " + best; stage = 0; root.classList.remove("dark"); paintStage(); setScore(0);
     show(`<div class="wg-kick">Left of the Dial · ${Lg("het spel", "the game")}</div><h2>Wapper<br>man<em>.</em></h2>
