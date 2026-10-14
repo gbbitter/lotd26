@@ -578,8 +578,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
       : `<button class="nn-loc off" data-nowloc>${sv(SI.pin, 20)}<span><b>${L("Sorteer op wat het dichtst bij is", "Sort by what's nearest")}</b><small>${hereErr === "denied" ? L("Locatietoegang is geweigerd. Sta het toe in je browserinstellingen.", "Location access was denied. Allow it in your browser settings.") : L("Tik om je locatie te gebruiken. Die blijft op je telefoon.", "Tap to use your location. It stays on your phone.")}</small></span></button>`;
     const head = vHead(`<i class="live-dot"></i>`, `LIVE · ${hhmm(f.m)}${demo ? " · TEST" : ""}`, L("Hier wil je zijn.", "This is where you want to be."), `${dayCap(d.id)} · ${L("nu & straks", "now & next")}`) + `<div class="nn-top"><div class="nn-filter" role="group" aria-label="Filter"><button class="${nowFav ? "" : "on"}" data-now-all aria-pressed="${!nowFav}">${L("Alles", "All")}</button><button class="${nowFav ? "on" : ""}" data-now-fav aria-pressed="${nowFav}">${L("Mijn favorieten", "My favourites")}</button></div></div>${locBar}`;
     const empty = `<div class="empty">${nowFav ? L("Geen favorieten nu of in de komende 3 uur.", "No favourites now or in the next 3 hours.") : L("Het is even rustig. Niets nu of in de komende 3 uur.", "It's quiet. Nothing now or in the next 3 hours.")}</div>`;
-    if (!FOOD.length && foodState === "idle") setTimeout(() => loadFood().then(() => { if (nowIdle()) render(true); }), 0);
-    return `<div class="list nn">${head}${foodNudge(f, d)}${cards || empty}</div>${updLine()}`;
+    return `<div class="list nn">${head}${cards || empty}</div>${updLine()}`;
   }
 
   /* ---- hoofdweergave ---- */
@@ -780,19 +779,6 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     foodFiltered().filter(f => f.c).forEach(f => { const st = ohState(f.oh); const ic = Lf.divIcon({ className: "fd-pin" + (f.tip ? " tip" : "") + (st.open === false ? " closed" : ""), html: `<span>${f.tip ? "★" : catIcon(f.cat)}</span>`, iconSize: [30, 30], iconAnchor: [15, 15] });
       Lf.marker(f.c, { icon: ic, title: f.name, alt: f.name, keyboard: true }).on("click", () => openFood(f.id)).addTo(foodLayer); });
     foodLayer.addTo(lmap);
-  }
-  /* "Tijd voor eten?" in Nu & straks */
-  function foodNudge(f, d) {
-    if (!d || !FOOD.length) return "";
-    const mine = ACTS.filter(a => a.day === d.id && isFav(a.id) && !a.cancelled).sort(byTime);
-    if (!mine.length || mine.some(a => mins(a.start) <= f.m && mins(a.end) > f.m)) return "";
-    const nxt = mine.find(a => mins(a.start) > f.m); if (!nxt) return "";
-    const gap = mins(nxt.start) - f.m; if (gap < 45) return "";
-    const vc = coordOf(venue(nxt.venueId).name); if (!vc) return "";
-    const cand = FOOD.filter(x => x.c && ohState(x.oh).open !== false).map(x => { const dv = distM(x.c, vc), du = here ? distM(here.c, x.c) : 0, st = ohState(x.oh); return { x, dv, score: dv + du * .7 + (st.open === true ? 0 : 250) - (x.tip ? 120 : 0) }; }).filter(o => o.dv < 900).sort((a, b) => a.score - b.score).slice(0, 3);
-    if (!cand.length) return "";
-    const vn = baseName(venue(nxt.venueId).name);
-    return `<section class="fd-nudge"><div class="fd-nh"><span>${L("Tijd voor eten?", "Time to eat?")}</span><b>${gap} min</b></div><p>${L(`Je hebt ${gap} minuten tot <strong>${esc(nxt.name)}</strong> in ${esc(vn)}. Snelle plekken in de buurt:`, `You have ${gap} minutes until <strong>${esc(nxt.name)}</strong> at ${esc(vn)}. Quick bites nearby:`)}</p>${cand.map(o => { const st = ohState(o.x.oh); return `<button class="fd-item${o.x.tip ? " tip" : ""}" data-food="${esc(o.x.id)}"><span class="fd-ico" aria-hidden="true">${o.x.tip ? "★" : catIcon(o.x.cat)}</span><span class="fd-main"><b>${esc(o.x.name)}</b><small>${catName(o.x.cat)} · ${L(`${walkMin(o.dv)} min van ${vn}`, `${walkMin(o.dv)} min from ${vn}`)}</small></span><span class="fd-st ${st.open === true ? "o" : "u"}">${st.open === true ? L("tot ", "till ") + hm(st.until) : "?"}</span></button>`; }).join("")}<button class="fd-more" data-food-map>${L("Meer eten op de kaart →", "More food on the map →")}</button></section>`;
   }
   window.__lotdFoodApply = () => { foodTips = window.__lotdFoodTips; if (FOOD.length) FOOD = mergeTips(FOOD.filter(f => !String(f.id).startsWith("tip-"))); };
   document.addEventListener("input", e => { if (e.target.id !== "fq") return; e.stopImmediatePropagation(); foodQ = e.target.value; foodShow = 40; paintFoodList(); drawFoodLayer(); }, true);
