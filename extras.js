@@ -678,7 +678,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
   /* openingstijden (OSM opening_hours, de gangbare vormen); onbekend = null */
   const DD = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
   function ohParse(oh) {
-    if (!oh) return null; oh = oh.trim(); if (oh === "24/7") return { all: true };
+    if (!oh) return null; oh = oh.trim().replace(/(\d),\s*(?=(Mo|Tu|We|Th|Fr|Sa|Su)\b)/g, "$1;").replace(/\s+/g, " "); if (oh === "24/7") return { all: true };
     const week = {}; DD.forEach(d => week[d] = null);
     for (let rule of oh.split(";")) {
       rule = rule.trim(); if (!rule) continue;
@@ -750,7 +750,8 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
   }
   const nearestVenue = c => { let best = null; mapGroups().forEach(g => { if (!g.c) return; const d = distM(c, g.c); if (!best || d < best.d) best = { name: g.name, d }; }); return best; };
   const foodFiltered = () => { const q = fold(foodQ.trim()); return FOOD.filter(f => (foodCat === "all" || f.cat === foodCat) && (!foodVeg || f.veg) && (!q || fold([f.name, f.cuisine, catName(f.cat), f.addr].join(" ")).includes(q)) && (!foodOpenOnly || ohState(f.oh).open === true)); };
-  const foodSort = list => list.map(f => ({ f, d: f.c && here ? distM(here.c, f.c) : null, st: ohState(f.oh) })).sort((a, b) => (a.d != null && b.d != null ? a.d - b.d : 0) || (!!b.f.tip - !!a.f.tip) || ((b.st.open === true) - (a.st.open === true)) || a.f.name.localeCompare(b.f.name));
+  const foodSort = list => list.map(f => { const d = f.c && here ? distM(here.c, f.c) : null, st = ohState(f.oh), nv = f.c ? nearestVenue(f.c) : null, base = d != null ? d : nv ? nv.d : 3000;
+    return { f, d, st, k: base - (f.tip ? 150 : 0) + (st.open === true ? 0 : st.open === false ? 5000 : 350) }; }).sort((a, b) => a.k - b.k || a.f.name.localeCompare(b.f.name));
   const fItem = ({ f, d, st }) => { const nv = !d && f.c ? nearestVenue(f.c) : null, where = d != null ? distTxt(d) : nv ? L(`${walkMin(nv.d)} min van ${nv.name}`, `${walkMin(nv.d)} min from ${nv.name}`) : (f.addr || "Rotterdam");
     return `<button class="fd-item${f.tip ? " tip" : ""}" data-food="${esc(f.id)}"><span class="fd-ico" aria-hidden="true">${f.tip ? "★" : catIcon(f.cat)}</span><span class="fd-main"><b>${esc(f.name)}${f.tip ? `<em class="fd-tip">LOTD-tip</em>` : ""}</b><small>${catName(f.cat)}${f.cuisine && f.cat === "overig" ? " · " + esc(f.cuisine) : ""}${f.veg ? " · " + L("vega", "veggie") : ""} · ${where}</small></span><span class="fd-st ${st.open === true ? "o" : st.open === false ? "c" : "u"}">${st.open === true ? (st.allDay ? "24/7" : L("tot ", "till ") + hm(st.until)) : st.open === false ? L("dicht", "closed") : "?"}</span></button>`; };
   const catIcon = k => ({ friet: "🍟", burger: "🍔", pizza: "🍕", oost: "🥙", azie: "🥡", broodjes: "🥪", kip: "🍗", hal: "🏛" }[k] || "🍽");
