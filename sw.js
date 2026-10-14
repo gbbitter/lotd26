@@ -1,6 +1,8 @@
-const VERSION = "2026-10-22";
+const VERSION = "2026-10-23-redesign";
 const CACHE = `lotd-${VERSION}`;
-const APP_SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-512.png", "./game.js", "./extras.js"];
+const APP_SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-512.png", "./game.js", "./extras.js", "./theme.css",
+  "./fonts/barlow-latin-400-normal.woff2", "./fonts/barlow-latin-500-normal.woff2", "./fonts/barlow-latin-600-normal.woff2", "./fonts/barlow-latin-700-normal.woff2",
+  "./fonts/barlow-condensed-latin-600-normal.woff2", "./fonts/barlow-condensed-latin-700-normal.woff2", "./fonts/barlow-condensed-latin-800-normal.woff2"];
 
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));
@@ -39,7 +41,7 @@ self.addEventListener("fetch", event => {
   if (request.method !== "GET" || url.origin !== self.location.origin) return;   // o.a. Supabase: nooit cachen
   if (url.pathname.endsWith("/lineup.json")) return;                              // altijd vers van het netwerk (app regelt offline zelf)
   const p = url.pathname;
-  if (request.mode === "navigate" || p.endsWith("/index.html") || p.endsWith("/game.js") || p.endsWith("/extras.js")) {
+  if (request.mode === "navigate" || p.endsWith("/index.html") || p.endsWith("/game.js") || p.endsWith("/extras.js") || p.endsWith("/theme.css")) {
     event.respondWith(networkFirst(request));                                     // code: altijd nieuwste, cache alleen als offline-fallback
     return;
   }

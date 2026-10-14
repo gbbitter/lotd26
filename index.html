@@ -179,6 +179,9 @@ nav button{font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:
 @media (max-width:599px){header{padding-bottom:4px}.brandbar{min-height:58px;margin-top:34px;gap:10px}.lotd-mark{width:52px;height:52px;font-size:12px}.lotd-mark span{font-size:7px}.brandstamp{width:46px;height:46px}.brandstamp b{font-size:18px}header h2{font-size:42px;margin:22px 0 18px}.lab{width:96px}}
 .game{height:100%;min-height:480px;position:relative;display:flex;flex-direction:column;background:#fff;touch-action:none;overscroll-behavior:none;user-select:none}.game-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:2px solid #050505;font-family:Arial,sans-serif}.game-title{font-size:18px;font-weight:700}.game-score{font:700 26px Arial,sans-serif;color:#1717ff}.game canvas{display:block;width:100%;flex:1;min-height:420px;touch-action:none}.game-help{text-align:center;padding:8px;color:#555;font:11px Arial,sans-serif}.game-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px;background:rgba(255,255,255,.94);font-family:Arial,sans-serif}.game-overlay h2{font-size:42px;line-height:.95;margin:0 0 14px}.game-overlay p{max-width:300px;line-height:1.45;margin:0 0 20px}.game-overlay strong{font-size:17px;color:#1717ff;margin:6px 0 20px}.game-overlay button{min-height:48px;min-width:190px;padding:12px 18px;margin:5px;background:#050505;color:#fff;border:2px solid #050505;font-weight:700;font-family:Arial,sans-serif}.game-overlay button:hover,.game-overlay button:focus-visible{background:#1717ff;color:#fff}.game-overlay button:disabled{opacity:.35}.game-overlay input{width:min(260px,100%);min-height:48px;border:2px solid #050505;border-radius:0;padding:10px 12px;font:16px Arial,sans-serif;margin:6px}.game-top{width:min(300px,100%);text-align:left;margin:2px 0 18px;padding-left:28px;font-family:Arial,sans-serif}.game-top li{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #ddd}.game-top b{color:#1717ff}
 </style>
+<link rel="preload" href="fonts/barlow-condensed-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/barlow-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link id="theme-css" rel="stylesheet" href="theme.css">
 </head>
 <body>
 <div class="statusbar" id="statusbar" role="status"></div><header id="app-header"><div class="brandbar"><img class="lotd-mark" src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/lotd-logo-c6lqMUD95gwzWwfVBJxT2zXsGQE1pk.png" alt="Left of the Dial logo"><div class="brandcopy"><h1>New music festival</h1><p>21 / 22 / 23 / 24 October 2026 · Rotterdam</p></div><div class="brandstamp">LOTD<br><b>26</b></div></div><h2 id="title">Timetable</h2></header>
@@ -320,7 +323,7 @@ const nextFav=a=>ACTS.filter(x=>isFav(x.id)&&x.day===a.day&&mins(x.start)>=mins(
 const routeNote=a=>{const b=nextFav(a);return b?travelNote(a,b):""};
 const nowPlaying=a=>{const n=new Date();return dayOf(a.day).date===tdy&&mins(a.start)<=n.getHours()*60+n.getMinutes()&&mins(a.end)>n.getHours()*60+n.getMinutes()};
 const byTime=(a,b)=>mins(a.start)-mins(b.start);
-const PPH=window.innerWidth>=900?Math.max(120,Math.min(220,(window.innerWidth-92)/10)):160;
+const PPH=window.innerWidth>=900?220:160;
 
 // ===== ICONS =====
 const ico={
