@@ -1,0 +1,33 @@
+name: Eetplekken bijwerken (OpenStreetMap)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, eten]
+    paths: ["scripts/food_snapshot.py", ".github/workflows/food.yml"]
+  schedule:
+    - cron: "17 4 * * *"   # elke nacht
+
+permissions:
+  contents: write
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Ophalen
+        run: python scripts/food_snapshot.py
+      - name: Opslaan als er iets veranderd is
+        run: |
+          if git diff --quiet -- food.json && git ls-files --error-unmatch food.json >/dev/null 2>&1; then
+            echo "Geen wijzigingen"; exit 0
+          fi
+          git config user.name "lotd-food-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add food.json
+          git commit -m "Eetplekken bijgewerkt uit OpenStreetMap"
+          git push

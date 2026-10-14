@@ -634,7 +634,9 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
       Lf.control.zoom({ position: "topleft" }).addTo(lmap);
       const MT_KEY = "EN4CW9GfL80ss8bkjtYB";
       let tl = Lf.tileLayer("https://api.maptiler.com/maps/dataviz-light/{z}/{x}/{y}{r}.png?key=" + MT_KEY, { maxZoom: 19, attribution: "© MapTiler © OpenStreetMap contributors" }).addTo(lmap), errs = 0;
-      tl.on("tileerror", () => { if (++errs === 3 && lmap) { lmap.removeLayer(tl); tl = Lf.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, className: "osm-grey", attribution: "© OpenStreetMap contributors" }).addTo(lmap); } });
+      const toOsm = () => { if (!lmap || tl._osm) return; lmap.removeLayer(tl); tl = Lf.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, className: "osm-grey", attribution: "© OpenStreetMap contributors" }).addTo(lmap); tl._osm = true; };
+      tl.on("tileerror", () => { if (++errs === 3) toOsm(); });
+      if (window.__mtOk === false) toOsm(); else if (window.__mtOk !== true) fetch("https://api.maptiler.com/maps/dataviz-light/14/8395/5417.png?key=" + MT_KEY, { mode: "cors" }).then(r => { window.__mtOk = r.ok; if (!r.ok) toOsm(); }).catch(() => {});
       const pts = [];
       groups.filter(g => g.c).forEach(g => {
         const ic = Lf.divIcon({ className: "lotd-pin", html: `<span class="pin"><img src="${LOGO}" alt="" onerror="this.remove()"><i>LOTD</i></span><em>${g.name}</em>`, iconSize: [46, 46], iconAnchor: [23, 23] });
@@ -728,20 +730,23 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
   function geoTips() {
     const geo = LS.get("lotd-foodgeo", {}) || {}, todo = foodTips.filter(tp => tp.addr && !geo[tp.name] && FOOD.some(f => f.id === "tip-" + tp.name)); if (!todo.length || navigator.onLine === false) return;
     let k = 0; const next = () => { if (k >= todo.length) return; const tp = todo[k++];
-      fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=nl&bounded=1&viewbox=4.38,51.98,4.58,51.86&q=" + encodeURIComponent(tp.addr), { headers: { Accept: "application/json" } }).then(r => r.json()).then(j => { if (j && j[0]) { geo[tp.name] = [+(+j[0].lat).toFixed(5), +(+j[0].lon).toFixed(5)]; LS.set("lotd-foodgeo", geo); const f = FOOD.find(x => x.id === "tip-" + tp.name); if (f) f.c = geo[tp.name]; } }).catch(() => {}).then(() => setTimeout(next, 1100)); };
+      fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=nl&bounded=1&viewbox=4.38,51.98,4.58,51.86&q=" + encodeURIComponent(tp.addr), { headers: { Accept: "application/json" } }).then(r => r.json()).then(j => { if (j && j[0]) { geo[tp.name] = [+(+j[0].lat).toFixed(5), +(+j[0].lon).toFixed(5)]; LS.set("lotd-foodgeo", geo); const f = FOOD.find(x => x.id === "tip-" + tp.name); if (f) { f.c = geo[tp.name]; if (route().p === "map" && mapMode === "food") { drawFoodLayer(); paintFoodList(); } } } }).catch(() => {}).then(() => setTimeout(next, 1100)); };
     next();
   }
   const FOOD_Q = `[out:json][timeout:25];(nwr["amenity"="fast_food"](51.903,4.455,51.935,4.495);nwr["amenity"="food_court"](51.903,4.455,51.935,4.495);nwr["amenity"="restaurant"]["cuisine"~"pizza|kebab|burger|falafel|shawarma|noodle|ramen|dumpling|friture|fries|sandwich|chicken|surinamese|vietnamese|poke|bagel"](51.903,4.455,51.935,4.495););out center tags;`;
+  let foodErr = "";
   function loadFood(force) {
     const cached = LS.get(FOOD_KEY, null);
     if (cached && cached.list && !FOOD.length) { FOOD = mergeTips(cached.list.slice()); foodState = "ok"; }
-    if (!force && cached && Date.now() - cached.t < FOOD_TTL) { if (!FOOD.length) FOOD = mergeTips(cached.list.slice()); foodState = "ok"; geoTips(); return Promise.resolve(); }
-    if (foodState === "loading") return Promise.resolve(); if (navigator.onLine === false) { if (!FOOD.length) { FOOD = mergeTips([]); foodState = "offline"; } return Promise.resolve(); }
-    foodState = FOOD.length ? "ok" : "loading";
-    const urls = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter"];
-    const tryUrl = i => fetch(urls[i] + "?data=" + encodeURIComponent(FOOD_Q)).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).catch(e => { if (i + 1 < urls.length) return tryUrl(i + 1); throw e; });
-    return tryUrl(0).then(j => { const list = buildFood(j.elements); if (list.length) { LS.set(FOOD_KEY, { t: Date.now(), list }); FOOD = mergeTips(list.slice()); foodState = "ok"; } else if (!FOOD.length) { FOOD = mergeTips([]); foodState = "ok"; } geoTips(); })
-      .catch(() => { if (!FOOD.length) { FOOD = mergeTips([]); foodState = "error"; } });
+    if (!force && cached && cached.list && cached.list.length && Date.now() - cached.t < FOOD_TTL) { geoTips(); return Promise.resolve(); }
+    if (foodState === "loading") return Promise.resolve();
+    if (navigator.onLine === false) { if (!FOOD.length) { FOOD = mergeTips([]); foodState = "offline"; } return Promise.resolve(); }
+    if (!FOOD.length) foodState = "loading";
+    const take = (els, src) => { const list = buildFood(els); if (list.length < 5) throw new Error(src + ": " + list.length); LS.set(FOOD_KEY, { t: Date.now(), list }); FOOD = mergeTips(list.slice()); foodState = "ok"; foodErr = ""; };
+    const snap = () => fetch("food.json", { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error("food.json " + r.status); return r.json(); }).then(j => take(j.elements, "food.json"));
+    const urls = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter", "https://overpass.private.coffee/api/interpreter"];
+    const live = i => fetch(urls[i], { method: "POST", body: "data=" + encodeURIComponent(FOOD_Q), headers: { "Content-Type": "application/x-www-form-urlencoded" } }).then(r => { if (!r.ok) throw new Error("Overpass " + r.status); return r.json(); }).then(j => take(j.elements, "Overpass")).catch(e => { if (i + 1 < urls.length) return live(i + 1); throw e; });
+    return snap().catch(() => live(0)).then(() => geoTips()).catch(e => { foodErr = String(e && e.message || e); if (!FOOD.length) { FOOD = mergeTips([]); } foodState = FOOD.some(f => !String(f.id).startsWith("tip-")) ? "ok" : "error"; geoTips(); });
   }
   const nearestVenue = c => { let best = null; mapGroups().forEach(g => { if (!g.c) return; const d = distM(c, g.c); if (!best || d < best.d) best = { name: g.name, d }; }); return best; };
   const foodFiltered = () => { const q = fold(foodQ.trim()); return FOOD.filter(f => (foodCat === "all" || f.cat === foodCat) && (!foodVeg || f.veg) && (!q || fold([f.name, f.cuisine, catName(f.cat), f.addr].join(" ")).includes(q)) && (!foodOpenOnly || ohState(f.oh).open === true)); };
@@ -752,7 +757,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
   const foodListHtml = () => {
     if (foodState === "loading" && !FOOD.length) return `<p class="fd-empty">${L("Eetplekken laden…", "Loading places to eat…")}</p>`;
     const all = foodSort(foodFiltered()), shown = all.slice(0, foodShow);
-    const note = foodState === "error" ? `<p class="fd-note">${L("Kon de eetplekken niet laden. Alleen de LOTD-tips worden getoond.", "Couldn't load places to eat. Showing LOTD tips only.")} <button class="lnk" data-food-retry>${L("Opnieuw", "Retry")}</button></p>` : foodState === "offline" ? `<p class="fd-note">${L("Offline: alleen de LOTD-tips.", "Offline: LOTD tips only.")}</p>` : "";
+    const note = foodState === "error" ? `<p class="fd-note">${L("Kon de eetplekken niet laden. Alleen de LOTD-tips worden getoond.", "Couldn't load places to eat. Showing LOTD tips only.")}${foodErr ? ` <small>(${esc(foodErr)})</small>` : ""} <button class="lnk" data-food-retry>${L("Opnieuw", "Retry")}</button></p>` : foodState === "offline" ? `<p class="fd-note">${L("Offline: alleen de LOTD-tips.", "Offline: LOTD tips only.")}</p>` : "";
     return note + `<p class="fd-count">${all.length} ${L(all.length === 1 ? "plek" : "plekken", all.length === 1 ? "place" : "places")}${here ? L(" · dichtstbij eerst", " · nearest first") : ` · <button class="lnk" data-food-loc>${L("Sorteer op mijn locatie", "Sort by my location")}</button>`}</p>` + (shown.length ? shown.map(fItem).join("") : `<p class="fd-empty">${L("Niets gevonden. Probeer een ander filter.", "Nothing found. Try another filter.")}</p>`) + (all.length > shown.length ? `<button class="fd-more" data-food-more>${L(`Toon meer (${all.length - shown.length})`, `Show more (${all.length - shown.length})`)}</button>` : "") + `<p class="fd-src">${L("Bron: OpenStreetMap-bijdragers. Openingstijden kunnen afwijken.", "Source: OpenStreetMap contributors. Opening hours may differ.")}</p>`;
   };
   const foodPanel = () => `<div class="fd-panel"><div class="fd-search"><input id="fq" type="search" placeholder="${L("Zoek friet, pizza, falafel…", "Search fries, pizza, falafel…")}" value="${esc(foodQ)}" autocomplete="off"></div><div class="fd-chips" role="group" aria-label="${L("Soort eten", "Type of food")}"><button class="${foodOpenOnly ? "on" : ""}" data-food-open aria-pressed="${foodOpenOnly}">${L("Nu open", "Open now")}</button><button class="${foodVeg ? "on" : ""}" data-food-veg aria-pressed="${foodVeg}">${L("Vega", "Veggie")}</button>${FOOD_CATS.map(([k, nl, en]) => `<button class="${foodCat === k ? "on" : ""}" data-food-cat="${k}" aria-pressed="${foodCat === k}">${k === "all" ? L(nl, en) : catIcon(k) + " " + L(nl, en)}</button>`).join("")}</div><div id="food-list">${foodListHtml()}</div></div>`;
