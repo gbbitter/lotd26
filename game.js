@@ -80,8 +80,21 @@ const leaderboard = (() => {
     { id: "interessant", nl: "Interessant", en: "Interesting", body: "#8fa0ff", arm: "#ffffff", band: "#141414", need: P => P.stars >= 6, how: ["6 sterren uit missies", "6 stars from missions"] },
     { id: "doek", nl: "Wit doek", en: "White sheet", body: "#ffffff", arm: "#1717ff", band: "#1717ff", need: (P, b) => b >= 1000, how: ["Record van 1000+", "Record of 1000+"] },
     { id: "platen", nl: "Platenkast", en: "Record crate", body: "#141414", arm: "#c6d0ff", band: "#c6d0ff", vinyl: true, need: P => P.crate.length >= 25, how: ["25 bands in je platenkast", "25 bands in your crate"] },
-    { id: "after", nl: "Afterparty", en: "Afterparty", body: "#0b0b14", arm: "#8f9cff", band: "#ff3d9a", glow: true, need: (P, b) => b >= 2250, how: ["Haal de Afterparty (2250)", "Reach the Afterparty (2250)"] }
+    { id: "after", nl: "Afterparty", en: "Afterparty", body: "#0b0b14", arm: "#8f9cff", band: "#ff3d9a", glow: true, need: (P, b) => b >= 2250, how: ["Haal de Afterparty (2250)", "Reach the Afterparty (2250)"] },
+    /* genre-skins: speel je vrij door bands van dat genre in je platenkast te verzamelen */
+    { id: "disco", nl: "Disco", en: "Disco", genre: "disco", n: 3, body: "#c9a227", arm: "#fff3c4", band: "#2a1a0e", pat: "sequins", hat: "afro", fx: "sparkle" },
+    { id: "punk", nl: "Punk", en: "Punk", genre: "punk", n: 5, body: "#141414", arm: "#ff3d9a", band: "#141414", pat: "studs", hat: "mohawk" },
+    { id: "postpunk", nl: "Post-punk", en: "Post-punk", genre: "post-punk", n: 3, body: "#141414", arm: "#ffffff", band: "#141414", pat: "stripes", hat: "shades" },
+    { id: "grunge", nl: "Grunge", en: "Grunge", genre: "grunge", n: 3, body: "#8c2f2f", arm: "#3a3a40", band: "#5b5b63", pat: "plaid", hat: "beanie" },
+    { id: "shoegaze", nl: "Shoegaze", en: "Shoegaze", genre: "shoegaze", n: 3, body: "#b9c4ff", arm: "#ffd1e6", band: "#6b5b95", pat: "haze", hat: "fringe" },
+    { id: "synth", nl: "Synth", en: "Synth", genre: "synth", n: 3, body: "#120a2a", arm: "#00e5ff", band: "#ff2bd6", pat: "grid", hat: "visor", glow: true },
+    { id: "folk", nl: "Folk", en: "Folk", genre: "folk", n: 5, body: "#d9a441", arm: "#f4e7c5", band: "#6b4f2a", pat: "knit", hat: "bucket" },
+    { id: "heavy", nl: "Heavy", en: "Heavy", genre: "heavy", n: 3, body: "#141414", arm: "#ff7a1a", band: "#1c1c1c", pat: "flames", hat: "longhair" },
+    { id: "garage", nl: "Garage", en: "Garage", genre: "garage", n: 3, body: "#2f5d9e", arm: "#cfdcf2", band: "#141414", pat: "denim", hat: "quiff" }
   ];
+  /* genre-skins: voorwaarde = aantal bands van dat genre in je platenkast */
+  const genreCount = (P, g) => { if (typeof ACTS === "undefined") return 0; const set = new Set(P.crate); let n = 0; const seen = new Set(); for (const a of ACTS) { if (!set.has(a.name) || seen.has(a.name)) continue; if ((a.genres || []).some(x => String(x).toLowerCase().includes(g))) { seen.add(a.name); n++; } } return n; };
+  SKINS.forEach(k => { if (k.genre) { k.need = P => genreCount(P, k.genre) >= k.n; k.how = [`${k.n} ${k.nl.toLowerCase()}-bands in je platenkast`, `${k.n} ${k.en.toLowerCase()} bands in your crate`]; k.prog = P => Math.min(k.n, genreCount(P, k.genre)) + "/" + k.n; } });
   /* missies: elke dag 3 nieuwe, allemaal ‘in één potje’ */
   const MISSIONS = [
     { k: "dodged", v: [40, 80, 140], nl: n => `Ontwijk ${n} logo's`, en: n => `Dodge ${n} logos` },
@@ -414,11 +427,13 @@ const leaderboard = (() => {
     for (let i = 0; i <= N; i++) { const f = i / N, w = (15 - 4 * f) * s, bx = px + sw(f) - w, by = gy - bh * f; i ? cx.lineTo(bx, by) : cx.moveTo(bx, by); }
     for (let i = N; i >= 0; i--) { const f = i / N, w = (15 - 4 * f) * s; cx.lineTo(px + sw(f) + w, gy - bh * f); }
     cx.closePath(); cx.fill(); cx.shadowBlur = 0;
-    if (outline) { cx.strokeStyle = INK; cx.lineWidth = 2 * s; cx.stroke(); }
+    if (SK.pat) { cx.save(); cx.clip(); drawPat(SK.pat, px, gy, bh, t); cx.restore(); cx.beginPath(); for (let i = 0; i <= N; i++) { const f = i / N, w = (15 - 4 * f) * s, bx = px + sw(f) - w, by = gy - bh * f; i ? cx.lineTo(bx, by) : cx.moveTo(bx, by); } for (let i = N; i >= 0; i--) { const f = i / N, w = (15 - 4 * f) * s; cx.lineTo(px + sw(f) + w, gy - bh * f); } cx.closePath(); }
+    if (outline || SK.pat) { cx.strokeStyle = outline ? INK : "rgba(0,0,0,.35)"; cx.lineWidth = (outline ? 2 : 1.2) * s; cx.stroke(); }
     if (SK.vinyl) { cx.strokeStyle = SK.arm; cx.lineWidth = 2 * s; for (const f of [.3, .42]) { cx.beginPath(); cx.moveTo(px + sw(f) - 12 * s, gy - bh * f); cx.lineTo(px + sw(f) + 12 * s, gy - bh * f); cx.stroke(); } }
     if (d < .5) { cx.save(); cx.translate(px + sw(.62), gy - bh * .62); cx.rotate(-Math.PI / 2); cx.fillStyle = SK.body ? (isLight(BODY) ? "#141414" : "#ffffff") : P.paper; cx.font = `800 ${10 * s}px ${FONT_D}`; cx.textAlign = "center"; cx.textBaseline = "middle"; cx.fillText("LEFT OF THE DIAL", 0, 0); cx.restore(); }
     for (const p of G.arms) { poly(p, 0, outline ? INK : BODY, 17 * s); poly(p, 4, ARM, 12 * s); }
     cx.save(); cx.translate(G.hx, G.hy); cx.rotate(d * .7 + Math.sin(t * 6) * .07 * (1 - d));
+    if (SK.hat) hatBack(SK, t);
     cx.beginPath(); cx.ellipse(0, 0, 20 * s, 25 * s, 0, 0, 7); cx.fillStyle = "#ffffff"; cx.fill();
     cx.save(); cx.clip();
     cx.fillStyle = SK.band; cx.beginPath(); cx.moveTo(-30 * s, -30 * s); cx.lineTo(30 * s, -30 * s); cx.lineTo(30 * s, -3 * s);
@@ -431,7 +446,37 @@ const leaderboard = (() => {
     if (d > .4) { cx.strokeStyle = "#ffffff"; cx.lineWidth = 2 * s; for (const e of [-1, 1]) { cx.beginPath(); cx.moveTo(e * 8 * s - 3 * s, -9 * s); cx.lineTo(e * 8 * s + 3 * s, -3 * s); cx.moveTo(e * 8 * s + 3 * s, -9 * s); cx.lineTo(e * 8 * s - 3 * s, -3 * s); cx.stroke(); } }
     cx.restore();
     cx.lineWidth = 3 * s; cx.strokeStyle = P.dark ? "#ffffff" : HEAD_INK; cx.beginPath(); cx.ellipse(0, 0, 20 * s, 25 * s, 0, 0, 7); cx.stroke();
+    if (SK.hat) hatFront(SK, t, d);
     cx.restore();
+    if (SK.fx === "sparkle" && !reduced) { cx.fillStyle = "#fff3c4"; for (let i = 0; i < 4; i++) { const a = t * 1.7 + i * 1.6, r = (26 + (i % 2) * 14) * s, k = .5 + .5 * Math.sin(t * 6 + i * 2); cx.globalAlpha = k; star(px + Math.cos(a) * r, gy - bh * .55 + Math.sin(a) * r * 1.4, 4.5 * s); } cx.globalAlpha = 1; }
+  }
+  /* patronen op het lichaam (binnen een clip van het lichaam) */
+  function drawPat(pat, px, gy, bh, t) {
+    const x0 = px - 30 * s, x1 = px + 30 * s, y0 = gy - bh - 4 * s, y1 = gy;
+    if (pat === "sequins") { for (let y = y0, r = 0; y < y1; y += 5 * s, r++) for (let x = x0 + (r % 2) * 2.5 * s; x < x1; x += 5 * s) { const k = (Math.sin(t * 5 + x * .3 + y * .2) + 1) / 2; cx.fillStyle = k > .85 ? "#ffffff" : k > .5 ? "#f2d46b" : "#a8841c"; cx.beginPath(); cx.moveTo(x, y - 2.2 * s); cx.lineTo(x + 2.2 * s, y); cx.lineTo(x, y + 2.2 * s); cx.lineTo(x - 2.2 * s, y); cx.fill(); } }
+    else if (pat === "studs") { cx.fillStyle = "#ff3d9a"; for (let y = y0 + 8 * s; y < y1; y += 11 * s) for (let x = x0; x < x1; x += 8 * s) { cx.beginPath(); cx.arc(x, y, 1.7 * s, 0, 7); cx.fill(); } cx.fillStyle = "#ffffff"; cx.fillRect(px - 15 * s, gy - bh * .3, 30 * s, 2 * s); }
+    else if (pat === "stripes") { cx.fillStyle = "#ffffff"; for (let y = y0; y < y1; y += 8 * s) cx.fillRect(x0, y, x1 - x0, 3.5 * s); }
+    else if (pat === "plaid") { cx.fillStyle = "rgba(20,20,20,.38)"; for (let x = x0; x < x1; x += 10 * s) cx.fillRect(x, y0, 4 * s, y1 - y0); for (let y = y0; y < y1; y += 10 * s) cx.fillRect(x0, y, x1 - x0, 4 * s); cx.fillStyle = "rgba(255,230,200,.25)"; for (let x = x0 + 7 * s; x < x1; x += 10 * s) cx.fillRect(x, y0, 1 * s, y1 - y0); }
+    else if (pat === "haze") { const g = cx.createLinearGradient(0, y0, 0, y1); g.addColorStop(0, "#ffd1e6"); g.addColorStop(.5, "#b9c4ff"); g.addColorStop(1, "#8fe3ff"); cx.fillStyle = g; cx.fillRect(x0, y0, x1 - x0, y1 - y0); }
+    else if (pat === "grid") { cx.strokeStyle = "#ff2bd6"; cx.lineWidth = 1.2 * s; const off = (t * 14 * s) % (7 * s); for (let y = y0 + off; y < y1; y += 7 * s) { cx.beginPath(); cx.moveTo(x0, y); cx.lineTo(x1, y); cx.stroke(); } cx.strokeStyle = "#00e5ff"; for (let x = x0; x < x1; x += 7 * s) { cx.beginPath(); cx.moveTo(x, y0); cx.lineTo(x, y1); cx.stroke(); } }
+    else if (pat === "knit") { cx.strokeStyle = "rgba(90,60,20,.45)"; cx.lineWidth = 1.4 * s; for (let y = y0; y < y1; y += 5 * s) { cx.beginPath(); for (let x = x0, i = 0; x < x1; x += 3 * s, i++) cx.lineTo(x, y + (i % 2 ? 2 * s : 0)); cx.stroke(); } cx.fillStyle = "#f4e7c5"; for (let y = y0 + 12 * s; y < y1; y += 24 * s) cx.fillRect(x0, y, x1 - x0, 3 * s); }
+    else if (pat === "flames") { cx.fillStyle = "#ff7a1a"; cx.beginPath(); cx.moveTo(x0, y1); for (let x = x0, i = 0; x <= x1; x += 6 * s, i++) cx.lineTo(x, y1 - bh * (.28 + .16 * Math.abs(Math.sin(i * 1.7 + t * 6)))); cx.lineTo(x1, y1); cx.fill(); cx.fillStyle = "#ffd23f"; cx.beginPath(); cx.moveTo(x0, y1); for (let x = x0, i = 0; x <= x1; x += 6 * s, i++) cx.lineTo(x, y1 - bh * (.12 + .1 * Math.abs(Math.sin(i * 2.3 + t * 7)))); cx.lineTo(x1, y1); cx.fill(); }
+    else if (pat === "denim") { cx.strokeStyle = "rgba(255,255,255,.18)"; cx.lineWidth = 1 * s; for (let x = x0; x < x1; x += 2.5 * s) { cx.beginPath(); cx.moveTo(x, y0); cx.lineTo(x + 10 * s, y1); cx.stroke(); } cx.setLineDash([3 * s, 2 * s]); cx.strokeStyle = "#f2b33d"; cx.lineWidth = 1.3 * s; cx.beginPath(); cx.moveTo(px - 15 * s, gy - bh * .45); cx.lineTo(px + 15 * s, gy - bh * .45); cx.stroke(); cx.setLineDash([]); cx.fillStyle = "#ff3d9a"; cx.beginPath(); cx.arc(px + 4 * s, gy - bh * .2, 4.5 * s, 0, 7); cx.fill(); }
+  }
+  /* kapsels en hoeden, in het assenstelsel van het hoofd (ellips 20x25) */
+  function hatBack(SK, t) {
+    if (SK.hat === "afro") { cx.fillStyle = "#2a1a0e"; for (const [x, y, r] of [[0, -16, 21], [-17, -9, 13], [17, -9, 13], [-12, -26, 12], [12, -26, 12], [0, -32, 12]]) { cx.beginPath(); cx.arc(x * s, y * s, r * s, 0, 7); cx.fill(); } }
+    if (SK.hat === "longhair") { cx.fillStyle = "#1c1c1c"; cx.beginPath(); cx.moveTo(-21 * s, -10 * s); cx.quadraticCurveTo(-30 * s, 22 * s + Math.sin(t * 7) * 3 * s, -18 * s, 44 * s); cx.lineTo(18 * s, 44 * s); cx.quadraticCurveTo(30 * s, 22 * s + Math.sin(t * 7 + 1) * 3 * s, 21 * s, -10 * s); cx.closePath(); cx.fill(); }
+  }
+  function hatFront(SK, t, d) {
+    const h = SK.hat;
+    if (h === "mohawk") { cx.fillStyle = "#ff3d9a"; cx.strokeStyle = "#141414"; cx.lineWidth = 1.6 * s; cx.beginPath(); cx.moveTo(-8 * s, -20 * s); const sp = [[-9, -38], [-4, -48], [1, -54], [6, -48], [10, -38]]; for (let i = 0; i < sp.length; i++) { const [x, y] = sp[i], k = Math.sin(t * 8 + i) * 1.2; cx.lineTo((x + k) * s, y * s); cx.lineTo((x + 3) * s, -26 * s); } cx.lineTo(8 * s, -20 * s); cx.closePath(); cx.fill(); cx.stroke(); }
+    else if (h === "beanie") { cx.fillStyle = SK.band; cx.beginPath(); cx.ellipse(0, -14 * s, 21 * s, 15 * s, 0, Math.PI, 0); cx.fill(); cx.fillStyle = "#3a3a40"; cx.fillRect(-22 * s, -16 * s, 44 * s, 7 * s); cx.fillStyle = "#c8c8cf"; cx.beginPath(); cx.arc(0, -31 * s, 4 * s, 0, 7); cx.fill(); }
+    else if (h === "bucket") { cx.fillStyle = "#6b4f2a"; cx.beginPath(); cx.ellipse(0, -14 * s, 30 * s, 6 * s, 0, 0, 7); cx.fill(); cx.beginPath(); cx.moveTo(-15 * s, -14 * s); cx.lineTo(-12 * s, -32 * s); cx.lineTo(12 * s, -32 * s); cx.lineTo(15 * s, -14 * s); cx.closePath(); cx.fill(); cx.fillStyle = "#d9a441"; cx.fillRect(-15 * s, -19 * s, 30 * s, 3 * s); }
+    else if (h === "fringe") { cx.fillStyle = "#6b5b95"; cx.beginPath(); cx.moveTo(-21 * s, -4 * s); cx.quadraticCurveTo(-22 * s, -30 * s, 0, -27 * s); cx.quadraticCurveTo(22 * s, -30 * s, 21 * s, -4 * s); for (let i = 6; i >= -6; i -= 2) cx.lineTo(i * 3 * s, (i % 4 ? -1 : 2) * s); cx.closePath(); cx.fill(); }
+    else if (h === "visor" && d < .4) { cx.fillStyle = "#00e5ff"; cx.shadowColor = "#00e5ff"; cx.shadowBlur = reduced ? 0 : 10 * s; cx.fillRect(-19 * s, -10 * s, 38 * s, 7 * s); cx.shadowBlur = 0; cx.fillStyle = "#ffffff"; cx.fillRect(-15 * s, -9 * s, 8 * s, 2 * s); }
+    else if (h === "shades" && d < .4) { cx.fillStyle = "#141414"; cx.strokeStyle = "#ffffff"; cx.lineWidth = 1.6 * s; for (const e of [-1, 1]) { cx.beginPath(); cx.roundRect(e > 0 ? 1.5 * s : -19 * s, -12 * s, 17.5 * s, 11 * s, 3 * s); cx.fill(); cx.stroke(); } cx.fillRect(-3 * s, -10 * s, 6 * s, 2.5 * s); cx.fillStyle = "rgba(255,255,255,.7)"; cx.fillRect(-16 * s, -10 * s, 4 * s, 2 * s); cx.fillRect(4.5 * s, -10 * s, 4 * s, 2 * s); }
+    else if (h === "quiff") { cx.fillStyle = "#141414"; cx.beginPath(); cx.moveTo(-18 * s, -12 * s); cx.quadraticCurveTo(-16 * s, -30 * s, 2 * s, -30 * s); cx.quadraticCurveTo(26 * s, -34 * s, 22 * s, -20 * s); cx.quadraticCurveTo(10 * s, -24 * s, 6 * s, -16 * s); cx.quadraticCurveTo(-4 * s, -20 * s, -18 * s, -12 * s); cx.fill(); }
   }
   function drawCrowd(P) {
     const beat = clock * (2.1 + stage * .18), live = state === "playing", hype = live ? .1 + .13 * (mult - 1) + (slow > 0 ? .1 : 0) : .05;
@@ -573,7 +618,7 @@ const leaderboard = (() => {
     const cur = skinOf().id;
     show(`<div class="wg-kick">${Lg("Kies je wapperman", "Pick your flapper")}</div><h2>Skins<em>.</em></h2>
       <p class="wg-sub">${Lg("Sterren verdien je met de dagelijkse missies.", "Earn stars with the daily missions.")} ★ ${prof.stars || 0}</p>
-      <div class="wg-skins">${SKINS.map(k => { const ok = k.need(prof, best); return `<button class="wg-skin${k.id === cur ? " on" : ""}${ok ? "" : " lock"}" data-k="${k.id}" ${ok ? "" : 'aria-disabled="true"'}><canvas></canvas>${Lg(k.nl, k.en)}<small>${ok ? (k.id === cur ? Lg("Gekozen", "Selected") : Lg("Tik om te kiezen", "Tap to pick")) : "🔒 " + Lg(k.how[0], k.how[1])}</small></button>`; }).join("")}</div>
+      <div class="wg-skins">${SKINS.map(k => { const ok = k.need(prof, best); return `<button class="wg-skin${k.id === cur ? " on" : ""}${ok ? "" : " lock"}" data-k="${k.id}" ${ok ? "" : 'aria-disabled="true"'}><canvas></canvas>${Lg(k.nl, k.en)}<small>${ok ? (k.id === cur ? Lg("Gekozen", "Selected") : Lg("Tik om te kiezen", "Tap to pick")) : "🔒 " + Lg(k.how[0], k.how[1]) + (k.prog ? ` (${k.prog(prof)})` : "")}</small></button>`; }).join("")}</div>
       <button class="wg-btn" id="a">${Lg("Spelen", "Play")} →</button><button class="wg-btn alt" id="b">${Lg("Terug", "Back")}</button>`, () => {
         ov.querySelectorAll(".wg-skin").forEach(b => { const k = SKINS.find(z => z.id === b.dataset.k); skinPreview(b.querySelector("canvas"), k);
           b.addEventListener("click", () => { if (!k.need(prof, best)) return; prof.skin = k.id; saveProf(); beep(660, .05); showSkins(); }); });
@@ -715,5 +760,5 @@ const leaderboard = (() => {
     root.remove(); root = null; state = "start";
   }
   window.WappermanGame = { mount, unmount };
-  if (window.__WG_TEST) window.__WG_API = { get: () => ({ state, x, W, H, s, groundY, laneW, obstacles, pickups, tokens, score, elapsed, mult, found, slow, evKind, evPhase, windDir, maxV, stage, prof, misDoneRun }), setKey: d => { keyDir = d; }, start, setBonus: n => { bonus = n; }, setInv: n => { inv = n; }, card: () => scoreCard().then(b => new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(b); })) };
+  if (window.__WG_TEST) window.__WG_API = { get: () => ({ state, x, W, H, s, groundY, laneW, obstacles, pickups, tokens, score, elapsed, mult, found, slow, evKind, evPhase, windDir, maxV, stage, prof, misDoneRun }), setKey: d => { keyDir = d; }, start, setBonus: n => { bonus = n; }, setInv: n => { inv = n; }, skin: (cv2, id, t, sc) => { const SK = SKINS.find(k => k.id === id), keep = [cx, s]; const g = cv2.getContext("2d"); cx = g; s = sc; try { wapper(cv2.width / 2, cv2.height - 14, t, 0, PALS[0], SK); } finally { cx = keep[0]; s = keep[1]; } }, skins: () => SKINS.map(k => [k.id, k.nl, k.how ? k.how[0] : ""]), card: () => scoreCard().then(b => new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(b); })) };
 })();
