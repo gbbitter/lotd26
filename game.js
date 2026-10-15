@@ -73,34 +73,33 @@ const leaderboard = (() => {
     { bg: "#141414", ink: "#ffffff", paper: "#141414", lane: "#2a2a2e", floor: "#1c1c20", crowd: "#2e2e36", acc: "#7d8bff", dark: true },
     { bg: "#07070c", ink: "#ffffff", paper: "#07070c", lane: "#1a1a2c", floor: "#0e0e1a", crowd: "#22224a", acc: "#8f9cff", dark: true, beams: true }
   ];
-  /* skins: Klassiek, Afterparty (record) en tien genre-skins (bands van dat genre in je platenkast) */
+  /* skins: Klassiek, Afterparty (record) en tien genre-skins (sterren uit missies) */
   const SKINS = [
     { id: "classic", nl: "Klassiek", en: "Classic", body: null, arm: null, band: "#1717ff", need: () => true, how: ["Altijd beschikbaar", "Always available"] },
-    { id: "rock", nl: "Rock", en: "Rock", genre: ["rock"], n: 8, body: "#1f1f22", arm: "#e3262f", band: "#141414", pat: "leather", hat: "rockhair" },
-    { id: "pop", nl: "Pop", en: "Pop", genre: ["pop"], n: 6, body: "#ff5fa8", arm: "#ffe14d", band: "#ffe14d", pat: "dots", hat: "hearts" },
-    { id: "indie", nl: "Indie", en: "Indie", genre: ["indie"], n: 5, body: "#c98a2b", arm: "#2f7a72", band: "#5a341c", pat: "cord", hat: "moptop" },
-    { id: "folk", nl: "Folk", en: "Folk", genre: ["folk", "country", "singer"], n: 5, body: "#b5562f", arm: "#f4e7c5", band: "#d9a441", pat: "knit", hat: "flowers" },
-    { id: "punk", nl: "Punk", en: "Punk", genre: ["punk"], n: 5, body: "#141414", arm: "#ff3d9a", band: "#141414", pat: "studs", hat: "mohawk" },
-    { id: "postpunk", nl: "Post-punk", en: "Post-punk", genre: ["post-punk", "wave"], n: 3, body: "#141414", arm: "#ffffff", band: "#141414", pat: "stripes", hat: "shades" },
-    { id: "rave", nl: "Rave", en: "Rave", genre: ["rave"], n: 3, body: "#d7ff1e", arm: "#ff2bd6", band: "#141414", pat: "smiley", hat: "fluffy", glow: true },
-    { id: "garage", nl: "Garage", en: "Garage", genre: ["garage"], n: 3, body: "#2f5d9e", arm: "#cfdcf2", band: "#141414", pat: "denim", hat: "quiff" },
-    { id: "shoegaze", nl: "Shoegaze", en: "Shoegaze", genre: ["shoegaze", "dream pop", "slowcore"], n: 3, body: "#b9c4ff", arm: "#ffd1e6", band: "#6b5b95", pat: "haze", hat: "fringe" },
-    { id: "grunge", nl: "Grunge", en: "Grunge", genre: ["grunge", "slacker", "noise"], n: 3, body: "#8c2f2f", arm: "#3a3a40", band: "#5b5b63", pat: "plaid", hat: "beanie" },
+    { id: "rock", nl: "Rock", en: "Rock", stars: 2, body: "#1f1f22", arm: "#e3262f", band: "#141414", pat: "leather", hat: "rockhair" },
+    { id: "pop", nl: "Pop", en: "Pop", stars: 4, body: "#ff5fa8", arm: "#ffe14d", band: "#ffe14d", pat: "dots", hat: "hearts" },
+    { id: "indie", nl: "Indie", en: "Indie", stars: 6, body: "#c98a2b", arm: "#2f7a72", band: "#5a341c", pat: "cord", hat: "moptop" },
+    { id: "folk", nl: "Folk", en: "Folk", stars: 9, body: "#b5562f", arm: "#f4e7c5", band: "#d9a441", pat: "knit", hat: "flowers" },
+    { id: "punk", nl: "Punk", en: "Punk", stars: 12, body: "#141414", arm: "#ff3d9a", band: "#141414", pat: "studs", hat: "mohawk" },
+    { id: "postpunk", nl: "Post-punk", en: "Post-punk", stars: 15, body: "#141414", arm: "#ffffff", band: "#141414", pat: "stripes", hat: "shades" },
+    { id: "rave", nl: "Rave", en: "Rave", stars: 18, body: "#d7ff1e", arm: "#ff2bd6", band: "#141414", pat: "smiley", hat: "fluffy", glow: true },
+    { id: "garage", nl: "Garage", en: "Garage", stars: 22, body: "#2f5d9e", arm: "#cfdcf2", band: "#141414", pat: "denim", hat: "quiff" },
+    { id: "shoegaze", nl: "Shoegaze", en: "Shoegaze", stars: 26, body: "#b9c4ff", arm: "#ffd1e6", band: "#6b5b95", pat: "haze", hat: "fringe" },
+    { id: "grunge", nl: "Grunge", en: "Grunge", stars: 30, body: "#8c2f2f", arm: "#3a3a40", band: "#5b5b63", pat: "plaid", hat: "beanie" },
     { id: "after", nl: "Afterparty", en: "Afterparty", body: "#9aa0b4", arm: "#ff3d9a", band: "#ffd23f", glow: true, rainbow: true, pat: "mirror", hat: "crown", fx: "party", need: (P, b) => b >= 2250, how: ["Haal de Afterparty (2250)", "Reach the Afterparty (2250)"] }
   ];
-  /* genre-skins: voorwaarde = aantal verschillende bands van dat genre in je platenkast */
-  const genreCount = (P, gs) => { if (typeof ACTS === "undefined") return 0; const set = new Set(P.crate), seen = new Set(); for (const a of ACTS) { if (!set.has(a.name) || seen.has(a.name)) continue; if ((a.genres || []).some(x => gs.some(g => String(x).toLowerCase().includes(g)))) seen.add(a.name); } return seen.size; };
-  SKINS.forEach(k => { if (k.genre) { k.need = P => genreCount(P, k.genre) >= k.n; k.how = [`${k.n} ${k.nl.toLowerCase()}-bands in je platenkast`, `${k.n} ${k.en.toLowerCase()} bands in your crate`]; k.prog = P => Math.min(k.n, genreCount(P, k.genre)) + "/" + k.n; } });
+  /* genre-skins: vrij te spelen met sterren uit de missies */
+  SKINS.forEach(k => { if (k.stars) { k.need = P => (P.stars || 0) >= k.stars; k.how = [`${k.stars} sterren`, `${k.stars} stars`]; k.prog = P => Math.min(k.stars, P.stars || 0) + "/" + k.stars; } });
   /* missies: elke dag 3 nieuwe, allemaal ‘in één potje’ */
   const MISSIONS = [
-    { k: "dodged", v: [40, 80, 140], nl: n => `Ontwijk ${n} logo's`, en: n => `Dodge ${n} logos` },
-    { k: "mult", v: [3, 4, 5], nl: n => `Haal combo x${n}`, en: n => `Reach combo x${n}` },
-    { k: "found", v: [2, 4, 6], nl: n => `Ontdek ${n} bands`, en: n => `Discover ${n} bands` },
-    { k: "waves", v: [1, 2, 3], nl: n => `Overleef ${n} ${n > 1 ? "golven" : "golf"} wind of regen`, en: n => `Survive ${n} wind or rain ${n > 1 ? "waves" : "wave"}` },
-    { k: "score", v: [300, 700, 1200], nl: n => `Scoor ${n} punten`, en: n => `Score ${n} points` },
-    { k: "nears", v: [8, 15, 25], nl: n => `${n} keer net gemist`, en: n => `${n} near misses` },
-    { k: "shields", v: [1, 2, 3], nl: n => `Pak ${n} ${n > 1 ? "schilden" : "schild"}`, en: n => `Grab ${n} ${n > 1 ? "shields" : "shield"}` },
-    { k: "stage", v: [1, 2, 3], nl: n => `Haal ${STAGES[n][0]}`, en: n => `Reach ${STAGES[n][1]}` }
+    { k: "dodged", v: [40, 80, 140, 200, 280, 380], nl: n => `Ontwijk ${n} logo's`, en: n => `Dodge ${n} logos` },
+    { k: "mult", v: [3, 4, 5, 5, 5, 5], nl: n => `Haal combo x${n}`, en: n => `Reach combo x${n}` },
+    { k: "found", v: [2, 4, 6, 8, 10, 13], nl: n => `Ontdek ${n} bands`, en: n => `Discover ${n} bands` },
+    { k: "waves", v: [1, 2, 3, 4, 5, 6], nl: n => `Overleef ${n} ${n > 1 ? "golven" : "golf"} wind of regen`, en: n => `Survive ${n} wind or rain ${n > 1 ? "waves" : "wave"}` },
+    { k: "score", v: [300, 700, 1200, 1700, 2250, 2800], nl: n => `Scoor ${n} punten`, en: n => `Score ${n} points` },
+    { k: "nears", v: [8, 15, 25, 35, 45, 60], nl: n => `${n} keer net gemist`, en: n => `${n} near misses` },
+    { k: "shields", v: [1, 2, 3, 4, 5, 6], nl: n => `Pak ${n} ${n > 1 ? "schilden" : "schild"}`, en: n => `Grab ${n} ${n > 1 ? "shields" : "shield"}` },
+    { k: "stage", v: [1, 2, 3, 4, 4, 4], nl: n => `Haal ${STAGES[n][0]}`, en: n => `Reach ${STAGES[n][1]}` }
   ];
   const FONT_D = '"Barlow Condensed","Arial Narrow",Arial,sans-serif', FONT_B = '"Barlow",Arial,sans-serif';
   const CSS = `
@@ -143,6 +142,7 @@ const leaderboard = (() => {
 .wg-mis{border:1px solid #e2e2e8;border-radius:6px;background:#fff;margin:0 0 16px;overflow:hidden}
 .wg-mis .wg-mis-h{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#141414;color:#fff;font:700 12px/1 "Barlow",Arial,sans-serif;letter-spacing:.07em;text-transform:uppercase}
 .wg-mis .wg-mis-h b{color:#c6d0ff;letter-spacing:.02em}
+.wg-mis-f{padding:9px 12px;border-top:1px solid #e2e2e8;font:500 13px "Barlow",Arial,sans-serif;color:#5e5e66}.wg-mis-f b{color:#1717ff;font-weight:700}
 .wg-mis ol{margin:0!important}.wg-mis li{display:flex!important;align-items:center;gap:10px;padding:11px 12px!important;border-bottom:1px solid #ececf1!important;font-size:15px!important}
 .wg-mis li:last-child{border-bottom:0!important}
 .wg-mis li i{flex:none;width:22px!important;height:22px;border-radius:50%;border:2px solid #c9c9d2;opacity:1!important;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:13px;color:#fff}
@@ -207,13 +207,17 @@ const leaderboard = (() => {
   let prof = (() => { let p = null; try { p = JSON.parse(store.get(PROF_KEY)); } catch {} p = Object.assign({ games: 0, time: 0, crate: [], stars: 0, streak: 0, lastDay: "", mis: { d: "", done: [0, 0, 0] }, skin: "classic" }, p && typeof p === "object" ? p : {}); if (!Array.isArray(p.crate)) p.crate = []; if (!p.mis || !Array.isArray(p.mis.done)) p.mis = { d: "", done: [0, 0, 0] }; return p; })();
   const saveProf = () => store.set(PROF_KEY, JSON.stringify(prof));
   function missionsToday() {
-    const d = today(); if (prof.mis.d !== d) { prof.mis = { d, done: [0, 0, 0] }; saveProf(); }
-    let h = 7; for (const ch of d) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    const d = today(); if (prof.mis.d !== d) { prof.mis = { d, done: [0, 0, 0], r: 0 }; saveProf(); }
+    const r = prof.mis.r || 0; let h = 7; for (const ch of d + (r ? "#" + r : "")) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
     const r2 = () => { h = (Math.imul(h, 1664525) + 1013904223) >>> 0; return h / 4294967296; };
     const pool = MISSIONS.slice(), out = [];
-    for (let lvl = 0; lvl < 3; lvl++) { const m = pool.splice(Math.floor(r2() * pool.length), 1)[0]; out.push({ m, n: m.v[lvl] }); }
+    for (let lvl = 0; lvl < 3; lvl++) { const m = pool.splice(Math.floor(r2() * pool.length), 1)[0]; out.push({ m, n: m.v[Math.min(m.v.length - 1, lvl + r * 2 - (r > 1 ? 1 : 0))] }); }
     return out;
   }
+  /* alle drie gehaald? dan staat er (max. 3x per dag) een zwaardere ronde klaar */
+  const ROUNDS = 3;
+  const allDone = () => prof.mis.done.every(Boolean);
+  function nextRound() { missionsToday(); if (allDone() && (prof.mis.r || 0) < ROUNDS - 1) { prof.mis.r = (prof.mis.r || 0) + 1; prof.mis.done = [0, 0, 0]; saveProf(); } }
   const misText = x => Lg(x.m.nl(x.n), x.m.en(x.n));
   const streakNow = () => (prof.lastDay === today() || prof.lastDay === yesterday()) ? prof.streak || 0 : 0;
   const unlockedIds = () => SKINS.filter(k => k.need(prof, best)).map(k => k.id);
@@ -285,7 +289,7 @@ const leaderboard = (() => {
     bonus = 0; dodged = 0; shield = 0; inv = 0; nextMile = T.mile; recShown = false; isRec = false; bestAtStart = best;
     obstacles = []; pickups = []; tokens = []; particles = []; pops = []; x = W / 2; vel = 0; touchDir = 0; active = null; prevGap = Math.floor((lanes - 3) / 2);
     combo = 0; comboT = 0; mult = 1; maxMult = 1; found = []; slow = 0; tokenT = 5; evT = T.eventFirst; evKind = null; evPhase = ""; evClock = 0; renderCombo();
-    stage = 0; banner = null; run = { waves: 0, nears: 0, shields: 0 }; newFound = []; misDoneRun = []; todayMis = missionsToday(); unlockBefore = unlockedIds();
+    stage = 0; banner = null; run = { waves: 0, nears: 0, shields: 0 }; newFound = []; misDoneRun = []; nextRound(); todayMis = missionsToday(); unlockBefore = unlockedIds();
     root.classList.remove("dark"); paintStage(); hide(); setScore(0); beep(520, .06, "square", .04, 400);
   }
   const speedNow = () => T.speedStart + Math.min(T.speedMax, elapsed * T.speedGain);
@@ -605,8 +609,10 @@ const leaderboard = (() => {
     wind: `<svg viewBox="0 0 36 36"><rect width="36" height="36" rx="6" fill="#eef0ff"/><path d="M6 13h17M9 19h20M6 25h14" stroke="#1717ff" stroke-width="3" stroke-linecap="round"/></svg>`,
     combo: `<svg viewBox="0 0 36 36"><rect width="36" height="36" rx="6" fill="#1717ff"/><text x="18" y="24" font-family="Arial Black,Arial" font-weight="900" font-size="14" fill="#fff" text-anchor="middle">x5</text></svg>`
   };
-  const misHtml = () => { const mis = missionsToday(), dn = prof.mis.done.filter(Boolean).length;
-    return `<div class="wg-mis"><div class="wg-mis-h"><span>${Lg("Missies van vandaag", "Today's missions")}</span><b>★ ${dn}/3</b></div><ol>${mis.map((m, i) => `<li class="${prof.mis.done[i] ? "ok" : ""}${misDoneRun.includes(i) ? " wg-now" : ""}"><i>${prof.mis.done[i] ? "✓" : ""}</i><span>${esc(misText(m))}</span>${misDoneRun.includes(i) ? "<small>+★</small>" : ""}</li>`).join("")}</ol></div>`; };
+  const nextSkin = () => SKINS.filter(k => k.stars && !k.need(prof, best)).sort((a, b) => a.stars - b.stars)[0];
+  const misHtml = () => { nextRound(); const mis = missionsToday(), dn = prof.mis.done.filter(Boolean).length, r = prof.mis.r || 0, ns = nextSkin();
+    const foot = allDone() ? `<div class="wg-mis-f">${Lg("Alle missies van vandaag gehaald. Morgen weer nieuwe!", "All of today's missions done. New ones tomorrow!")}</div>` : ns ? `<div class="wg-mis-f">${Lg("Volgende skin", "Next skin")}: <b>${Lg(ns.nl, ns.en)}</b> · ★ ${prof.stars || 0}/${ns.stars}</div>` : "";
+    return `<div class="wg-mis"><div class="wg-mis-h"><span>${r ? Lg(`Bonusronde ${r}`, `Bonus round ${r}`) : Lg("Missies van vandaag", "Today's missions")}</span><b>★ ${dn}/3</b></div><ol>${mis.map((m, i) => `<li class="${prof.mis.done[i] ? "ok" : ""}${misDoneRun.includes(i) ? " wg-now" : ""}"><i>${prof.mis.done[i] ? "✓" : ""}</i><span>${esc(misText(m))}</span>${misDoneRun.includes(i) ? "<small>+★</small>" : ""}</li>`).join("")}</ol>${foot}</div>`; };
   function showStart() {
     state = "start"; bestEl.textContent = "Record " + best; stage = 0; root.classList.remove("dark"); paintStage(); setScore(0);
     show(`<div class="wg-kick">Left of the Dial · ${Lg("het spel", "the game")}</div><h2>Wapper<br>man<em>.</em></h2>
@@ -629,7 +635,7 @@ const leaderboard = (() => {
       ${row("vinyl", Lg("Vinyl: ontdek een band", "Vinyl: discover a band"), Lg("Echte bands van het festival. Ze komen in je platenkast.", "Real festival bands. They go into your crate."))}
       ${row("fav", Lg("Roze vinyl: je favoriet", "Pink vinyl: your favourite"), Lg("Een band uit jouw lijst: dubbele punten.", "A band from your list: double points."))}
       ${row("wind", Lg("Wind en regen", "Wind and rain"), Lg("Golven die je wegduwen of meer logo's sturen. Overleef ze voor +25.", "Waves that push you or send more logos. Survive them for +25."))}</ol>
-      <p class="wg-sub">${Lg("Elke 500 punten een nieuwe festivaldag, tot de Afterparty. Elke dag drie nieuwe missies. Verzamel bands per genre voor nieuwe skins.", "Every 500 points a new festival day, up to the Afterparty. Three new missions every day. Collect bands per genre for new skins.")}</p>
+      <p class="wg-sub">${Lg("Elke 500 punten een nieuwe festivaldag, tot de Afterparty. Elke dag drie nieuwe missies, en na drie gehaalde missies een zwaardere bonusronde. Sterren speel je om in skins.", "Every 500 points a new festival day, up to the Afterparty. Three new missions every day, then a tougher bonus round. Stars unlock skins.")}</p>
       <button class="wg-btn" id="a">${Lg("Spelen", "Play")} →</button><button class="wg-btn alt" id="b">${Lg("Terug", "Back")}</button>`, () => { on("#a", start); on("#b", showStart); });
   }
   function showCrate() {
@@ -652,7 +658,7 @@ const leaderboard = (() => {
     state = "start"; lock = performance.now() + 200;
     const cur = skinOf().id;
     show(`<div class="wg-kick">${Lg("Kies je wapperman", "Pick your flapper")}</div><h2>Skins<em>.</em></h2>
-      <p class="wg-sub">${Lg("Verzamel bands van een genre in je platenkast en de skin is van jou. De Afterparty-skin is voor wie de Afterparty haalt.", "Collect bands of a genre in your crate to unlock its skin. The Afterparty skin is for those who reach the Afterparty.")}</p>
+      <p class="wg-sub">${Lg("Sterren verdien je met de missies. Alles gehaald? Dan volgt een zwaardere bonusronde. De Afterparty-skin is voor wie de Afterparty haalt.", "Earn stars with the missions. All done? A tougher bonus round follows. The Afterparty skin is for those who reach the Afterparty.")} ★ ${prof.stars || 0}</p>
       <div class="wg-skins">${SKINS.map(k => { const ok = k.need(prof, best); return `<button class="wg-skin${k.id === cur ? " on" : ""}${ok ? "" : " lock"}" data-k="${k.id}" ${ok ? "" : 'aria-disabled="true"'}><canvas></canvas>${Lg(k.nl, k.en)}<small>${ok ? (k.id === cur ? Lg("Gekozen", "Selected") : Lg("Tik om te kiezen", "Tap to pick")) : "🔒 " + Lg(k.how[0], k.how[1]) + (k.prog ? ` (${k.prog(prof)})` : "")}</small></button>`; }).join("")}</div>
       <button class="wg-btn" id="a">${Lg("Spelen", "Play")} →</button><button class="wg-btn alt" id="b">${Lg("Terug", "Back")}</button>`, () => {
         ov.querySelectorAll(".wg-skin").forEach(b => { const k = SKINS.find(z => z.id === b.dataset.k); skinPreview(b.querySelector("canvas"), k);
@@ -795,5 +801,5 @@ const leaderboard = (() => {
     root.remove(); root = null; state = "start";
   }
   window.WappermanGame = { mount, unmount };
-  if (window.__WG_TEST) window.__WG_API = { get: () => ({ state, x, W, H, s, groundY, laneW, obstacles, pickups, tokens, score, elapsed, mult, found, slow, evKind, evPhase, windDir, maxV, stage, prof, misDoneRun }), setKey: d => { keyDir = d; }, start, setBonus: n => { bonus = n; }, setInv: n => { inv = n; }, skin: (cv2, id, t, sc) => { const SK = SKINS.find(k => k.id === id), keep = [cx, s]; const g = cv2.getContext("2d"); cx = g; s = sc; try { wapper(cv2.width / 2, cv2.height - 14, t, 0, PALS[0], SK); } finally { cx = keep[0]; s = keep[1]; } }, skins: () => SKINS.map(k => [k.id, k.nl, k.how ? k.how[0] : "", k.genre ? genreCount({ crate: ACTS.map(x => x.name) }, k.genre) : 0]), card: () => scoreCard().then(b => new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(b); })) };
+  if (window.__WG_TEST) window.__WG_API = { get: () => ({ state, x, W, H, s, groundY, laneW, obstacles, pickups, tokens, score, elapsed, mult, found, slow, evKind, evPhase, windDir, maxV, stage, prof, misDoneRun }), setKey: d => { keyDir = d; }, start, setBonus: n => { bonus = n; }, setInv: n => { inv = n; }, skin: (cv2, id, t, sc) => { const SK = SKINS.find(k => k.id === id), keep = [cx, s]; const g = cv2.getContext("2d"); cx = g; s = sc; try { wapper(cv2.width / 2, cv2.height - 14, t, 0, PALS[0], SK); } finally { cx = keep[0]; s = keep[1]; } }, skins: () => SKINS.map(k => [k.id, k.nl, k.how ? k.how[0] : "", k.stars || 0]), card: () => scoreCard().then(b => new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(b); })) };
 })();
