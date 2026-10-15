@@ -181,6 +181,9 @@ const leaderboard = (() => {
 .wg-skin small{font:500 10.5px/1.2 "Barlow",Arial,sans-serif;color:#5e5e66;text-align:center}
 .wg-skin.on{border:2px solid #1717ff;background:#eef0ff}
 .wg-skin.lock{opacity:.55;cursor:default}
+.wg-head{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}.wg-head>div{min-width:0}
+.wg-me{flex:none;display:flex;flex-direction:column;align-items:center;gap:1px;margin:0 0 12px;padding:6px 8px 8px;border:1px solid #e2e2e8;border-radius:8px;background:#fff;cursor:pointer;color:#141414;font:800 15px/1.05 "Barlow Condensed",Arial,sans-serif;text-transform:uppercase}
+.wg-me canvas{width:84px;height:108px;box-shadow:none;margin:0}.wg-me small{font:600 10px/1.2 "Barlow",Arial,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#1717ff}
 .wg-stick{position:sticky;bottom:0;margin:0 -4px;padding:10px 4px calc(10px + env(safe-area-inset-bottom,0px));background:linear-gradient(rgba(255,255,255,0),#fff 14px);z-index:2}.wg-stick .wg-btn:last-child{margin-bottom:0}
 .wg-pulse{animation:wgPulse .45s ease}@keyframes wgPulse{40%{transform:scale(1.04)}}
 .wg-how li{align-items:flex-start;font-weight:500;font-size:15px;line-height:1.35}
@@ -617,13 +620,14 @@ const leaderboard = (() => {
     return `<div class="wg-mis"><div class="wg-mis-h"><span>${r ? Lg(`Bonusronde ${r}`, `Bonus round ${r}`) : Lg("Missies van vandaag", "Today's missions")}</span><b>★ ${dn}/3</b></div><ol>${mis.map((m, i) => `<li class="${prof.mis.done[i] ? "ok" : ""}${misDoneRun.includes(i) ? " wg-now" : ""}"><i>${prof.mis.done[i] ? "✓" : ""}</i><span>${esc(misText(m))}</span>${misDoneRun.includes(i) ? "<small>+★</small>" : ""}</li>`).join("")}</ol>${foot}</div>`; };
   function showStart() {
     state = "start"; bestEl.textContent = "Record " + best; stage = 0; root.classList.remove("dark"); paintStage(); setScore(0);
-    show(`<div class="wg-kick">Left of the Dial · ${Lg("het spel", "the game")}</div><h2>Wapper<br>man<em>.</em></h2>
+    const me = skinOf();
+    show(`<div class="wg-head"><div><div class="wg-kick">Left of the Dial · ${Lg("het spel", "the game")}</div><h2>Wapper<br>man<em>.</em></h2></div><button class="wg-me" id="f" aria-label="${Lg("Jouw skin", "Your skin")}: ${Lg(me.nl, me.en)}"><canvas></canvas><b>${Lg(me.nl, me.en)}</b><small>${Lg("Wijzig", "Change")}</small></button></div>
       <p>${Lg("Wapper, ontwijk de logo's en verzamel onderweg bands van het festival.", "Flap, dodge the logos and collect festival bands along the way.")}</p>
       <div class="wg-stats"><div class="hl"><b>${best}</b><small>Record</small></div><div><b>${prof.crate.length}</b><small>${Lg("Platen", "Records")}</small></div><div><b>★${prof.stars || 0}</b><small>${Lg("Sterren", "Stars")}</small></div><div><b>${streakNow()}</b><small>${Lg("Dagen op rij", "Day streak")}</small></div></div>
       ${misHtml()}
       <button class="wg-btn" id="a">${Lg("Spelen", "Play")} →</button>
       <div class="wg-row"><button class="wg-btn alt" id="b">Top 10</button><button class="wg-btn alt" id="c">${Lg("Platenkast", "Crate")}</button><button class="wg-btn alt" id="d">Skins</button><button class="wg-btn alt" id="e">${Lg("Hoe werkt het?", "How to play")}</button></div>`,
-      () => { on("#a", start); on("#b", () => showTop()); on("#c", showCrate); on("#d", showSkins); on("#e", showHow); });
+      () => { on("#a", start); on("#b", () => showTop()); on("#c", showCrate); on("#d", showSkins); on("#e", showHow); on("#f", showSkins); animMe(ov.querySelector(".wg-me canvas")); });
   }
   function showHow() {
     state = "start"; lock = performance.now() + 200;
@@ -652,9 +656,15 @@ const leaderboard = (() => {
         on("#a", start); on("#b", showStart);
       });
   }
-  function skinPreview(cv2, SK) {
-    const d = 2, keep = [cx, s]; cv2.width = 64 * d; cv2.height = 84 * d; const g = cv2.getContext("2d"); g.setTransform(d, 0, 0, d, 0, 0);
-    cx = g; s = .45; try { wapper(32, 79, 1.3, 0, PALS[0], SK); } finally { cx = keep[0]; s = keep[1]; }
+  function skinPreview(cv2, SK, t = 1.3, w = 64, h = 84, sc = .45) {
+    const d = 2, keep = [cx, s]; if (cv2.width !== w * d) { cv2.width = w * d; cv2.height = h * d; } const g = cv2.getContext("2d"); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, cv2.width, cv2.height); g.setTransform(d, 0, 0, d, 0, 0);
+    cx = g; s = sc; try { wapper(w / 2, h - 5, t, 0, PALS[0], SK); } finally { cx = keep[0]; s = keep[1]; }
+  }
+  /* beginscherm: je gekozen skin, zachtjes wapperend */
+  function animMe(cv2) {
+    if (!cv2) return; const SK = skinOf(), draw = t => skinPreview(cv2, SK, t, 84, 108, .58);
+    if (reduced) { draw(1.3); return; }
+    const loop = ts => { if (!cv2.isConnected) return; draw(ts / 1000); requestAnimationFrame(loop); }; requestAnimationFrame(loop);
   }
   function showSkins() {
     state = "start"; lock = performance.now() + 200;
