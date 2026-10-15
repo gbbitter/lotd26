@@ -410,3 +410,15 @@ html body .mapwrap.food:not(.zl) .fd-pin.closed span { background: #b9b9c2; }
 .inst-steps b { font-weight: 700; }
 .inst-steps svg { color: var(--blue, #1717ff); }
 .inst-note { font-size: 13px; color: #5e5e66; }
+
+/* persoonlijke groene markering (alleen zichtbaar op het toestel waar de eigen link is geopend) */
+:root { --green: #00c853; --green-int: #c6f6d3; }
+html body .tt .act.act.must.gr { background: var(--green) !important; color: #050505 !important; border-color: var(--green) !important; border-left-color: var(--vc, var(--green)) !important; }
+html body .tt .act.act.int.gr { background: var(--green-int) !important; color: var(--ink) !important; border-color: #9fe6b3 !important; border-left-color: var(--vc, var(--green)) !important; }
+html body .tt .act.must.gr .live { color: #050505 !important; }
+html body .gl-item.must.gr { box-shadow: inset 4px 0 0 var(--green); background: #e6fbec; }
+html body .gl-item.int.gr { box-shadow: inset 4px 0 0 #8fe3a8; background: #f2fdf5; }
+html body .nn-act.must.gr { border-left-color: var(--green); background: #e6fbec; }
+html body .nn-act.int.gr { border-left-color: #8fe3a8; background: #f2fdf5; }
+html body .item.must.gr { box-shadow: inset 5px 0 0 var(--green); background: #e6fbec; }
+html body .item.int.gr { box-shadow: inset 5px 0 0 #8fe3a8; background: #f2fdf5; }

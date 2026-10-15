@@ -430,10 +430,34 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
   if (ios && !standalone && visits >= 2 && !LS.get("lotd-install-x", false)) post("install", { text: () => L("Zet de app op je beginscherm voor snelle toegang, ook offline.", "Add the app to your home screen for quick access, also offline."), btn: () => L("Hoe?", "How?"), x: true, fn: () => { sheet = iosInstallSheet(); renderModal(); } });
   window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferred = e; if (visits >= 2 && !LS.get("lotd-install-x", false)) post("install", { text: () => L("Installeer de app voor snelle toegang, ook offline.", "Install the app for quick access, also offline."), btn: () => L("Installeer", "Install"), x: true, fn: () => deferred && deferred.prompt() }); });
 
+  /* ---- persoonlijke groene markering: alleen op dit toestel, aangezet via een eigen link (#g=…). Geen bandnamen in de code. ---- */
+  const gnorm = x => String(x).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  let green = LS.get("lotd-green", null); if (!green || !Array.isArray(green.names)) green = { names: [], on: true };
+  const isGreen = id => { if (!green.on || !green.names.length || !isFav(id)) return false; const a = act(id); return !!a && green.names.includes(gnorm(a.name)); };
+  const gr = id => isGreen(id) ? " gr" : "";
+  function applyGreen() {
+    const m = location.hash.match(/^#g=([0-9A-Za-z_-]+)/); if (!m) return false;
+    const codes = new Set(m[1].match(/.{3}/g) || []), names = [...new Set(ACTS.filter(a => codes.has(shareCode(a))).map(a => gnorm(a.name)))];
+    if (LS.get("lotd-green-done", "") !== m[1]) {
+      let add = 0, up = 0;
+      for (const n of names) {
+        const perf = ACTS.filter(a => gnorm(a.name) === n && !a.cancelled), mine = perf.filter(a => isFav(a.id));
+        if (mine.length) mine.forEach(a => { if (!isStar(a.id)) { stars.push(a.id); up++; } });
+        else perf.forEach(a => { favs.push(a.id); add++; });
+      }
+      favs = [...new Set(favs)]; stars = [...new Set(stars)]; saveFavs(); saveStars(); LS.set("lotd-green-done", m[1]);
+      post("saved", { text: () => L(`${names.length} bands groen gemarkeerd · ${add} optredens toegevoegd · ${up} naar ‘moet ik zien’`, `${names.length} bands marked green · ${add} shows added · ${up} moved to must-see`), x: true });
+    }
+    green = { names: [...new Set([...green.names, ...names])], on: true }; LS.set("lotd-green", green);
+    history.replaceState(null, "", location.pathname + location.search + "#/favorites"); return true;
+  }
+  applyGreen();
+  window.addEventListener("hashchange", () => { if (applyGreen()) render(); });
+
   /* ---- rijen, blokken, modal ---- */
   row = function (a, extra) {
     const d = dayOf(a.day), v = venue(a.venueId), cl = clashLine(a);
-    return `<div class="item"><button class="t" data-open="${a.id}"><b>${a.cancelled ? `<s>${a.name}</s>` : a.name}${isFriend(a.id) ? ' <i class="fr"></i>' : ""}</b><span><i class="dot" style="background:${v.color}"></i>${v.name} · ${d.label} ${timeTxt(a)}${a.cancelled ? ` · <em class="clash">${L("Vervallen", "Cancelled")}</em>` : ""}${typeof extra === "string" && extra ? ` · <em class="when">${extra}</em>` : ""}${subX(a)}${cl ? `<em class="clash">${cl}</em>` : ""}</span></button><span class="rt2"><button class="hb ri ${isFav(a.id) && !isStar(a.id) ? "on" : ""}" data-int="${a.id}" aria-label="${L("Interessant", "Interesting")}" aria-pressed="${isFav(a.id) && !isStar(a.id)}">${dial("int", 24, isFav(a.id) && !isStar(a.id))}</button><button class="hb rm ${isStar(a.id) ? "on" : ""}" data-must="${a.id}" aria-label="${L("Moet ik zien", "Must-see")}" aria-pressed="${isStar(a.id)}">${dial("must", 24, isStar(a.id))}</button></span></div>`;
+    return `<div class="item${isFav(a.id) ? (isStar(a.id) ? " must" : " int") : ""}${gr(a.id)}"><button class="t" data-open="${a.id}"><b>${a.cancelled ? `<s>${a.name}</s>` : a.name}${isFriend(a.id) ? ' <i class="fr"></i>' : ""}</b><span><i class="dot" style="background:${v.color}"></i>${v.name} · ${d.label} ${timeTxt(a)}${a.cancelled ? ` · <em class="clash">${L("Vervallen", "Cancelled")}</em>` : ""}${typeof extra === "string" && extra ? ` · <em class="when">${extra}</em>` : ""}${subX(a)}${cl ? `<em class="clash">${cl}</em>` : ""}</span></button><span class="rt2"><button class="hb ri ${isFav(a.id) && !isStar(a.id) ? "on" : ""}" data-int="${a.id}" aria-label="${L("Interessant", "Interesting")}" aria-pressed="${isFav(a.id) && !isStar(a.id)}">${dial("int", 24, isFav(a.id) && !isStar(a.id))}</button><button class="hb rm ${isStar(a.id) ? "on" : ""}" data-must="${a.id}" aria-label="${L("Moet ik zien", "Must-see")}" aria-pressed="${isStar(a.id)}">${dial("must", 24, isStar(a.id))}</button></span></div>`;
   };
   let genreOpen = false, selGenres = [], skipModal = false, nowFav = false;
   const allGenres = () => { const c = {}; ACTS.forEach(a => (a.genres || []).forEach(g => (c[g] = c[g] || new Set()).add(a.name))); return Object.entries(c).map(([g, s]) => [g, s.size]).sort((x, y) => x[0].localeCompare(y[0])); };
@@ -486,7 +510,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
   const dayCap = id => { const t = dayFull(id).toLowerCase(); return t.charAt(0).toUpperCase() + t.slice(1); };
   const durMin = a => mins(a.end) - mins(a.start);
   const glItem = (a, extra) => { const v = venue(a.venueId), st = isStar(a.id), it = isFav(a.id) && !st, live = isLive(a) && !a.cancelled, cl = clashes(a).length;
-    return `<button class="gl-item${st ? " must" : it ? " int" : ""}${a.cancelled ? " cancel" : ""}${a.after ? " after" : ""}" data-open="${a.id}" style="--vc:${v.color}"><span class="gl-time">${a.start}<small>${a.endUnknown ? "…" : a.end}</small></span><span class="gl-main"><strong>${a.cancelled ? `<s>${a.name}</s>` : a.name}</strong><span class="gl-meta"><i class="dot" style="background:${v.color}"></i>${v.name}${tagX(a) ? " · " + tagX(a) : ""}${a.cancelled ? ` · <em class="clash">${L("Vervallen", "Cancelled")}</em>` : ""}${extra ? ` · <em class="when">${extra}</em>` : ""}</span>${cl ? `<span class="gl-clash">${sv(SI.warn, 14)}${L("Overlapt met een favoriet", "Overlaps a favourite")}</span>` : ""}</span><span class="gl-end">${live ? `<em class="gl-live">${L("NU", "NOW")}</em>` : ""}${st ? dial("must", 20) : it ? dial("int", 20) : `<i class="gl-chev" aria-hidden="true">›</i>`}</span></button>`; };
+    return `<button class="gl-item${st ? " must" : it ? " int" : ""}${gr(a.id)}${a.cancelled ? " cancel" : ""}${a.after ? " after" : ""}" data-open="${a.id}" style="--vc:${v.color}"><span class="gl-time">${a.start}<small>${a.endUnknown ? "…" : a.end}</small></span><span class="gl-main"><strong>${a.cancelled ? `<s>${a.name}</s>` : a.name}</strong><span class="gl-meta"><i class="dot" style="background:${v.color}"></i>${v.name}${tagX(a) ? " · " + tagX(a) : ""}${a.cancelled ? ` · <em class="clash">${L("Vervallen", "Cancelled")}</em>` : ""}${extra ? ` · <em class="when">${extra}</em>` : ""}</span>${cl ? `<span class="gl-clash">${sv(SI.warn, 14)}${L("Overlapt met een favoriet", "Overlaps a favourite")}</span>` : ""}</span><span class="gl-end">${live ? `<em class="gl-live">${L("NU", "NOW")}</em>` : ""}${st ? dial("must", 20) : it ? dial("int", 20) : `<i class="gl-chev" aria-hidden="true">›</i>`}</span></button>`; };
   const onFavPage = () => route().p === "favorites";
   const filterCount = () => (pref !== "all" && !onFavPage() ? 1 : 0) + (selGenres.length ? 1 : 0) + (hiddenVenues.length ? 1 : 0) + (friend.on && friend.ids.length ? 1 : 0);
   const filterHtml = () => {
@@ -515,7 +539,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     let ticks = ""; for (let i = 0; i <= hours; i++) ticks += `<div class="tick" style="left:${i * PPH}px">${String((start / 60 + i) % 24).padStart(2, "0")}:00</div>`;
     const rows = VENUES.filter(v => list.some(a => a.venueId === v.id)).map(v => {
       const acts = list.filter(a => a.venueId === v.id).map(a => { const l = (mins(a.start) - start) / 60 * PPH, w = (mins(a.end) - mins(a.start)) / 60 * PPH, cl = clashes(a).length;
-        return `<button class="act ${a.after ? "after " : ""}${isStar(a.id) ? "must" : isFav(a.id) ? "int" : ""} ${isFav(a.id) ? "fav" : ""} ${a.cancelled ? "cancel" : ""}" style="left:${l}px;width:${w - 4}px;--vc:${v.color}" data-open="${a.id}"${cl ? ' aria-label="Overlapt met favorieten"' : ""}>${isFav(a.id) ? `<i class="h">${mark(a.id)}</i>` : ""}${cl ? '<i class="clash-marker" title="Overlap met een favoriet" aria-hidden="true">!</i>' : ""}${isLive(a) && !a.cancelled ? '<em class="live">NU</em>' : ""}${isFriend(a.id) ? '<i class="fr"></i>' : ""}<b>${a.name}</b><span>${timeTxt(a)}</span><span class="g">${a.cancelled ? L("Vervallen", "Cancelled") : tagX(a)}</span></button>`; }).join("");
+        return `<button class="act ${a.after ? "after " : ""}${isStar(a.id) ? "must" : isFav(a.id) ? "int" : ""}${gr(a.id)} ${isFav(a.id) ? "fav" : ""} ${a.cancelled ? "cancel" : ""}" style="left:${l}px;width:${w - 4}px;--vc:${v.color}" data-open="${a.id}"${cl ? ' aria-label="Overlapt met favorieten"' : ""}>${isFav(a.id) ? `<i class="h">${mark(a.id)}</i>` : ""}${cl ? '<i class="clash-marker" title="Overlap met een favoriet" aria-hidden="true">!</i>' : ""}${isLive(a) && !a.cancelled ? '<em class="live">NU</em>' : ""}${isFriend(a.id) ? '<i class="fr"></i>' : ""}<b>${a.name}</b><span>${timeTxt(a)}</span><span class="g">${a.cancelled ? L("Vervallen", "Cancelled") : tagX(a)}</span></button>`; }).join("");
       return `<div class="row"><div class="lab${(n => n >= 12 ? " long xlong" : n >= 10 ? " long" : "")(Math.max(...v.name.split(/\s+/).map(w => w.length)))}"><i class="dot" style="background:${v.color}"></i><span class="lab-t" lang="nl">${v.name}<small>${(n => L(n === 1 ? "1 optreden" : n + " optredens", n === 1 ? "1 show" : n + " shows"))(list.filter(a => a.venueId === v.id).length)}</small></span></div><div class="track" style="width:${W}px;background-size:${PPH}px 100%">${acts}</div></div>`; }).join("");
     const now = today && f.m >= start && f.m <= end ? `<div class="now" style="left:calc(var(--labw) + ${(f.m - start) / 60 * PPH}px)"></div>` : "";
     return segHtml + caption + `<div class="tt-wrap"><div class="tt"><div class="tt-in" style="width:calc(var(--labw) + ${W}px)"><div class="hrow"><div class="lab"></div><div class="trackh" style="width:${W}px">${ticks}</div></div>${rows}${now}</div></div></div>`;
@@ -574,7 +598,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     });
     const useLoc = locOn() && here;
     list.sort((x, y) => useLoc ? ((x.dist == null) - (y.dist == null)) || (x.dist - y.dist) : (y.live - x.live) || (x.first - y.first) || x.name.localeCompare(y.name));
-    const mark = a => isStar(a.id) ? " must" : isFav(a.id) ? " int" : "";
+    const mark = a => (isStar(a.id) ? " must" : isFav(a.id) ? " int" : "") + gr(a.id);
     const icon = a => isStar(a.id) ? `<i class="nn-fav must" aria-label="${L("Moet ik zien", "Must-see")}">♥</i>` : isFav(a.id) ? `<i class="nn-fav" aria-label="${L("Interessant", "Interesting")}">★</i>` : "";
     const actRow = (a, live, multi, v) => {
       const s = mins(a.start), e = mins(a.end), pct = live ? Math.max(3, Math.min(100, Math.round((f.m - s) / Math.max(1, e - s) * 100))) : 0;
