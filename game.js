@@ -181,6 +181,8 @@ const leaderboard = (() => {
 .wg-skin small{font:500 10.5px/1.2 "Barlow",Arial,sans-serif;color:#5e5e66;text-align:center}
 .wg-skin.on{border:2px solid #1717ff;background:#eef0ff}
 .wg-skin.lock{opacity:.55;cursor:default}
+.wg-stick{position:sticky;bottom:0;margin:0 -4px;padding:10px 4px calc(10px + env(safe-area-inset-bottom,0px));background:linear-gradient(rgba(255,255,255,0),#fff 14px);z-index:2}.wg-stick .wg-btn:last-child{margin-bottom:0}
+.wg-pulse{animation:wgPulse .45s ease}@keyframes wgPulse{40%{transform:scale(1.04)}}
 .wg-how li{align-items:flex-start;font-weight:500;font-size:15px;line-height:1.35}
 .wg-how li svg{flex:none;width:36px;height:36px}
 .wg-how li b{display:block;font:700 18px "Barlow Condensed",Arial,sans-serif;letter-spacing:.01em}
@@ -660,9 +662,12 @@ const leaderboard = (() => {
     show(`<div class="wg-kick">${Lg("Kies je wapperman", "Pick your flapper")}</div><h2>Skins<em>.</em></h2>
       <p class="wg-sub">${Lg("Sterren verdien je met de missies. Alles gehaald? Dan volgt een zwaardere bonusronde. De Afterparty-skin is voor wie de Afterparty haalt.", "Earn stars with the missions. All done? A tougher bonus round follows. The Afterparty skin is for those who reach the Afterparty.")} ★ ${prof.stars || 0}</p>
       <div class="wg-skins">${SKINS.map(k => { const ok = k.need(prof, best); return `<button class="wg-skin${k.id === cur ? " on" : ""}${ok ? "" : " lock"}" data-k="${k.id}" ${ok ? "" : 'aria-disabled="true"'}><canvas></canvas>${Lg(k.nl, k.en)}<small>${ok ? (k.id === cur ? Lg("Gekozen", "Selected") : Lg("Tik om te kiezen", "Tap to pick")) : "🔒 " + Lg(k.how[0], k.how[1]) + (k.prog ? ` (${k.prog(prof)})` : "")}</small></button>`; }).join("")}</div>
-      <button class="wg-btn" id="a">${Lg("Spelen", "Play")} →</button><button class="wg-btn alt" id="b">${Lg("Terug", "Back")}</button>`, () => {
+      <div class="wg-stick"><button class="wg-btn" id="a">${Lg("Spelen", "Play")} →</button><button class="wg-btn alt" id="b">${Lg("Terug", "Back")}</button></div>`, () => {
         ov.querySelectorAll(".wg-skin").forEach(b => { const k = SKINS.find(z => z.id === b.dataset.k); skinPreview(b.querySelector("canvas"), k);
-          b.addEventListener("click", () => { if (!k.need(prof, best)) return; prof.skin = k.id; saveProf(); beep(660, .05); showSkins(); }); });
+          b.addEventListener("click", () => { if (!k.need(prof, best)) return; prof.skin = k.id; saveProf(); beep(660, .05);
+            /* ter plekke bijwerken: geen herladen, scrollpositie blijft, knoppen blijven bereikbaar */
+            ov.querySelectorAll(".wg-skin").forEach(o => { const ko = SKINS.find(z => z.id === o.dataset.k); if (!ko.need(prof, best)) return; const sel = ko.id === k.id; o.classList.toggle("on", sel); o.querySelector("small").textContent = sel ? Lg("Gekozen", "Selected") : Lg("Tik om te kiezen", "Tap to pick"); });
+            const a = ov.querySelector("#a"); if (a) { a.classList.remove("wg-pulse"); void a.offsetWidth; a.classList.add("wg-pulse"); } }); });
         on("#a", start); on("#b", showStart);
       });
   }
