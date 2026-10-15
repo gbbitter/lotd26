@@ -73,27 +73,23 @@ const leaderboard = (() => {
     { bg: "#141414", ink: "#ffffff", paper: "#141414", lane: "#2a2a2e", floor: "#1c1c20", crowd: "#2e2e36", acc: "#7d8bff", dark: true },
     { bg: "#07070c", ink: "#ffffff", paper: "#07070c", lane: "#1a1a2c", floor: "#0e0e1a", crowd: "#22224a", acc: "#8f9cff", dark: true, beams: true }
   ];
-  /* skins: vrij te spelen met sterren (missies), record of platenkast */
+  /* skins: Klassiek, Afterparty (record) en tien genre-skins (bands van dat genre in je platenkast) */
   const SKINS = [
     { id: "classic", nl: "Klassiek", en: "Classic", body: null, arm: null, band: "#1717ff", need: () => true, how: ["Altijd beschikbaar", "Always available"] },
-    { id: "electric", nl: "Electric", en: "Electric", body: "#1717ff", arm: "#ffffff", band: "#141414", need: P => P.stars >= 3, how: ["3 sterren uit missies", "3 stars from missions"] },
-    { id: "interessant", nl: "Interessant", en: "Interesting", body: "#8fa0ff", arm: "#ffffff", band: "#141414", need: P => P.stars >= 6, how: ["6 sterren uit missies", "6 stars from missions"] },
-    { id: "doek", nl: "Wit doek", en: "White sheet", body: "#ffffff", arm: "#1717ff", band: "#1717ff", need: (P, b) => b >= 1000, how: ["Record van 1000+", "Record of 1000+"] },
-    { id: "platen", nl: "Platenkast", en: "Record crate", body: "#141414", arm: "#c6d0ff", band: "#c6d0ff", vinyl: true, need: P => P.crate.length >= 25, how: ["25 bands in je platenkast", "25 bands in your crate"] },
-    { id: "after", nl: "Afterparty", en: "Afterparty", body: "#0b0b14", arm: "#8f9cff", band: "#ff3d9a", glow: true, need: (P, b) => b >= 2250, how: ["Haal de Afterparty (2250)", "Reach the Afterparty (2250)"] },
-    /* genre-skins: speel je vrij door bands van dat genre in je platenkast te verzamelen */
-    { id: "disco", nl: "Disco", en: "Disco", genre: "disco", n: 3, body: "#c9a227", arm: "#fff3c4", band: "#2a1a0e", pat: "sequins", hat: "afro", fx: "sparkle" },
-    { id: "punk", nl: "Punk", en: "Punk", genre: "punk", n: 5, body: "#141414", arm: "#ff3d9a", band: "#141414", pat: "studs", hat: "mohawk" },
-    { id: "postpunk", nl: "Post-punk", en: "Post-punk", genre: "post-punk", n: 3, body: "#141414", arm: "#ffffff", band: "#141414", pat: "stripes", hat: "shades" },
-    { id: "grunge", nl: "Grunge", en: "Grunge", genre: "grunge", n: 3, body: "#8c2f2f", arm: "#3a3a40", band: "#5b5b63", pat: "plaid", hat: "beanie" },
-    { id: "shoegaze", nl: "Shoegaze", en: "Shoegaze", genre: "shoegaze", n: 3, body: "#b9c4ff", arm: "#ffd1e6", band: "#6b5b95", pat: "haze", hat: "fringe" },
-    { id: "synth", nl: "Synth", en: "Synth", genre: "synth", n: 3, body: "#120a2a", arm: "#00e5ff", band: "#ff2bd6", pat: "grid", hat: "visor", glow: true },
-    { id: "folk", nl: "Folk", en: "Folk", genre: "folk", n: 5, body: "#d9a441", arm: "#f4e7c5", band: "#6b4f2a", pat: "knit", hat: "bucket" },
-    { id: "heavy", nl: "Heavy", en: "Heavy", genre: "heavy", n: 3, body: "#141414", arm: "#ff7a1a", band: "#1c1c1c", pat: "flames", hat: "longhair" },
-    { id: "garage", nl: "Garage", en: "Garage", genre: "garage", n: 3, body: "#2f5d9e", arm: "#cfdcf2", band: "#141414", pat: "denim", hat: "quiff" }
+    { id: "rock", nl: "Rock", en: "Rock", genre: ["rock"], n: 8, body: "#1f1f22", arm: "#e3262f", band: "#141414", pat: "leather", hat: "rockhair" },
+    { id: "pop", nl: "Pop", en: "Pop", genre: ["pop"], n: 6, body: "#ff5fa8", arm: "#ffe14d", band: "#ffe14d", pat: "dots", hat: "hearts" },
+    { id: "indie", nl: "Indie", en: "Indie", genre: ["indie"], n: 5, body: "#c98a2b", arm: "#2f7a72", band: "#5a341c", pat: "cord", hat: "moptop" },
+    { id: "folk", nl: "Folk", en: "Folk", genre: ["folk", "country", "singer"], n: 5, body: "#b5562f", arm: "#f4e7c5", band: "#d9a441", pat: "knit", hat: "flowers" },
+    { id: "punk", nl: "Punk", en: "Punk", genre: ["punk"], n: 5, body: "#141414", arm: "#ff3d9a", band: "#141414", pat: "studs", hat: "mohawk" },
+    { id: "postpunk", nl: "Post-punk", en: "Post-punk", genre: ["post-punk", "wave"], n: 3, body: "#141414", arm: "#ffffff", band: "#141414", pat: "stripes", hat: "shades" },
+    { id: "rave", nl: "Rave", en: "Rave", genre: ["rave"], n: 3, body: "#d7ff1e", arm: "#ff2bd6", band: "#141414", pat: "smiley", hat: "fluffy", glow: true },
+    { id: "garage", nl: "Garage", en: "Garage", genre: ["garage"], n: 3, body: "#2f5d9e", arm: "#cfdcf2", band: "#141414", pat: "denim", hat: "quiff" },
+    { id: "shoegaze", nl: "Shoegaze", en: "Shoegaze", genre: ["shoegaze", "dream pop", "slowcore"], n: 3, body: "#b9c4ff", arm: "#ffd1e6", band: "#6b5b95", pat: "haze", hat: "fringe" },
+    { id: "grunge", nl: "Grunge", en: "Grunge", genre: ["grunge", "slacker", "noise"], n: 3, body: "#8c2f2f", arm: "#3a3a40", band: "#5b5b63", pat: "plaid", hat: "beanie" },
+    { id: "after", nl: "Afterparty", en: "Afterparty", body: "#9aa0b4", arm: "#ff3d9a", band: "#ffd23f", glow: true, rainbow: true, pat: "mirror", hat: "crown", fx: "party", need: (P, b) => b >= 2250, how: ["Haal de Afterparty (2250)", "Reach the Afterparty (2250)"] }
   ];
-  /* genre-skins: voorwaarde = aantal bands van dat genre in je platenkast */
-  const genreCount = (P, g) => { if (typeof ACTS === "undefined") return 0; const set = new Set(P.crate); let n = 0; const seen = new Set(); for (const a of ACTS) { if (!set.has(a.name) || seen.has(a.name)) continue; if ((a.genres || []).some(x => String(x).toLowerCase().includes(g))) { seen.add(a.name); n++; } } return n; };
+  /* genre-skins: voorwaarde = aantal verschillende bands van dat genre in je platenkast */
+  const genreCount = (P, gs) => { if (typeof ACTS === "undefined") return 0; const set = new Set(P.crate), seen = new Set(); for (const a of ACTS) { if (!set.has(a.name) || seen.has(a.name)) continue; if ((a.genres || []).some(x => gs.some(g => String(x).toLowerCase().includes(g)))) seen.add(a.name); } return seen.size; };
   SKINS.forEach(k => { if (k.genre) { k.need = P => genreCount(P, k.genre) >= k.n; k.how = [`${k.n} ${k.nl.toLowerCase()}-bands in je platenkast`, `${k.n} ${k.en.toLowerCase()} bands in your crate`]; k.prog = P => Math.min(k.n, genreCount(P, k.genre)) + "/" + k.n; } });
   /* missies: elke dag 3 nieuwe, allemaal ‘in één potje’ */
   const MISSIONS = [
@@ -314,7 +310,8 @@ const leaderboard = (() => {
     tokenT -= iv;
     if (tokenT <= 0 && typeof ACTS !== "undefined" && ACTS.length) {
       const pool = ACTS.filter(a => !a.cancelled && !a.after && a.genre !== "Extra" && !found.some(f => f.id === a.id)), favPool = pool.filter(a => isFavAct(a.id));
-      const a = favPool.length && Math.random() < .22 ? favPool[(Math.random() * favPool.length) | 0] : pool.length ? pool[(Math.random() * pool.length) | 0] : null;
+      const newPool = pool.filter(a => !prof.crate.includes(a.name)), base = newPool.length && Math.random() < .7 ? newPool : pool;
+      const a = favPool.length && Math.random() < .22 ? favPool[(Math.random() * favPool.length) | 0] : base.length ? base[(Math.random() * base.length) | 0] : null;
       if (a) { const far = x < (g + gw / 2) * laneW ? gw - .5 : .5; tokens.push({ x: (g + far) * laneW, y: -size - 14, speed: sp, r: 13 * s, act: a, ph: rnd(0, 6), fav: isFavAct(a.id) }); }
       tokenT = rnd(T.tokenEvery[0], T.tokenEvery[1]);
     }
@@ -419,10 +416,11 @@ const leaderboard = (() => {
   function star(px, py, r) { cx.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * .45 : r; cx.lineTo(px + Math.cos(a) * rr, py + Math.sin(a) * rr); } cx.closePath(); cx.fill(); }
   function wapper(px, gy, t, d, P, SK) {
     SK = SK || skinOf();
-    const G = geom(px, gy, t, d), { bh, sw } = G, INK = P.ink, BODY = SK.body || P.ink, ARM = SK.arm || P.paper, HEAD_INK = "#141414";
+    const G = geom(px, gy, t, d), { bh, sw } = G, INK = P.ink, BODY = SK.body || P.ink, ARM = SK.rainbow ? `hsl(${(t * 140) % 360},100%,62%)` : SK.arm || P.paper, HEAD_INK = "#141414";
+    if (SK.fx === "party") partyBack(px, gy, bh, t);
     const outline = SK.body && (SK.body === P.bg || isLight(SK.body) === isLight(P.bg));
     cx.fillStyle = P.dark ? "#55555f" : "#9a9aa4"; cx.fillRect(px - 20 * s, gy, 40 * s, 9 * s);
-    if (SK.glow && !reduced) { cx.shadowColor = SK.arm; cx.shadowBlur = 18 * s; }
+    if (SK.glow && !reduced) { cx.shadowColor = ARM; cx.shadowBlur = 18 * s; }
     cx.fillStyle = BODY; cx.beginPath(); const N = 8;
     for (let i = 0; i <= N; i++) { const f = i / N, w = (15 - 4 * f) * s, bx = px + sw(f) - w, by = gy - bh * f; i ? cx.lineTo(bx, by) : cx.moveTo(bx, by); }
     for (let i = N; i >= 0; i--) { const f = i / N, w = (15 - 4 * f) * s; cx.lineTo(px + sw(f) + w, gy - bh * f); }
@@ -430,7 +428,7 @@ const leaderboard = (() => {
     if (SK.pat) { cx.save(); cx.clip(); drawPat(SK.pat, px, gy, bh, t); cx.restore(); cx.beginPath(); for (let i = 0; i <= N; i++) { const f = i / N, w = (15 - 4 * f) * s, bx = px + sw(f) - w, by = gy - bh * f; i ? cx.lineTo(bx, by) : cx.moveTo(bx, by); } for (let i = N; i >= 0; i--) { const f = i / N, w = (15 - 4 * f) * s; cx.lineTo(px + sw(f) + w, gy - bh * f); } cx.closePath(); }
     if (outline || SK.pat) { cx.strokeStyle = outline ? INK : "rgba(0,0,0,.35)"; cx.lineWidth = (outline ? 2 : 1.2) * s; cx.stroke(); }
     if (SK.vinyl) { cx.strokeStyle = SK.arm; cx.lineWidth = 2 * s; for (const f of [.3, .42]) { cx.beginPath(); cx.moveTo(px + sw(f) - 12 * s, gy - bh * f); cx.lineTo(px + sw(f) + 12 * s, gy - bh * f); cx.stroke(); } }
-    if (d < .5) { cx.save(); cx.translate(px + sw(.62), gy - bh * .62); cx.rotate(-Math.PI / 2); cx.fillStyle = SK.body ? (isLight(BODY) ? "#141414" : "#ffffff") : P.paper; cx.font = `800 ${10 * s}px ${FONT_D}`; cx.textAlign = "center"; cx.textBaseline = "middle"; cx.fillText("LEFT OF THE DIAL", 0, 0); cx.restore(); }
+    if (d < .5) { cx.save(); cx.translate(px + sw(.62), gy - bh * .62); cx.rotate(-Math.PI / 2); cx.fillStyle = SK.body ? (isLight(BODY) ? "#141414" : "#ffffff") : P.paper; cx.font = `800 ${10 * s}px ${FONT_D}`; cx.textAlign = "center"; cx.textBaseline = "middle"; if (SK.pat) { cx.strokeStyle = isLight(BODY) ? "#ffffff" : "#141414"; cx.lineWidth = 3 * s; cx.lineJoin = "round"; cx.strokeText("LEFT OF THE DIAL", 0, 0); } cx.fillText("LEFT OF THE DIAL", 0, 0); cx.restore(); }
     for (const p of G.arms) { poly(p, 0, outline ? INK : BODY, 17 * s); poly(p, 4, ARM, 12 * s); }
     cx.save(); cx.translate(G.hx, G.hy); cx.rotate(d * .7 + Math.sin(t * 6) * .07 * (1 - d));
     if (SK.hat) hatBack(SK, t);
@@ -448,11 +446,13 @@ const leaderboard = (() => {
     cx.lineWidth = 3 * s; cx.strokeStyle = P.dark ? "#ffffff" : HEAD_INK; cx.beginPath(); cx.ellipse(0, 0, 20 * s, 25 * s, 0, 0, 7); cx.stroke();
     if (SK.hat) hatFront(SK, t, d);
     cx.restore();
+    if (SK.fx === "party") partyFront(px, gy, bh, t);
     if (SK.fx === "sparkle" && !reduced) { cx.fillStyle = "#fff3c4"; for (let i = 0; i < 4; i++) { const a = t * 1.7 + i * 1.6, r = (26 + (i % 2) * 14) * s, k = .5 + .5 * Math.sin(t * 6 + i * 2); cx.globalAlpha = k; star(px + Math.cos(a) * r, gy - bh * .55 + Math.sin(a) * r * 1.4, 4.5 * s); } cx.globalAlpha = 1; }
   }
   /* patronen op het lichaam (binnen een clip van het lichaam) */
   function drawPat(pat, px, gy, bh, t) {
     const x0 = px - 30 * s, x1 = px + 30 * s, y0 = gy - bh - 4 * s, y1 = gy;
+    if (drawPat2(pat, px, gy, bh, t, x0, x1, y0, y1)) return;
     if (pat === "sequins") { for (let y = y0, r = 0; y < y1; y += 5 * s, r++) for (let x = x0 + (r % 2) * 2.5 * s; x < x1; x += 5 * s) { const k = (Math.sin(t * 5 + x * .3 + y * .2) + 1) / 2; cx.fillStyle = k > .85 ? "#ffffff" : k > .5 ? "#f2d46b" : "#a8841c"; cx.beginPath(); cx.moveTo(x, y - 2.2 * s); cx.lineTo(x + 2.2 * s, y); cx.lineTo(x, y + 2.2 * s); cx.lineTo(x - 2.2 * s, y); cx.fill(); } }
     else if (pat === "studs") { cx.fillStyle = "#ff3d9a"; for (let y = y0 + 8 * s; y < y1; y += 11 * s) for (let x = x0; x < x1; x += 8 * s) { cx.beginPath(); cx.arc(x, y, 1.7 * s, 0, 7); cx.fill(); } cx.fillStyle = "#ffffff"; cx.fillRect(px - 15 * s, gy - bh * .3, 30 * s, 2 * s); }
     else if (pat === "stripes") { cx.fillStyle = "#ffffff"; for (let y = y0; y < y1; y += 8 * s) cx.fillRect(x0, y, x1 - x0, 3.5 * s); }
@@ -463,9 +463,37 @@ const leaderboard = (() => {
     else if (pat === "flames") { cx.fillStyle = "#ff7a1a"; cx.beginPath(); cx.moveTo(x0, y1); for (let x = x0, i = 0; x <= x1; x += 6 * s, i++) cx.lineTo(x, y1 - bh * (.28 + .16 * Math.abs(Math.sin(i * 1.7 + t * 6)))); cx.lineTo(x1, y1); cx.fill(); cx.fillStyle = "#ffd23f"; cx.beginPath(); cx.moveTo(x0, y1); for (let x = x0, i = 0; x <= x1; x += 6 * s, i++) cx.lineTo(x, y1 - bh * (.12 + .1 * Math.abs(Math.sin(i * 2.3 + t * 7)))); cx.lineTo(x1, y1); cx.fill(); }
     else if (pat === "denim") { cx.strokeStyle = "rgba(255,255,255,.18)"; cx.lineWidth = 1 * s; for (let x = x0; x < x1; x += 2.5 * s) { cx.beginPath(); cx.moveTo(x, y0); cx.lineTo(x + 10 * s, y1); cx.stroke(); } cx.setLineDash([3 * s, 2 * s]); cx.strokeStyle = "#f2b33d"; cx.lineWidth = 1.3 * s; cx.beginPath(); cx.moveTo(px - 15 * s, gy - bh * .45); cx.lineTo(px + 15 * s, gy - bh * .45); cx.stroke(); cx.setLineDash([]); cx.fillStyle = "#ff3d9a"; cx.beginPath(); cx.arc(px + 4 * s, gy - bh * .2, 4.5 * s, 0, 7); cx.fill(); }
   }
+  function drawPat2(pat, px, gy, bh, t, x0, x1, y0, y1) {
+    if (pat === "leather") { const g = cx.createLinearGradient(x0, 0, x1, 0); g.addColorStop(0, "rgba(255,255,255,0)"); g.addColorStop(.45, "rgba(255,255,255,.16)"); g.addColorStop(.6, "rgba(255,255,255,0)"); cx.fillStyle = g; cx.fillRect(x0, y0, x1 - x0, y1 - y0);
+      cx.strokeStyle = "#c8c8d0"; cx.lineWidth = 1.6 * s; cx.beginPath(); cx.moveTo(px - 8 * s, y0 + bh * .1); cx.lineTo(px + 6 * s, y1); cx.stroke(); cx.setLineDash([1.5 * s, 1.5 * s]); cx.lineWidth = 3 * s; cx.stroke(); cx.setLineDash([]);
+      cx.fillStyle = "#3a3a40"; cx.beginPath(); cx.moveTo(x0, y0); cx.lineTo(px - 2 * s, y0 + bh * .28); cx.lineTo(x0, y0 + bh * .38); cx.fill(); cx.beginPath(); cx.moveTo(x1, y0); cx.lineTo(px + 2 * s, y0 + bh * .28); cx.lineTo(x1, y0 + bh * .38); cx.fill();
+      cx.fillStyle = "#c8c8d0"; for (let i = 0; i < 4; i++) { cx.beginPath(); cx.arc(px - 11 * s + i * 2.5 * s, y0 + bh * (.12 + i * .05), 1.3 * s, 0, 7); cx.fill(); }
+      cx.fillStyle = "#e3262f"; const bx = px - 7 * s, by = gy - bh * .2; cx.beginPath(); cx.moveTo(bx + 2 * s, by - 9 * s); cx.lineTo(bx - 4 * s, by + 1 * s); cx.lineTo(bx, by + 1 * s); cx.lineTo(bx - 2 * s, by + 9 * s); cx.lineTo(bx + 5 * s, by - 2 * s); cx.lineTo(bx + 1 * s, by - 2 * s); cx.closePath(); cx.fill(); return true; }
+    if (pat === "dots") { for (let y = y0, r = 0; y < y1; y += 9 * s, r++) for (let x = x0 + (r % 2) * 4.5 * s; x < x1; x += 9 * s) { if ((r * 7 + Math.round(x / s)) % 5 === 0) { cx.fillStyle = "#ffe14d"; heart(x, y, 3.2 * s); } else { cx.fillStyle = "#ffffff"; cx.beginPath(); cx.arc(x, y, 2.2 * s, 0, 7); cx.fill(); } } return true; }
+    if (pat === "cord") { cx.fillStyle = "rgba(90,50,10,.28)"; for (let x = x0; x < x1; x += 3.2 * s) cx.fillRect(x, y0, 1.3 * s, y1 - y0); cx.fillStyle = "#f4e7c5"; cx.fillRect(px - 15 * s, gy - bh * .5, 30 * s, 2.5 * s); cx.fillStyle = "#2f7a72"; cx.fillRect(px - 15 * s, gy - bh * .5 + 3.5 * s, 30 * s, 2.5 * s); return true; }
+    if (pat === "smiley") { for (let y = y0 + 8 * s, r = 0; y < y1; y += 17 * s, r++) for (let x = x0 + (r % 2 ? 8 : 0) * s; x < x1; x += 16 * s) { const rr = 5.5 * s; cx.fillStyle = "#141414"; cx.beginPath(); cx.arc(x, y, rr, 0, 7); cx.fill(); cx.fillStyle = "#d7ff1e"; cx.beginPath(); cx.arc(x, y, rr - 1.3 * s, 0, 7); cx.fill(); cx.fillStyle = "#141414"; cx.fillRect(x - 2.2 * s, y - 2 * s, 1.3 * s, 2 * s); cx.fillRect(x + 1 * s, y - 2 * s, 1.3 * s, 2 * s); cx.strokeStyle = "#141414"; cx.lineWidth = 1 * s; cx.beginPath(); cx.arc(x, y + .3 * s, 2.6 * s, .3, Math.PI - .3); cx.stroke(); } return true; }
+    if (pat === "mirror") { const q = 5 * s; for (let y = y0, r = 0; y < y1; y += q, r++) for (let x = x0, c = 0; x < x1; x += q, c++) { const k = Math.sin(t * 7 + r * 1.3 + c * 2.1), hue = (t * 160 + r * 25 + c * 40) % 360; cx.fillStyle = k > .78 ? "#ffffff" : k > -.15 ? `hsl(${hue},100%,${k > .4 ? 72 : 58}%)` : k > -.6 ? "#d4d7e3" : "#8a8fa3"; cx.fillRect(x + .4 * s, y + .4 * s, q - .8 * s, q - .8 * s); } return true; }
+    return false;
+  }
+  function heart(x, y, r) { cx.beginPath(); cx.moveTo(x, y + r); cx.bezierCurveTo(x - r * 1.6, y - r * .1, x - r * .7, y - r * 1.4, x, y - r * .4); cx.bezierCurveTo(x + r * .7, y - r * 1.4, x + r * 1.6, y - r * .1, x, y + r); cx.fill(); }
+  /* Afterparty: laserwaaier achter, confetti en sterren ervoor */
+  function partyBack(px, gy, bh, t) {
+    if (reduced) return; const cy = gy - bh * .9;
+    cx.save(); cx.globalCompositeOperation = "lighter"; cx.lineCap = "round";
+    for (let i = 0; i < 7; i++) { const a = -Math.PI / 2 + Math.sin(t * 1.6 + i * .9) * 1.15, L = 120 * s; cx.strokeStyle = `hsla(${(t * 120 + i * 51) % 360},100%,60%,.45)`; cx.lineWidth = 3 * s; cx.beginPath(); cx.moveTo(px, cy); cx.lineTo(px + Math.cos(a) * L, cy + Math.sin(a) * L); cx.stroke(); }
+    const g = cx.createRadialGradient(px, cy, 0, px, cy, 70 * s); g.addColorStop(0, "rgba(255,61,154,.35)"); g.addColorStop(1, "rgba(255,61,154,0)"); cx.fillStyle = g; cx.beginPath(); cx.arc(px, cy, 70 * s, 0, 7); cx.fill();
+    cx.restore();
+  }
+  function partyFront(px, gy, bh, t) {
+    if (reduced) return;
+    for (let i = 0; i < 14; i++) { const ph = i * 2.399, fall = ((t * (22 + i % 4 * 6) + i * 37) % 130) * s, xx = px + Math.sin(ph) * (34 + (i % 3) * 14) * s + Math.sin(t * 3 + i) * 5 * s, yy = gy - bh - 50 * s + fall; cx.save(); cx.translate(xx, yy); cx.rotate(t * 5 + i); cx.fillStyle = `hsl(${(i * 47 + t * 90) % 360},100%,60%)`; cx.fillRect(-2.5 * s, -1.2 * s, 5 * s, 2.4 * s); cx.restore(); }
+    cx.fillStyle = "#ffd23f"; for (let i = 0; i < 3; i++) { const k = .5 + .5 * Math.sin(t * 7 + i * 2.1); cx.globalAlpha = k; star(px + [-30, 32, 22][i] * s, gy - bh * [.5, .75, .25][i], (4 + 3 * k) * s); } cx.globalAlpha = 1;
+  }
   /* kapsels en hoeden, in het assenstelsel van het hoofd (ellips 20x25) */
   function hatBack(SK, t) {
     if (SK.hat === "afro") { cx.fillStyle = "#2a1a0e"; for (const [x, y, r] of [[0, -16, 21], [-17, -9, 13], [17, -9, 13], [-12, -26, 12], [12, -26, 12], [0, -32, 12]]) { cx.beginPath(); cx.arc(x * s, y * s, r * s, 0, 7); cx.fill(); } }
+    if (SK.hat === "rockhair") { cx.fillStyle = "#141414"; cx.beginPath(); cx.moveTo(-24 * s, 8 * s); for (let i = 0; i <= 10; i++) { const a = Math.PI * (1.05 + i * .09), r = (i % 2 ? 26 : 33) * s + Math.sin(t * 9 + i) * 1.5 * s; cx.lineTo(Math.cos(a) * r, Math.sin(a) * r - 6 * s); } cx.lineTo(24 * s, 8 * s); cx.closePath(); cx.fill(); }
+    if (SK.hat === "flowers") { cx.fillStyle = "#d9a441"; for (const e of [-1, 1]) { cx.beginPath(); cx.moveTo(e * 17 * s, -6 * s); cx.quadraticCurveTo(e * 27 * s, 18 * s, e * 19 * s, 36 * s); cx.lineTo(e * 13 * s, 34 * s); cx.quadraticCurveTo(e * 19 * s, 16 * s, e * 12 * s, 0); cx.fill(); } }
     if (SK.hat === "longhair") { cx.fillStyle = "#1c1c1c"; cx.beginPath(); cx.moveTo(-21 * s, -10 * s); cx.quadraticCurveTo(-30 * s, 22 * s + Math.sin(t * 7) * 3 * s, -18 * s, 44 * s); cx.lineTo(18 * s, 44 * s); cx.quadraticCurveTo(30 * s, 22 * s + Math.sin(t * 7 + 1) * 3 * s, 21 * s, -10 * s); cx.closePath(); cx.fill(); }
   }
   function hatFront(SK, t, d) {
@@ -476,6 +504,13 @@ const leaderboard = (() => {
     else if (h === "fringe") { cx.fillStyle = "#6b5b95"; cx.beginPath(); cx.moveTo(-21 * s, -4 * s); cx.quadraticCurveTo(-22 * s, -30 * s, 0, -27 * s); cx.quadraticCurveTo(22 * s, -30 * s, 21 * s, -4 * s); for (let i = 6; i >= -6; i -= 2) cx.lineTo(i * 3 * s, (i % 4 ? -1 : 2) * s); cx.closePath(); cx.fill(); }
     else if (h === "visor" && d < .4) { cx.fillStyle = "#00e5ff"; cx.shadowColor = "#00e5ff"; cx.shadowBlur = reduced ? 0 : 10 * s; cx.fillRect(-19 * s, -10 * s, 38 * s, 7 * s); cx.shadowBlur = 0; cx.fillStyle = "#ffffff"; cx.fillRect(-15 * s, -9 * s, 8 * s, 2 * s); }
     else if (h === "shades" && d < .4) { cx.fillStyle = "#141414"; cx.strokeStyle = "#ffffff"; cx.lineWidth = 1.6 * s; for (const e of [-1, 1]) { cx.beginPath(); cx.roundRect(e > 0 ? 1.5 * s : -19 * s, -12 * s, 17.5 * s, 11 * s, 3 * s); cx.fill(); cx.stroke(); } cx.fillRect(-3 * s, -10 * s, 6 * s, 2.5 * s); cx.fillStyle = "rgba(255,255,255,.7)"; cx.fillRect(-16 * s, -10 * s, 4 * s, 2 * s); cx.fillRect(4.5 * s, -10 * s, 4 * s, 2 * s); }
+    else if (h === "rockhair") { cx.fillStyle = "#141414"; cx.beginPath(); cx.moveTo(-20 * s, -6 * s); cx.lineTo(-14 * s, -14 * s); cx.lineTo(-9 * s, -6 * s); cx.lineTo(-4 * s, -16 * s); cx.lineTo(1 * s, -7 * s); cx.lineTo(7 * s, -17 * s); cx.lineTo(11 * s, -7 * s); cx.lineTo(16 * s, -14 * s); cx.lineTo(20 * s, -6 * s); cx.lineTo(18 * s, -22 * s); cx.lineTo(-18 * s, -22 * s); cx.closePath(); cx.fill(); cx.fillStyle = "#e3262f"; cx.beginPath(); cx.moveTo(-20 * s, -15 * s); cx.quadraticCurveTo(0, -24 * s, 20 * s, -15 * s); cx.lineTo(20 * s, -11 * s); cx.quadraticCurveTo(0, -20 * s, -20 * s, -11 * s); cx.fill(); cx.fillStyle = "#ffffff"; for (const x of [-12, -3, 6, 14]) { cx.beginPath(); cx.arc(x * s, -15.5 * s - Math.abs(x) * .05 * s, .9 * s, 0, 7); cx.fill(); } }
+    else if (h === "hearts" && d < .4) { cx.fillStyle = "#e3262f"; cx.strokeStyle = "#ffffff"; cx.lineWidth = 1.4 * s; for (const e of [-1, 1]) { heart(e * 8.5 * s, -6 * s, 6.5 * s); cx.stroke(); } cx.fillStyle = "#141414"; cx.fillRect(-3 * s, -9 * s, 6 * s, 1.8 * s); cx.fillStyle = "rgba(255,255,255,.7)"; cx.beginPath(); cx.arc(-11 * s, -9 * s, 1.5 * s, 0, 7); cx.arc(6 * s, -9 * s, 1.5 * s, 0, 7); cx.fill(); const bub = (5 + 3 * Math.abs(Math.sin(t * 2.2))) * s; cx.fillStyle = "#ff8cc6"; cx.strokeStyle = "#ff5fa8"; cx.beginPath(); cx.arc(9 * s, 18 * s, bub, 0, 7); cx.fill(); cx.stroke(); cx.fillStyle = "rgba(255,255,255,.75)"; cx.beginPath(); cx.arc(9 * s - bub * .4, 18 * s - bub * .4, bub * .22, 0, 7); cx.fill(); }
+    else if (h === "moptop") { cx.fillStyle = "#5a341c"; cx.beginPath(); cx.moveTo(-23 * s, 4 * s); cx.quadraticCurveTo(-26 * s, -30 * s, 0, -29 * s); cx.quadraticCurveTo(26 * s, -30 * s, 23 * s, 4 * s); cx.lineTo(17 * s, 4 * s); cx.lineTo(16 * s, -11 * s); cx.lineTo(-16 * s, -11 * s); cx.lineTo(-17 * s, 4 * s); cx.closePath(); cx.fill(); if (d < .4) { cx.strokeStyle = "#141414"; cx.lineWidth = 1.8 * s; for (const e of [-1, 1]) { cx.beginPath(); cx.arc(e * 8.5 * s, -4 * s, 7 * s, 0, 7); cx.stroke(); } cx.beginPath(); cx.moveTo(-1.5 * s, -5 * s); cx.lineTo(1.5 * s, -5 * s); cx.stroke(); } }
+    else if (h === "flowers") { cx.fillStyle = "#d9a441"; cx.beginPath(); cx.ellipse(0, -15 * s, 20 * s, 11 * s, 0, Math.PI, 0); cx.fill(); cx.strokeStyle = "#5c7a3a"; cx.lineWidth = 2.2 * s; cx.beginPath(); cx.moveTo(-21 * s, -12 * s); cx.quadraticCurveTo(0, -25 * s, 21 * s, -12 * s); cx.stroke(); const cols = ["#ff5fa8", "#ffffff", "#ffd23f", "#8fa0ff", "#ff7a1a", "#ffffff", "#ff5fa8"]; for (let i = 0; i < 7; i++) { const f = i / 6, fx = (-19 + 38 * f) * s, fy = (-12 - 12 * Math.sin(f * Math.PI)) * s; cx.fillStyle = cols[i]; for (let k = 0; k < 5; k++) { const a = k * 1.2566 + t * .5; cx.beginPath(); cx.arc(fx + Math.cos(a) * 2.6 * s, fy + Math.sin(a) * 2.6 * s, 2.2 * s, 0, 7); cx.fill(); } cx.fillStyle = "#ffd23f"; cx.beginPath(); cx.arc(fx, fy, 1.5 * s, 0, 7); cx.fill(); } }
+    else if (h === "fluffy") { cx.fillStyle = "#ff2bd6"; cx.beginPath(); cx.ellipse(0, -14 * s, 31 * s, 6.5 * s, 0, 0, 7); cx.fill(); for (let i = 0; i < 9; i++) { cx.beginPath(); cx.arc((-15 + i * 3.75) * s, (-24 + Math.sin(i * 1.7) * 2) * s, 6 * s, 0, 7); cx.fill(); } cx.fillStyle = "#ff8cf0"; for (let i = 0; i < 6; i++) { cx.beginPath(); cx.arc((-12 + i * 5) * s, (-28 + Math.cos(i * 2.1) * 2) * s, 2.4 * s, 0, 7); cx.fill(); } if (d < .4) { cx.fillStyle = "#141414"; cx.beginPath(); cx.roundRect(-19 * s, -11 * s, 38 * s, 9 * s, 4 * s); cx.fill(); cx.fillStyle = "#d7ff1e"; cx.fillRect(-15 * s, -9 * s, 8 * s, 1.8 * s); cx.fillRect(4 * s, -9 * s, 8 * s, 1.8 * s); } }
+    else if (h === "crown") { const glow = reduced ? 0 : 12 * s; cx.shadowColor = "#ffd23f"; cx.shadowBlur = glow; cx.fillStyle = "#ffd23f"; cx.strokeStyle = "#a8841c"; cx.lineWidth = 1.4 * s; cx.beginPath(); cx.moveTo(-16 * s, -18 * s); cx.lineTo(-19 * s, -40 * s); cx.lineTo(-9 * s, -29 * s); cx.lineTo(0, -46 * s); cx.lineTo(9 * s, -29 * s); cx.lineTo(19 * s, -40 * s); cx.lineTo(16 * s, -18 * s); cx.closePath(); cx.fill(); cx.shadowBlur = 0; cx.stroke(); for (const [x, y, c] of [[-19, -40, "#ff3d9a"], [0, -46, "#00e5ff"], [19, -40, "#ff3d9a"], [0, -25, "#1717ff"], [-9, -23, "#ff3d9a"], [9, -23, "#00e5ff"]]) { cx.fillStyle = c; cx.beginPath(); cx.arc(x * s, y * s, 2.6 * s, 0, 7); cx.fill(); }
+      if (d < .4) { cx.shadowColor = "#ff3d9a"; cx.shadowBlur = glow; for (const e of [-1, 1]) { cx.fillStyle = "#141414"; cx.save(); cx.translate(e * 9 * s, -6 * s); cx.rotate(e * .15 + Math.sin(t * 4) * .05); star(0, 0, 9 * s); cx.restore(); } cx.shadowBlur = 0; cx.strokeStyle = `hsl(${(t * 140) % 360},100%,62%)`; cx.lineWidth = 1.6 * s; for (const e of [-1, 1]) { cx.save(); cx.translate(e * 9 * s, -6 * s); cx.rotate(e * .15 + Math.sin(t * 4) * .05); cx.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? 9 * s * .45 : 9 * s; cx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } cx.closePath(); cx.stroke(); cx.restore(); } } }
     else if (h === "quiff") { cx.fillStyle = "#141414"; cx.beginPath(); cx.moveTo(-18 * s, -12 * s); cx.quadraticCurveTo(-16 * s, -30 * s, 2 * s, -30 * s); cx.quadraticCurveTo(26 * s, -34 * s, 22 * s, -20 * s); cx.quadraticCurveTo(10 * s, -24 * s, 6 * s, -16 * s); cx.quadraticCurveTo(-4 * s, -20 * s, -18 * s, -12 * s); cx.fill(); }
   }
   function drawCrowd(P) {
@@ -594,7 +629,7 @@ const leaderboard = (() => {
       ${row("vinyl", Lg("Vinyl: ontdek een band", "Vinyl: discover a band"), Lg("Echte bands van het festival. Ze komen in je platenkast.", "Real festival bands. They go into your crate."))}
       ${row("fav", Lg("Roze vinyl: je favoriet", "Pink vinyl: your favourite"), Lg("Een band uit jouw lijst: dubbele punten.", "A band from your list: double points."))}
       ${row("wind", Lg("Wind en regen", "Wind and rain"), Lg("Golven die je wegduwen of meer logo's sturen. Overleef ze voor +25.", "Waves that push you or send more logos. Survive them for +25."))}</ol>
-      <p class="wg-sub">${Lg("Elke 500 punten een nieuwe festivaldag, tot de Afterparty. Elke dag drie nieuwe missies: sterren speel je om in skins.", "Every 500 points a new festival day, up to the Afterparty. Three new missions every day: stars unlock skins.")}</p>
+      <p class="wg-sub">${Lg("Elke 500 punten een nieuwe festivaldag, tot de Afterparty. Elke dag drie nieuwe missies. Verzamel bands per genre voor nieuwe skins.", "Every 500 points a new festival day, up to the Afterparty. Three new missions every day. Collect bands per genre for new skins.")}</p>
       <button class="wg-btn" id="a">${Lg("Spelen", "Play")} →</button><button class="wg-btn alt" id="b">${Lg("Terug", "Back")}</button>`, () => { on("#a", start); on("#b", showStart); });
   }
   function showCrate() {
@@ -611,13 +646,13 @@ const leaderboard = (() => {
   }
   function skinPreview(cv2, SK) {
     const d = 2, keep = [cx, s]; cv2.width = 64 * d; cv2.height = 84 * d; const g = cv2.getContext("2d"); g.setTransform(d, 0, 0, d, 0, 0);
-    cx = g; s = .52; try { wapper(32, 76, 1.3, 0, PALS[0], SK); } finally { cx = keep[0]; s = keep[1]; }
+    cx = g; s = .45; try { wapper(32, 79, 1.3, 0, PALS[0], SK); } finally { cx = keep[0]; s = keep[1]; }
   }
   function showSkins() {
     state = "start"; lock = performance.now() + 200;
     const cur = skinOf().id;
     show(`<div class="wg-kick">${Lg("Kies je wapperman", "Pick your flapper")}</div><h2>Skins<em>.</em></h2>
-      <p class="wg-sub">${Lg("Sterren verdien je met de dagelijkse missies.", "Earn stars with the daily missions.")} ★ ${prof.stars || 0}</p>
+      <p class="wg-sub">${Lg("Verzamel bands van een genre in je platenkast en de skin is van jou. De Afterparty-skin is voor wie de Afterparty haalt.", "Collect bands of a genre in your crate to unlock its skin. The Afterparty skin is for those who reach the Afterparty.")}</p>
       <div class="wg-skins">${SKINS.map(k => { const ok = k.need(prof, best); return `<button class="wg-skin${k.id === cur ? " on" : ""}${ok ? "" : " lock"}" data-k="${k.id}" ${ok ? "" : 'aria-disabled="true"'}><canvas></canvas>${Lg(k.nl, k.en)}<small>${ok ? (k.id === cur ? Lg("Gekozen", "Selected") : Lg("Tik om te kiezen", "Tap to pick")) : "🔒 " + Lg(k.how[0], k.how[1]) + (k.prog ? ` (${k.prog(prof)})` : "")}</small></button>`; }).join("")}</div>
       <button class="wg-btn" id="a">${Lg("Spelen", "Play")} →</button><button class="wg-btn alt" id="b">${Lg("Terug", "Back")}</button>`, () => {
         ov.querySelectorAll(".wg-skin").forEach(b => { const k = SKINS.find(z => z.id === b.dataset.k); skinPreview(b.querySelector("canvas"), k);
@@ -760,5 +795,5 @@ const leaderboard = (() => {
     root.remove(); root = null; state = "start";
   }
   window.WappermanGame = { mount, unmount };
-  if (window.__WG_TEST) window.__WG_API = { get: () => ({ state, x, W, H, s, groundY, laneW, obstacles, pickups, tokens, score, elapsed, mult, found, slow, evKind, evPhase, windDir, maxV, stage, prof, misDoneRun }), setKey: d => { keyDir = d; }, start, setBonus: n => { bonus = n; }, setInv: n => { inv = n; }, skin: (cv2, id, t, sc) => { const SK = SKINS.find(k => k.id === id), keep = [cx, s]; const g = cv2.getContext("2d"); cx = g; s = sc; try { wapper(cv2.width / 2, cv2.height - 14, t, 0, PALS[0], SK); } finally { cx = keep[0]; s = keep[1]; } }, skins: () => SKINS.map(k => [k.id, k.nl, k.how ? k.how[0] : ""]), card: () => scoreCard().then(b => new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(b); })) };
+  if (window.__WG_TEST) window.__WG_API = { get: () => ({ state, x, W, H, s, groundY, laneW, obstacles, pickups, tokens, score, elapsed, mult, found, slow, evKind, evPhase, windDir, maxV, stage, prof, misDoneRun }), setKey: d => { keyDir = d; }, start, setBonus: n => { bonus = n; }, setInv: n => { inv = n; }, skin: (cv2, id, t, sc) => { const SK = SKINS.find(k => k.id === id), keep = [cx, s]; const g = cv2.getContext("2d"); cx = g; s = sc; try { wapper(cv2.width / 2, cv2.height - 14, t, 0, PALS[0], SK); } finally { cx = keep[0]; s = keep[1]; } }, skins: () => SKINS.map(k => [k.id, k.nl, k.how ? k.how[0] : "", k.genre ? genreCount({ crate: ACTS.map(x => x.name) }, k.genre) : 0]), card: () => scoreCard().then(b => new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(b); })) };
 })();
