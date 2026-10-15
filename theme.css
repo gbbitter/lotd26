@@ -402,3 +402,11 @@ html body .fd-nudge .fd-more { width: calc(100% - 24px); margin: 10px 12px 12px;
 html body .mapwrap.food:not(.zl) .fd-pin span { width: 14px; height: 14px; margin: 8px; font-size: 0; border-width: 2px; background: var(--blue); border-color: #fff; }
 html body .mapwrap.food:not(.zl) .fd-pin.tip span { width: 20px; height: 20px; margin: 5px; font-size: 11px; background: #ff3d9a; }
 html body .mapwrap.food:not(.zl) .fd-pin.closed span { background: #b9b9c2; }
+
+/* installatie-uitleg (iPhone/iPad) */
+.inst-steps { margin: 14px 0 10px; padding: 0; list-style: none; counter-reset: st; }
+.inst-steps li { counter-increment: st; position: relative; padding: 2px 0 14px 42px; font: 500 16px/1.4 var(--body, "Barlow", Arial, sans-serif); color: var(--ink, #141414); }
+.inst-steps li::before { content: counter(st); position: absolute; left: 0; top: 0; width: 28px; height: 28px; border-radius: 50%; background: var(--blue, #1717ff); color: #fff; display: grid; place-items: center; font: 800 16px/1 var(--display, "Barlow Condensed", Arial, sans-serif); }
+.inst-steps b { font-weight: 700; }
+.inst-steps svg { color: var(--blue, #1717ff); }
+.inst-note { font-size: 13px; color: #5e5e66; }

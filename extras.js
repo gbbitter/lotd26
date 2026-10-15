@@ -350,7 +350,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
 
   /* ---- menu (taal, tekstgrootte, installeren, delen) ---- */
   const menuHtml = () => {
-    const inst = standaloneApp() ? "" : `<button class="mn-row" data-install>${L("Installeer de app", "Install the app")}<small>${iosDevice() ? L("Tik op Deel en kies ‘Zet op beginscherm’", "Tap Share, then ‘Add to Home Screen’") : L("Snel openen vanaf je beginscherm, ook offline", "Open from your home screen, also offline")}</small></button>`;
+    const inst = standaloneApp() ? "" : `<button class="mn-row" data-install>${L("Installeer de app", "Install the app")}<small>${iosDevice() ? L("Tik hier voor de stappen", "Tap for the steps") : L("Snel openen vanaf je beginscherm, ook offline", "Open from your home screen, also offline")}</small></button>`;
     return `<div data-menusheet><h2>Menu</h2>
       <div class="mn-lab">${L("Taal", "Language")}</div><div class="mn-seg"><button class="${lang === "nl" ? "on" : ""}" data-lang="nl" aria-pressed="${lang === "nl"}">Nederlands</button><button class="${lang === "en" ? "on" : ""}" data-lang="en" aria-pressed="${lang === "en"}">English</button></div>
       <div class="mn-lab">${L("Tekstgrootte", "Text size")}</div><div class="mn-seg"><button class="${big ? "" : "on"}" data-aa-set="0" aria-pressed="${!big}">${L("Normaal", "Normal")}</button><button class="${big ? "on" : ""} mn-big" data-aa-set="1" aria-pressed="${big}">${L("Groot", "Large")}</button></div>
@@ -358,7 +358,22 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
       <p class="mn-meta">${navigator.onLine === false ? L("Offline · ", "Offline · ") : ""}${L("Tijden bijgewerkt: ", "Times updated: ")}${fmtDate()}</p></div>`;
   };
   const standaloneApp = () => navigator.standalone || matchMedia("(display-mode: standalone)").matches;
-  const iosDevice = () => /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const iosDevice = () => (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)) && !window.MSStream;
+  /* uitleg installeren op iPhone/iPad: Safari, Chrome/andere browsers, of een in-app browser (Instagram, Facebook, Gmail…) */
+  const SHARE_ICO = `<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" style="vertical-align:-4px"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 10H6.5A1.5 1.5 0 0 0 5 11.5v8A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-8A1.5 1.5 0 0 0 17.5 10H16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+  function iosInstallSheet() {
+    const ua = navigator.userAgent, inApp = /FBAN|FBAV|Instagram|Line\/|LinkedInApp|GSA\/|Snapchat|TikTok|Twitter|musical_ly/.test(ua), other = /CriOS|FxiOS|EdgiOS|OPiOS|DuckDuckGo/.test(ua);
+    const url = location.origin + location.pathname;
+    if (inApp) return `<h2>${L("Installeer de app", "Install the app")}</h2><p>${L("Je bekijkt de timetable nu in de browser van een andere app. Daar kun je hem niet op je beginscherm zetten.", "You're viewing the timetable inside another app's browser. You can't add it to your home screen from there.")}</p>
+      <ol class="inst-steps"><li>${L("Tik op ••• of het kompas en kies <b>Open in Safari</b>.", "Tap ••• or the compass and choose <b>Open in Safari</b>.")}</li><li>${L("Of kopieer de link en plak hem in Safari:", "Or copy the link and paste it into Safari:")} <b>${esc(url.replace(/^https?:\/\//, ""))}</b></li><li>${L("Volg daar de stappen onder <b>Installeer de app</b> in het menu.", "Then follow the steps under <b>Install the app</b> in the menu.")}</li></ol>`;
+    const steps = other
+      ? [L(`Tik op de deelknop ${SHARE_ICO} rechts in de adresbalk.`, `Tap the share button ${SHARE_ICO} on the right of the address bar.`)]
+      : [L(`Tik onderin op ${SHARE_ICO} <b>Deel</b>. Zie je die niet? Tik dan eerst op <b>•••</b> rechtsonder.`, `Tap ${SHARE_ICO} <b>Share</b> at the bottom. Don't see it? Tap <b>•••</b> bottom right first.`)];
+    steps.push(L("Scroll omlaag en kies <b>Zet op beginscherm</b>. Staat het er niet? Tik op <b>Meer</b> of <b>Wijzig taken</b>.", "Scroll down and choose <b>Add to Home Screen</b>. Not there? Tap <b>More</b> or <b>Edit Actions</b>."));
+    steps.push(L("Laat <b>Open als webapp</b> aan staan en tik op <b>Voeg toe</b>.", "Keep <b>Open as Web App</b> switched on and tap <b>Add</b>."));
+    return `<h2>${L("Installeer de app", "Install the app")}</h2><p>${L("Zet de timetable op je beginscherm: hij opent dan als losse app, zonder adresbalk, en werkt ook offline.", "Put the timetable on your home screen: it opens as a separate app, without the address bar, and also works offline.")}</p>
+      <ol class="inst-steps">${steps.map(x => `<li>${x}</li>`).join("")}</ol><p class="inst-note">${L("Werkt het niet? Kijk of privé-surfen uit staat en of je iOS up-to-date is.", "Not working? Check that private browsing is off and iOS is up to date.")}</p>`;
+  }
   const openMenu = () => { sheet = menuHtml(); renderModal(); };
   const refreshMenu = () => { if (sheet && sheet.indexOf("data-menusheet") > -1) { sheet = menuHtml(); renderModal(); } };
 
@@ -410,9 +425,9 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
 
   /* ---- installeer-tip ---- */
   const visits = (LS.get("lotd-visits", 0) || 0) + 1; LS.set("lotd-visits", visits);
-  const standalone = navigator.standalone || matchMedia("(display-mode: standalone)").matches, ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const standalone = navigator.standalone || matchMedia("(display-mode: standalone)").matches, ios = (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)) && !window.MSStream;
   let deferred = null;
-  if (ios && !standalone && visits >= 2 && !LS.get("lotd-install-x", false)) post("install", { text: () => L("Tip: tik op Deel en kies ‘Zet op beginscherm’ voor snelle toegang, ook offline.", "Tip: tap Share, then ‘Add to Home Screen’ for quick access, also offline."), x: true });
+  if (ios && !standalone && visits >= 2 && !LS.get("lotd-install-x", false)) post("install", { text: () => L("Zet de app op je beginscherm voor snelle toegang, ook offline.", "Add the app to your home screen for quick access, also offline."), btn: () => L("Hoe?", "How?"), x: true, fn: () => { sheet = iosInstallSheet(); renderModal(); } });
   window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferred = e; if (visits >= 2 && !LS.get("lotd-install-x", false)) post("install", { text: () => L("Installeer de app voor snelle toegang, ook offline.", "Install the app for quick access, also offline."), btn: () => L("Installeer", "Install"), x: true, fn: () => deferred && deferred.prompt() }); });
 
   /* ---- rijen, blokken, modal ---- */
@@ -806,7 +821,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     const gc = c("[data-genre]"); if (gc) { stop(); const g = gc.dataset.genre; selGenres = gc.checked ? [...selGenres, g] : selGenres.filter(x => x !== g); skipModal = true; render(true); skipModal = false; return; }
     if (c("[data-menu]")) { stop(); openMenu(); return; }
     { const b = c("[data-aa-set]"); if (b) { stop(); big = b.dataset.aaSet === "1"; localStorage.setItem("lotd-big", big ? "1" : "0"); document.documentElement.classList.toggle("big", big); paintCtl(); refreshMenu(); return; } }
-    if (c("[data-install]")) { stop(); if (deferred) { deferred.prompt(); } else if (!iosDevice()) { sheet = `<h2>${L("Installeer de app", "Install the app")}</h2><p>${L("Open het browsermenu (⋮) en kies ‘App installeren’ of ‘Toevoegen aan startscherm’.", "Open the browser menu (⋮) and choose ‘Install app’ or ‘Add to Home screen’.")}</p>`; renderModal(); } return; }
+    if (c("[data-install]")) { stop(); if (deferred) { deferred.prompt(); } else if (iosDevice()) { sheet = iosInstallSheet(); renderModal(); } else { sheet = `<h2>${L("Installeer de app", "Install the app")}</h2><p>${L("Open het browsermenu (⋮) en kies ‘App installeren’ of ‘Toevoegen aan startscherm’.", "Open the browser menu (⋮) and choose ‘Install app’ or ‘Add to Home screen’.")}</p>`; renderModal(); } return; }
     if (c("[data-share-app]")) { stop(); const u = location.origin + "/"; if (navigator.share) navigator.share({ title: "Left of the Dial 2026 · Timetable", url: u }).catch(() => {}); else if (navigator.clipboard) navigator.clipboard.writeText(u).then(() => { post("saved", { text: () => L("Link gekopieerd", "Link copied"), x: true }); }); return; }
     { const b = c("[data-layout]"); if (b) { stop(); ttLayout = b.dataset.layout; LS.set("lotd-layout", ttLayout); render(true); if (ttLayout === "grid") setTimeout(() => { if (document.querySelector(".tt .now")) scrollToNow(false); }, 0); return; } }
     { const b = c("[data-pref]"); if (b) { stop(); pref = b.dataset.pref; favOnly = pref !== "all"; sheet = filterHtml(); render(true); return; } }
