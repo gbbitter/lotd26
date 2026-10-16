@@ -454,3 +454,22 @@ html body .tt-head .oo-band span { position: static; }
 html body .tt { border-top: 0 !important; }
 html body .oo-zone { top: 0; }
 html body .tt .row .lab { z-index: 4 !important; }
+
+/* favorieten: alle / haalbare route */
+html body .fav-bar .fav-mode { flex: none !important; width: auto !important; } html body .fav-mode { display: inline-flex; border: 1px solid var(--hair); border-radius: 6px; overflow: hidden; margin-right: auto; }
+html body .fav-bar .fav-mode button { border: 0 !important; border-radius: 0 !important; min-height: 40px !important; padding: 0 12px !important; font: 600 13.5px var(--font) !important; background: var(--paper) !important; color: var(--muted-ink) !important; }
+html body .fav-bar .fav-mode button.on { background: var(--ink) !important; color: #fff !important; }
+html body .rt-intro { display: flex; flex-direction: column; gap: 3px; margin: 0 16px 6px; padding: 12px 14px; background: var(--blue-soft, #eef0ff); border-left: 4px solid var(--blue); }
+html body .rt-intro b { font: 800 18px/1.1 var(--display); text-transform: uppercase; letter-spacing: .01em; color: var(--ink); }
+html body .rt-intro span { font: 500 13px/1.35 var(--font); color: var(--muted-ink); }
+html body .rt-day { display: flex; justify-content: space-between; align-items: baseline; padding: 18px 16px 8px; font: 600 11px var(--font); letter-spacing: .06em; color: var(--muted-ink); border-bottom: 1px solid var(--hair); }
+html body .rt-day small { font: 500 11px var(--font); letter-spacing: 0; }
+html body .rt-hop { display: flex; align-items: center; gap: 8px; padding: 6px 16px 6px 22px; font: 500 12.5px var(--font); color: var(--muted-ink); background: var(--surface, #f6f6f8); border-bottom: 1px solid var(--hair); }
+html body .rt-hop span { flex: 1; }
+html body .rt-hop em { font-style: normal; font-weight: 700; color: var(--ink); }
+html body .rt-hop.tight em { color: var(--warn, #d1343e); }
+html body .rt-skip { margin: 18px 16px 8px; border: 1px solid var(--hair); border-radius: 6px; }
+html body .rt-skip summary { padding: 12px 14px; font: 700 14px var(--font); cursor: pointer; }
+html body .rt-sk button { display: flex; flex-direction: column; gap: 1px; width: 100%; text-align: left; padding: 10px 14px; border: 0; border-top: 1px solid var(--hair); background: none; color: var(--ink); }
+html body .rt-sk b { font: 700 15px var(--font); }
+html body .rt-sk span, html body .rt-sk small { font: 500 12px var(--font); color: var(--muted-ink); }

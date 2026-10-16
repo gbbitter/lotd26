@@ -562,12 +562,56 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     return segHtml + caption + `<div class="tt-head" aria-hidden="true"><div class="lab"></div><div class="tt-head-track"><div class="trackh" style="width:${W}px">${ticks}${ooBand}</div></div></div><div class="tt-wrap"><div class="tt"><div class="tt-in" style="width:calc(var(--labw) + ${W}px)">${ooZone}${rows}${now}</div></div></div>`;
   };
 
+  /* ---- haalbare route: uit je favorieten een schema zonder grote overlap ----
+     Voorrang: moet ik zien (groen eerst, alleen op eigen toestel) > interessant (groen eerst).
+     Elke band één keer; maximaal ROUTE_TOL minuten overlap, looptijd meegerekend. */
+  const ROUTE_TOL = 10;
+  let favMode = LS.get("lotd-fav-mode", "all") === "route" ? "route" : "all";
+  const rPrio = a => (isStar(a.id) ? 0 : 2) + (isGreen(a.id) ? 0 : 1);
+  const rEnd = a => a.endUnknown ? mins(a.start) + 60 : mins(a.end);
+  const rGap = (x, y) => { const [p, n] = mins(x.start) <= mins(y.start) ? [x, y] : [y, x]; return mins(n.start) - rEnd(p) - (walk(p, n) ?? 5); };
+  const rClash = (x, y) => x.day === y.day && rGap(x, y) < -ROUTE_TOL;
+  function planRoute() {
+    const cands = ACTS.filter(a => isFav(a.id) && !a.cancelled), bands = new Map();
+    cands.forEach(a => { const k = norm(a.name); if (!bands.has(k)) bands.set(k, []); bands.get(k).push(a); });
+    const order = [...bands.values()].map(list => ({ list, p: Math.min(...list.map(rPrio)) })).sort((x, y) => x.p - y.p || x.list.length - y.list.length || Math.min(...x.list.map(a => DAYS.findIndex(d => d.id === a.day) * 2000 + mins(a.start))) - Math.min(...y.list.map(a => DAYS.findIndex(d => d.id === a.day) * 2000 + mins(a.start))));
+    const chosen = [], skipped = [];
+    order.forEach(({ list, p }) => {
+      const rivals = cands.filter(c => rPrio(c) <= p && !list.includes(c));
+      const opts = list.slice().sort((x, y) => rPrio(x) - rPrio(y) || rivals.filter(r => rClash(r, x)).length - rivals.filter(r => rClash(r, y)).length || DAYS.findIndex(d => d.id === x.day) - DAYS.findIndex(d => d.id === y.day) || byTime(x, y));
+      const pick = opts.find(o => !chosen.some(c => rClash(c, o)));
+      if (pick) chosen.push(pick); else { const o = opts[0]; skipped.push({ a: o, by: chosen.find(c => rClash(c, o)) }); }
+    });
+    const sortT = (x, y) => DAYS.findIndex(d => d.id === x.day) - DAYS.findIndex(d => d.id === y.day) || byTime(x, y);
+    return { chosen: chosen.sort(sortT), skipped: skipped.sort((x, y) => sortT(x.a, y.a)), total: cands.length, bands: bands.size };
+  }
+  function vRoute() {
+    const r = planRoute(), noClash = h => h.replace(/<span class="gl-clash">[\s\S]*?<\/span>(?=<\/span>)/, "");
+    if (!r.total) return `<div class="empty">${L("Nog geen favorieten.<br>Tik op een act en kies ‘Moet ik zien’ of ‘Interessant’.", "No favourites yet.<br>Tap an act and choose ‘Must-see’ or ‘Interesting’.")}</div>`;
+    const intro = `<div class="rt-intro"><b>${L(`${r.chosen.length} van je ${r.bands} bands passen in je route`, `${r.chosen.length} of your ${r.bands} bands fit your route`)}</b><span>${L(`‘Moet ik zien’ gaat voor ‘interessant’. Elke band één keer, hooguit ${ROUTE_TOL} min overlap inclusief looptijd.`, `‘Must-see’ beats ‘interesting’. Every band once, at most ${ROUTE_TOL} min overlap including walking.`)}</span></div>`;
+    let out = "";
+    DAYS.forEach(d => {
+      const day = r.chosen.filter(a => a.day === d.id); if (!day.length) return;
+      out += `<div class="rt-day">${dayFull(d.id)}<small>${day.length} ${L(day.length === 1 ? "optreden" : "optredens", day.length === 1 ? "show" : "shows")}</small></div><div class="gig-list rt-list">`;
+      day.forEach((a, i) => {
+        if (i) { const prev = day[i - 1], w = walk(prev, a), g = rGap(prev, a), dest = venue(a.venueId).name;
+          const txt = prev.venueId === a.venueId ? L("Zelfde zaal", "Same venue") : w != null ? L(`${w} min lopen naar ${dest}`, `${w} min walk to ${dest}`) : L(`Naar ${dest}`, `To ${dest}`);
+          const sl = g >= 0 ? (g >= 30 ? L(`${g} min vrij`, `${g} min free`) : L(`${g} min speling`, `${g} min to spare`)) : L(`${-g} min eerder weg`, `leave ${-g} min early`);
+          out += `<div class="rt-hop${g < 0 ? " tight" : ""}">${sv(SI.foot, 15)}<span>${txt}</span><em>${sl}</em></div>`; }
+        out += noClash(glItem(a));
+      });
+      out += `</div>`;
+    });
+    const sk = r.skipped.length ? `<details class="rt-skip"><summary>${L(`Valt af (${r.skipped.length})`, `Left out (${r.skipped.length})`)}</summary>${r.skipped.map(x => `<div class="rt-sk"><button data-open="${x.a.id}"><b>${x.a.name}</b><span>${dayOf(x.a.day).label} ${timeTxt(x.a)} · ${venue(x.a.venueId).name}</span>${x.by ? `<small>${L("botst met", "clashes with")} ${x.by.name}${isStar(x.by.id) ? " ♥" : ""}</small>` : ""}</button></div>`).join("")}</details>` : "";
+    return intro + out + sk;
+  }
+
   /* ---- favorieten-pagina (agenda, vriend, jullie allebei) ---- */
   vFavs = function () {
     const banner = sharedIds && !sharedReadOnly ? `<div class="share-banner"><b>Favorieten van een vriend</b><button data-view-shared>Bekijk</button><button data-compare-shared>Vergelijk met mijn lijst</button><button data-add-shared>Toevoegen aan mijn favorieten</button></div>` : "";
     const both = friend.on && friend.ids.length ? ACTS.filter(a => isFav(a.id) && friend.ids.includes(a.id) && !a.cancelled).sort((x, y) => DAYS.findIndex(d => d.id === x.day) - DAYS.findIndex(d => d.id === y.day) || byTime(x, y)) : [];
     const nF = ACTS.filter(a => isFav(a.id)).length, nS = ACTS.filter(a => isStar(a.id)).length;
-    return banner + vHead(sv(SI.heart, 14), L("JOUW SELECTIE", "YOUR SELECTION"), L("Jouw festival, jouw route.", "Your festival, your route."), `${nS} ${L("moet ik zien", "must-see")} · ${nF - nS} ${L("interessant", "interesting")}`) + `<div class="list"><div class="fav-bar"><span></span>${friend.ids.length ? `<button data-friend-clear>${L("Vriend wissen", "Clear friend")}</button>` : ""}${nF ? `<button class="fav-share" data-share><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M5 14v6h14v-6"/></svg>${L("Delen", "Share")}</button>` : ""}</div>${both.length ? `<div class="grp">${L("Jullie allebei", "You both want to see")} (${both.length})</div>${both.map(a => row(a)).join("")}` : ""}</div>` + vTimetable(true) + updLine();
+    return banner + vHead(sv(SI.heart, 14), L("JOUW SELECTIE", "YOUR SELECTION"), L("Jouw festival, jouw route.", "Your festival, your route."), `${nS} ${L("moet ik zien", "must-see")} · ${nF - nS} ${L("interessant", "interesting")}`) + `<div class="list"><div class="fav-bar">${sharedReadOnly ? "<span></span>" : `<span class="fav-mode" role="group" aria-label="${L("Weergave", "View")}"><button class="${favMode === "all" ? "on" : ""}" data-fav-mode="all" aria-pressed="${favMode === "all"}">${L("Alle favorieten", "All favourites")}</button><button class="${favMode === "route" ? "on" : ""}" data-fav-mode="route" aria-pressed="${favMode === "route"}">${L("Haalbare route", "Doable route")}</button></span>`}${friend.ids.length ? `<button data-friend-clear>${L("Vriend wissen", "Clear friend")}</button>` : ""}${nF ? `<button class="fav-share" data-share><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M5 14v6h14v-6"/></svg>${L("Delen", "Share")}</button>` : ""}</div>${both.length ? `<div class="grp">${L("Jullie allebei", "You both want to see")} (${both.length})</div>${both.map(a => row(a)).join("")}` : ""}</div>` + (favMode === "route" && !sharedReadOnly ? vRoute() : vTimetable(true)) + updLine();
   };
 
   /* ---- zoeken ---- */
@@ -869,6 +913,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     if (c("[data-filter]")) { stop(); sheet = filterHtml(); renderModal(); return; }
     if (c("[data-filter-clear]")) { stop(); ooOnly = false; if (!onFavPage()) { pref = "all"; favOnly = false; } selGenres = []; hiddenVenues = []; saveVenues(); if (friend.on && friend.ids.length) { friend.on = false; saveFriend(); } if (sheet && sheet.indexOf("data-filtersheet") > -1) sheet = filterHtml(); render(true); return; }
     if (c("[data-fl-fav]")) { stop(); favOnly = !favOnly; sheet = filterHtml(); render(true); return; }
+    { const fm = c("[data-fav-mode]"); if (fm) { stop(); favMode = fm.dataset.favMode === "route" ? "route" : "all"; LS.set("lotd-fav-mode", favMode); render(true); return; } }
     if (c("[data-fl-oo]")) { stop(); ooOnly = !ooOnly; if (ooOnly && day !== "v" && day !== "z") day = "v"; sheet = filterHtml(); render(true); return; }
     if (c("[data-fl-friend]")) { stop(); friend.on = !friend.on; saveFriend(); sheet = filterHtml(); render(true); return; }
     if (c("[data-fl-genres]")) { stop(); sheet = null; genreOpen = true; renderModal(); return; }
