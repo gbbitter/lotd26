@@ -508,7 +508,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     tt.scrollTo({ left: Math.max(0, x), behavior: smooth ? "smooth" : "auto" }); return true;
   }
   let autoNowDone = "", pref = "all", ttLayout = LS.get("lotd-layout", "grid") === "list" ? "list" : "grid";
-  const prefOk = (a, pf) => pf === "all" ? true : pf === "must" ? isStar(a.id) : pf === "int" ? isFav(a.id) && !isStar(a.id) : isFav(a.id);
+  const prefOk = (a, pf) => pf === "all" ? true : pf === "route" ? routeIds().has(a.id) : pf === "must" ? isStar(a.id) : pf === "int" ? isFav(a.id) && !isStar(a.id) : isFav(a.id);
   const DAYFULL = { w: ["WOENSDAG", "WEDNESDAY"], d: ["DONDERDAG", "THURSDAY"], v: ["VRIJDAG", "FRIDAY"], z: ["ZATERDAG", "SATURDAY"] };
   const dayFull = id => { const d = dayOf(id), n = d.date.slice(8); return L(`${DAYFULL[id][0]} ${+n} OKTOBER`, `${DAYFULL[id][1]} ${+n} OCTOBER`); };
   const vHead = (icon, lab, h, p) => `<div class="vh"><span class="vh-lab">${icon}${lab}</span><h2>${h}</h2>${p ? `<p>${p}</p>` : ""}</div>`;
@@ -523,7 +523,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     const go = (attr, t, sub) => `<button class="fl-row" ${attr}><span><b>${t}</b><small>${sub}</small></span><i class="fl-chev" aria-hidden="true">›</i></button>`;
     const shownV = VENUES.length - hiddenVenues.length;
     return `<div data-filtersheet><h2>Filter</h2>
-      ${onFavPage() ? "" : `<fieldset class="fl-pref"><legend>${L("Mijn selectie", "My selection")}</legend>${[["all", L("Alles", "Everything")], ["must", L("Moet ik zien", "Must-see")], ["int", L("Interessant", "Interesting")], ["both", L("Beide", "Both")]].map(([k, t]) => `<button class="${pref === k ? "on" : ""}" data-pref="${k}" role="radio" aria-checked="${pref === k}">${t}</button>`).join("")}</fieldset>`}
+      ${onFavPage() ? "" : `<fieldset class="fl-pref"><legend>${L("Mijn selectie", "My selection")}</legend>${[["all", L("Alles", "Everything")], ["must", L("Moet ik zien", "Must-see")], ["int", L("Interessant", "Interesting")], ["both", L("Beide", "Both")], ["route", L("Haalbare route", "Doable route"), L("Je favorieten zonder grote overlap", "Your favourites without big clashes")]].map(([k, t, sub]) => `<button class="${pref === k ? "on" : ""}${sub ? " wide" : ""}" data-pref="${k}" role="radio" aria-checked="${pref === k}">${t}${sub ? `<small>${sub}</small>` : ""}</button>`).join("")}</fieldset>`}
       ${friend.ids.length ? sw(friend.on, "data-fl-friend", L("Lijst van je vriend tonen", "Show your friend's list"), `${friend.ids.length} acts`) : ""}
       ${sw(ooOnly, "data-fl-oo", OO_NAME, L("Alleen het gratis dagprogramma (vr & za, 12–16 uur)", "Only the free daytime programme (Fri & Sat, 12–4 pm)"))}
       ${go("data-fl-genres", "Genre", selGenres.length ? selGenres.map(cap).join(", ") : L("Alle genres", "All genres"))}
@@ -544,14 +544,14 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     const ooN = list.filter(isOO).length;
     const caption = `<div class="tt-cap"><span>${dayFull(day)}</span>${ooN ? `<span class="oo-cap"><b>${OO_NAME}</b> · ${L("gratis dagprogramma 12:00–16:00", "free daytime programme 12:00–16:00")}</span>` : ""}</div>`;
     if (ttLayout === "list") { let ooHead = false, eveHead = false;
-      return segHtml + caption + `<div class="gig-list">${list.slice().sort((x, y) => byTime(x, y) || venue(x.venueId).name.localeCompare(venue(y.venueId).name)).map(a => { let h = "";
+      return segHtml + caption + `<div class="gig-list">${list.slice().sort((x, y) => byTime(x, y) || venue(x.venueId).name.localeCompare(venue(y.venueId).name)).map(a => { let h = ""; const gi = pf === "route" ? glItem(a).replace(/<span class="gl-clash">[\s\S]*?<\/span>(?=<\/span>)/, "") : glItem(a);
         if (ooN && isOO(a) && !ooHead) { ooHead = true; h = `<div class="oo-head"><b>${OO_NAME}</b><span>${L("Gratis dagprogramma · geen ticket nodig", "Free daytime programme · no ticket needed")}</span></div>`; }
         else if (ooN && !isOO(a) && !eveHead) { eveHead = true; h = `<div class="oo-head eve"><b>${L("Festivalprogramma", "Festival programme")}</b><span>${L("Vanaf 16:00 · met ticket", "From 16:00 · ticket required")}</span></div>`; }
-        return h + glItem(a); }).join("")}</div>`; }
+        return h + gi; }).join("")}</div>`; }
     const start = Math.floor(Math.min(...list.map(a => mins(a.start))) / 60) * 60, end = Math.ceil(Math.max(...list.map(a => mins(a.end))) / 60) * 60, hours = (end - start) / 60, W = hours * PPH;
     let ticks = ""; for (let i = 0; i <= hours; i++) ticks += `<div class="tick" style="left:${i * PPH}px">${String((start / 60 + i) % 24).padStart(2, "0")}:00</div>`;
     const rows = VENUES.filter(v => list.some(a => a.venueId === v.id)).map(v => {
-      const acts = list.filter(a => a.venueId === v.id).map(a => { const l = (mins(a.start) - start) / 60 * PPH, w = (mins(a.end) - mins(a.start)) / 60 * PPH, cl = clashes(a).length;
+      const acts = list.filter(a => a.venueId === v.id).map(a => { const l = (mins(a.start) - start) / 60 * PPH, w = (mins(a.end) - mins(a.start)) / 60 * PPH, cl = pf === "route" ? 0 : clashes(a).length;
         return `<button class="act ${isOO(a) ? "oo " : ""}${a.after ? "after " : ""}${isStar(a.id) ? "must" : isFav(a.id) ? "int" : ""}${gr(a.id)} ${isFav(a.id) ? "fav" : ""} ${a.cancelled ? "cancel" : ""}" style="left:${l}px;width:${w - 4}px;--vc:${v.color}" data-open="${a.id}"${cl ? ' aria-label="Overlapt met favorieten"' : ""}>${isFav(a.id) ? `<i class="h">${mark(a.id)}</i>` : ""}${cl ? '<i class="clash-marker" title="Overlap met een favoriet" aria-hidden="true">!</i>' : ""}${isLive(a) && !a.cancelled ? '<em class="live">NU</em>' : ""}${isFriend(a.id) ? '<i class="fr"></i>' : ""}<b>${a.name}</b><span>${timeTxt(a)}</span><span class="g">${a.cancelled ? L("Vervallen", "Cancelled") : (isOO(a) ? `<em class="oo-t">${ooFree()}</em>` : "") + tagX(a)}</span></button>`; }).join("");
       return `<div class="row"><div class="lab${(n => n >= 12 ? " long xlong" : n >= 10 ? " long" : "")(Math.max(...v.name.split(/\s+/).map(w => w.length)))}"><i class="dot" style="background:${v.color}"></i><span class="lab-t" lang="nl">${v.name}<small>${(n => L(n === 1 ? "1 optreden" : n + " optredens", n === 1 ? "1 show" : n + " shows"))(list.filter(a => a.venueId === v.id).length)}</small></span></div><div class="track" style="width:${W}px;background-size:${PPH}px 100%">${acts}</div></div>`; }).join("");
     const ooA = list.filter(isOO), ooL = ooA.length ? (Math.min(720, ...ooA.map(a => mins(a.start))) - start) / 60 * PPH : 0, ooW = ooA.length ? (960 - start) / 60 * PPH - ooL : 0;
@@ -585,6 +585,8 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     const sortT = (x, y) => DAYS.findIndex(d => d.id === x.day) - DAYS.findIndex(d => d.id === y.day) || byTime(x, y);
     return { chosen: chosen.sort(sortT), skipped: skipped.sort((x, y) => sortT(x.a, y.a)), total: cands.length, bands: bands.size };
   }
+  let routeMemo = { k: "", ids: new Set() };
+  function routeIds() { const k = favs.join() + "|" + stars.join() + "|" + (green.on ? green.names.join() : "") + "|" + ACTS.length; if (routeMemo.k !== k) routeMemo = { k, ids: new Set(planRoute().chosen.map(a => a.id)) }; return routeMemo.ids; }
   function vRoute() {
     const r = planRoute(), noClash = h => h.replace(/<span class="gl-clash">[\s\S]*?<\/span>(?=<\/span>)/, "");
     if (!r.total) return `<div class="empty">${L("Nog geen favorieten.<br>Tik op een act en kies ‘Moet ik zien’ of ‘Interessant’.", "No favourites yet.<br>Tap an act and choose ‘Must-see’ or ‘Interesting’.")}</div>`;

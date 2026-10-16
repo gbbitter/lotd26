@@ -473,3 +473,5 @@ html body .rt-skip summary { padding: 12px 14px; font: 700 14px var(--font); cur
 html body .rt-sk button { display: flex; flex-direction: column; gap: 1px; width: 100%; text-align: left; padding: 10px 14px; border: 0; border-top: 1px solid var(--hair); background: none; color: var(--ink); }
 html body .rt-sk b { font: 700 15px var(--font); }
 html body .rt-sk span, html body .rt-sk small { font: 500 12px var(--font); color: var(--muted-ink); }
+html body .fl-pref button.wide { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 6px 10px; }
+html body .fl-pref button.wide small { font: 500 12px var(--font); opacity: .75; }
