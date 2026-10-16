@@ -531,6 +531,8 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
       <div class="sheet-actions"><button data-filter-clear>${L("Wis alles", "Clear all")}</button><button data-close-sheet>${L("Klaar", "Done")}</button></div></div>`;
   };
   /* ---- timetable ---- */
+  function syncHead() { document.querySelectorAll(".tt").forEach(tt => { const h = tt.closest(".tt-wrap")?.previousElementSibling; const tr = h && h.classList.contains("tt-head") && h.querySelector(".trackh"); if (tr) tr.style.transform = `translateX(${-tt.scrollLeft}px)`; }); }
+  document.addEventListener("scroll", e => { if (e.target && e.target.classList && e.target.classList.contains("tt")) syncHead(); }, true);
   vTimetable = function (onlyFavs) {
     const ids = sharedReadOnly && sharedIds ? sharedIds : null, f = festNow();
     const gOk = a => !selGenres.length || (a.genres || []).some(g => selGenres.includes(g));
@@ -555,7 +557,9 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     const ooA = list.filter(isOO), ooL = ooA.length ? (Math.min(720, ...ooA.map(a => mins(a.start))) - start) / 60 * PPH : 0, ooW = ooA.length ? (960 - start) / 60 * PPH - ooL : 0;
     const ooBand = ooA.length ? `<div class="oo-band" style="left:${ooL}px;width:${ooW}px"><span>${OO_NAME} · ${ooFree()}</span></div>` : "", ooZone = ooA.length ? `<div class="oo-zone" style="left:calc(var(--labw) + ${ooL}px);width:${ooW}px" aria-hidden="true"></div>` : "";
     const now = today && f.m >= start && f.m <= end ? `<div class="now" style="left:calc(var(--labw) + ${(f.m - start) / 60 * PPH}px)"></div>` : "";
-    return segHtml + caption + `<div class="tt-wrap"><div class="tt"><div class="tt-in" style="width:calc(var(--labw) + ${W}px)"><div class="hrow"><div class="lab"></div><div class="trackh" style="width:${W}px">${ticks}${ooBand}</div></div>${ooZone}${rows}${now}</div></div></div>`;
+    /* tijdsbalk staat los boven de timetable en blijft onder de dagknoppen plakken; horizontaal loopt hij mee met de timetable */
+    setTimeout(syncHead, 0);
+    return segHtml + caption + `<div class="tt-head" aria-hidden="true"><div class="lab"></div><div class="tt-head-track"><div class="trackh" style="width:${W}px">${ticks}${ooBand}</div></div></div><div class="tt-wrap"><div class="tt"><div class="tt-in" style="width:calc(var(--labw) + ${W}px)">${ooZone}${rows}${now}</div></div></div>`;
   };
 
   /* ---- favorieten-pagina (agenda, vriend, jullie allebei) ---- */
