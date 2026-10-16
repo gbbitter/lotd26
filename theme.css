@@ -475,3 +475,7 @@ html body .rt-sk b { font: 700 15px var(--font); }
 html body .rt-sk span, html body .rt-sk small { font: 500 12px var(--font); color: var(--muted-ink); }
 html body .fl-pref button.wide { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 6px 10px; }
 html body .fl-pref button.wide small { font: 500 12px var(--font); opacity: .75; }
+html body .m-also { margin: 12px 0 0; border: 1px solid var(--hair); border-radius: 6px; }
+html body .m-also summary { padding: 10px 12px; font: 600 13.5px var(--font); color: var(--muted-ink); cursor: pointer; }
+html body .m-also button { display: flex; justify-content: space-between; gap: 10px; width: 100%; padding: 9px 12px; border: 0; border-top: 1px solid var(--hair); background: none; text-align: left; color: var(--ink); }
+html body .m-also b { font: 600 14px var(--font); } html body .m-also span { font: 500 12px var(--font); color: var(--muted-ink); white-space: nowrap; }
