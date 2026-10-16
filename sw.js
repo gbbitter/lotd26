@@ -1,4 +1,4 @@
-const VERSION = "2026-10-25-13";
+const VERSION = "2026-10-25-14";
 const CACHE = `lotd-${VERSION}`;
 const APP_SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-512.png", "./icon-192.png", "./apple-touch-icon.png", "./game.js", "./extras.js", "./theme.css",
   "./fonts/barlow-latin-400-normal.woff2", "./fonts/barlow-latin-500-normal.woff2", "./fonts/barlow-latin-600-normal.woff2", "./fonts/barlow-latin-700-normal.woff2",

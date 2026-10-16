@@ -422,3 +422,21 @@ html body .nn-act.must.gr { border-left-color: var(--green); background: #e6fbec
 html body .nn-act.int.gr { border-left-color: #8fe3a8; background: #f2fdf5; }
 html body .item.must.gr { box-shadow: inset 5px 0 0 var(--green); background: #e6fbec; }
 html body .item.int.gr { box-shadow: inset 5px 0 0 #8fe3a8; background: #f2fdf5; }
+
+/* The Official Unofficial (gratis dagprogramma vr/za 12–16 uur) */
+:root { --oo: #ffd23f; --oo-soft: rgba(255, 210, 63, .14); --oo-ink: #6b5200; }
+html body .oo-band { position: absolute; bottom: 0; height: 15px; background: var(--oo); border-radius: 3px 3px 0 0; overflow: hidden; z-index: 1; }
+html body .oo-band span { display: block; padding: 1px 8px 0; font: 800 10px/14px var(--display); letter-spacing: .08em; text-transform: uppercase; color: #141414; white-space: nowrap; position: sticky; left: calc(var(--labw) + 4px); }
+html body .oo-zone { position: absolute; top: 42px; bottom: 0; background: var(--oo-soft); border-left: 2px dashed var(--oo); border-right: 2px dashed var(--oo); pointer-events: none; z-index: 1; }
+html body .tt .act { z-index: 2; }
+html body .oo-t { font-style: normal; font-weight: 700; color: var(--oo-ink); background: var(--oo); border-radius: 3px; padding: 0 4px; margin-right: 4px; font-size: .9em; }
+html body .tt .act .g .oo-t { color: #141414; }
+html body .tt-cap { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; }
+html body .oo-cap { font: 500 12px var(--font); letter-spacing: 0; color: var(--ink); background: var(--oo-soft); border-left: 3px solid var(--oo); padding: 2px 8px; }
+html body .oo-cap b { font-weight: 700; }
+html body .oo-head { display: flex; flex-direction: column; gap: 2px; padding: 12px 16px 10px; background: var(--oo-soft); border-left: 4px solid var(--oo); border-bottom: 1px solid var(--hair); }
+html body .oo-head b { font: 800 17px/1 var(--display); text-transform: uppercase; letter-spacing: .02em; color: var(--ink); }
+html body .oo-head span { font: 500 12.5px var(--font); color: var(--muted-ink); }
+html body .oo-head.eve { background: var(--paper); border-left-color: var(--blue); }
+html body .m-oo { background: var(--oo-soft); border-left: 4px solid var(--oo); padding: 10px 12px !important; margin: 0 0 12px !important; font-size: 14px; }
+html body .m-oo b { display: block; font: 800 16px/1.1 var(--display); text-transform: uppercase; letter-spacing: .02em; margin-bottom: 2px; }
