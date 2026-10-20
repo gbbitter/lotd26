@@ -441,14 +441,16 @@ render();
 if ("serviceWorker" in navigator) {
   const reloadKey = "lotd-sw-reloaded";
   navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" }).then(registration => {
-    registration.update().catch(() => {});
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") registration.update().catch(() => {});
-    });
+    /* nieuwe versie zoeken: bij openen en bij terugkeren, maar hooguit eens per 10 minuten */
+    const check = () => { let t = 0; try { t = +localStorage.getItem("lotd-sw-check") || 0; } catch (e) {} if (Date.now() - t < 6e5) return; try { localStorage.setItem("lotd-sw-check", String(Date.now())); } catch (e) {} registration.update().catch(() => {}); };
+    check();
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") check(); });
   }).catch(() => {});
   navigator.serviceWorker.addEventListener("controllerchange", () => {
-    if (sessionStorage.getItem(reloadKey)) return;
-    sessionStorage.setItem(reloadKey, "1");
+    /* nieuwe versie actief: herladen, maar nooit vaker dan eens per 30 seconden (geen herlaad-lussen) */
+    let last = 0; try { last = +sessionStorage.getItem(reloadKey) || 0; } catch (e) {}
+    if (Date.now() - last < 30000) return;
+    try { sessionStorage.setItem(reloadKey, String(Date.now())); } catch (e) {}
     window.location.reload();
   });
 }

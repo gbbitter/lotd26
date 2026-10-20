@@ -1035,8 +1035,11 @@ html.big .row{height:104px}html.big .pill,html.big .checkrow{font-size:15px!impo
   { const th = document.getElementById("theme-css"); if (th) document.head.insertBefore(css, th); else document.head.appendChild(css); }
 
   setInterval(() => { if (route().p === "now" && !openId && !venueOpen && !genreOpen && !sheet) render(true); }, 30000);
-  setInterval(() => { if (document.visibilityState === "visible") checkLineup(); }, 300000);
-  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") checkLineup(); });
+  /* line-up: elke 15 min terwijl de app open is, en bij terugkeren hooguit eens per 5 min */
+  let lastLineup = Date.now();
+  const lineupTick = force => { if (document.visibilityState !== "visible") return; if (!force && Date.now() - lastLineup < 3e5) return; lastLineup = Date.now(); checkLineup(); };
+  setInterval(() => lineupTick(true), 900000);
+  document.addEventListener("visibilitychange", () => lineupTick(false));
   window.addEventListener("online", () => { netState(); checkLineup(); }); window.addEventListener("offline", netState);
   paintCtl(); netState(); render(); checkLineup();
 })();
