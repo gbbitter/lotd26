@@ -1,8 +1,10 @@
 {
-  "updated": "2026-10-16T10:45:00",
-  "notice": "Nieuw: The Official Unofficial, het gratis dagprogramma op vrijdag en zaterdag (12:00–16:00), staat nu in de timetable.",
-  "notice_en": "New: The Official Unofficial, the free daytime programme on Friday and Saturday (12:00–16:00), is now in the timetable.",
-  "cancelled": [],
+  "updated": "2026-10-21T12:45:00",
+  "notice": "Newhvn heeft helaas hun hele tour geannuleerd en speelt niet op Left of the Dial. Hun blokjes in het schema blijven voorlopig leeg.",
+  "notice_en": "Newhvn have sadly cancelled their entire tour and will not play Left of the Dial. Their slots stay empty for now.",
+  "cancelled": [
+    "Newhvn"
+  ],
   "coords": {},
   "raw": [
     "Reijngoud|v|1230-1315 Rockpool Dramas;1345-1430 Zo Lief;1500-1600 Fellatio;1730-1810 Atticomatic;1900-1940 Pyncher;2030-2110 Date Camp;2200-2240 Bramwell;2320-0000 The Jump Cuts",
