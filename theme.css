@@ -540,3 +540,9 @@ html body .inst-tabs button.on { background: var(--ink); color: #fff; }
 html body .inst-now { display: block; width: 100%; min-height: 48px; margin: 14px 0 4px; border: 0; border-radius: 6px; background: var(--blue); color: #fff; font: 800 18px var(--display); text-transform: uppercase; letter-spacing: .02em; }
 html body .inst-or { margin: 10px 0 0 !important; font: 600 13px var(--font); color: var(--muted-ink); }
 html body .inst-warn { margin: 12px 0 0 !important; padding: 10px 12px; background: var(--warn-bg, #fdecee); border-radius: 6px; font-size: 14px; }
+
+/* iPhone: soepeler scrollen. Timetable alleen horizontaal eigen scroll (verticaal gaat naar de pagina),
+   pagina-scroll niet laten doorschieten naar de body, kopregel van de tijdsbalk via de GPU verschuiven */
+html body main { -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; }
+html body .tt { overflow-x: auto !important; overflow-y: hidden !important; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; touch-action: pan-x pan-y; }
+html body .tt-head .trackh { backface-visibility: hidden; }

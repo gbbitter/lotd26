@@ -195,7 +195,7 @@ const leaderboard = (() => {
 @media (max-width:360px){.wg h2{font-size:54px}.wg-stats b{font-size:22px}.wg-big b{font-size:76px}}
 @media (prefers-reduced-motion:reduce){.wg-card{animation:none}.wg{transition:none}}`;
 
-  let root, cv, cx, scoreEl, bestEl, ov, sndEl, ro, raf, last = 0, sprites, prevOverflow, ac = null;
+  let root, cv, cx, scoreEl, bestEl, ov, sndEl, ro, raf, last = 0, sprites, prevOverflow, mainEl = null, prevMain = "", ac = null;
   let W = 0, H = 0, s = 1, groundY = 0, lanes = 6, laneW = 60, maxV = 300;
   let state = "start", score = 0, best = Number(store.get(BEST_KEY) || 0), lock = 0, muted = store.get(MUTE_KEY) === "1";
   let x = 0, vel = 0, clock = 0, elapsed = 0, spawnT = 0, diagT = 0, pickupT = 0, prevGap = 2, hitT = 0, def = 0, shakeT = 0, flash = 0;
@@ -770,6 +770,8 @@ const leaderboard = (() => {
     if (e.pointerType === "mouse") mouseX = e.clientX - cv.getBoundingClientRect().left;
     else if (e.pointerId === active) steer(e);
   }
+  /* iOS: tijdens het spelen geen scroll/rubber-band (anders stopt het sturen); in menu's alleen binnen het scrollbare menu */
+  function onTouchMove(e) { if (state === "playing" || !(e.target.closest && e.target.closest(".wg-ov.on"))) { if (e.cancelable) e.preventDefault(); } }
   function onUp(e) { if (e.pointerId === active) { active = null; touchDir = 0; } }
   function onKeyDown(e) {
     if (e.target && /INPUT|BUTTON|TEXTAREA/.test(e.target.tagName)) return;
@@ -795,12 +797,14 @@ const leaderboard = (() => {
     cv = root.querySelector("canvas"); cx = cv.getContext("2d"); scoreEl = root.querySelector(".wg-score"); bestEl = root.querySelector(".wg-best"); comboEl = root.querySelector(".wg-combo"); ov = root.querySelector(".wg-ov"); stageEl = root.querySelector(".wg-stage"); pwEl = root.querySelector(".wg-pw"); recbarEl = root.querySelector(".wg-recbar b"); pwLast = ""; sndEl = root.querySelector(".wg-snd");
     prevOverflow = [document.documentElement.style.overflow, document.body.style.overflow];
     document.documentElement.style.overflow = document.body.style.overflow = "hidden";
+    mainEl = document.getElementById("main"); if (mainEl) { prevMain = mainEl.style.overflow; mainEl.style.overflow = "hidden"; }
     sprites = [makeSprite(false), makeSprite(true)]; mouseX = null; keyDir = touchDir = 0; active = null; last = 0; x = 0; obstacles = []; pickups = []; tokens = []; particles = []; pops = []; def = 0; stage = 0; banner = null;
     const sndIco = () => { sndEl.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/>${muted ? '<path d="m22 9-6 6M16 9l6 6"/>' : '<path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/>'}</svg>`; sndEl.setAttribute("aria-pressed", String(!muted)); };
     sndIco(); if (document.fonts && document.fonts.load) { try { document.fonts.load(`800 40px ${FONT_D}`); document.fonts.load(`700 16px ${FONT_B}`); } catch {} }
     sndEl.addEventListener("click", () => { muted = !muted; store.set(MUTE_KEY, muted ? "1" : "0"); sndIco(); if (!muted) beep(660, .06); });
     resize(); ro = new ResizeObserver(resize); ro.observe(root);
     root.addEventListener("pointerdown", onDown); root.addEventListener("pointermove", onMove);
+    root.addEventListener("touchmove", onTouchMove, { passive: false });
     ["pointerup", "pointercancel", "lostpointercapture"].forEach(t => root.addEventListener(t, onUp));
     root.querySelector(".wg-x").addEventListener("click", () => { unmount(); location.hash = "#/"; });
     window.addEventListener("keydown", onKeyDown); window.addEventListener("keyup", onKeyUp);
@@ -813,6 +817,8 @@ const leaderboard = (() => {
     window.removeEventListener("keydown", onKeyDown); window.removeEventListener("keyup", onKeyUp);
     document.removeEventListener("visibilitychange", onVis); window.removeEventListener("hashchange", unmount);
     document.documentElement.style.overflow = prevOverflow[0]; document.body.style.overflow = prevOverflow[1];
+    if (mainEl) { mainEl.style.overflow = prevMain || ""; mainEl = null; }
+    if (root) root.removeEventListener("touchmove", onTouchMove);
     root.remove(); root = null; state = "start";
   }
   window.WappermanGame = { mount, unmount };

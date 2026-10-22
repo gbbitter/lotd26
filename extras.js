@@ -556,7 +556,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
       <div class="sheet-actions"><button data-filter-clear>${L("Wis alles", "Clear all")}</button><button data-close-sheet>${L("Klaar", "Done")}</button></div></div>`;
   };
   /* ---- timetable ---- */
-  function syncHead() { document.querySelectorAll(".tt").forEach(tt => { const h = tt.closest(".tt-wrap")?.previousElementSibling; const tr = h && h.classList.contains("tt-head") && h.querySelector(".trackh"); if (tr) tr.style.transform = `translateX(${-tt.scrollLeft}px)`; }); }
+  function syncHead() { document.querySelectorAll(".tt").forEach(tt => { const h = tt.closest(".tt-wrap")?.previousElementSibling; const tr = h && h.classList.contains("tt-head") && h.querySelector(".trackh"); if (tr) tr.style.transform = `translate3d(${-tt.scrollLeft}px,0,0)`; }); }
   document.addEventListener("scroll", e => { if (e.target && e.target.classList && e.target.classList.contains("tt")) syncHead(); }, true);
   vTimetable = function (onlyFavs) {
     const ids = sharedReadOnly && sharedIds ? sharedIds : null, f = festNow();
