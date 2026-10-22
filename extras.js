@@ -326,7 +326,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     bar.appendChild(home); bar.appendChild(tw); bar.appendChild(tools); }
   function paintTicker() {
     const t = document.getElementById("lotd-ticker"); if (!t) return;
-    const sep = "<b>\u2733</b>", one = ["LEFT OF THE DIAL 2026", L("21 / 22 / 23 / 24 OKTOBER", "21 / 22 / 23 / 24 OCTOBER"), "ROTTERDAM", "SOLD OUT", "SEE YOU DOWN THE FRONT"].map(x => `${x}${sep}`).join("");
+    const sep = "<b>\u2733</b>", one = ["LEFT OF THE DIAL 2026", L("21 / 22 / 23 / 24 OKTOBER", "21 / 22 / 23 / 24 OCTOBER"), "ROTTERDAM", "SOLD OUT", "THE CLUB IS OPEN"].map(x => `${x}${sep}`).join("");
     t.innerHTML = `<div class="lt-track"><span>${one}${one}</span><span>${one}${one}</span></div>`;
   }
   /* aftellen tot het festival / live-teller tijdens het festival */
@@ -388,7 +388,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
   /* ---- offline-indicator ---- */
   let meta = { updated: (cached && cached.updated) || "2026-09-27T12:00:00" };
   const fmtDate = () => { try { return new Date(meta.updated).toLocaleString(lang === "en" ? "en-GB" : "nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch (e) { return ""; } };
-  const updLine = () => `<div class="upd"><span>${sv(SI.heart, 13)}${favs.length} ${L("op je programma", "in your plan")}</span><span>${L("Tijden bijgewerkt: ", "Times updated: ")}${fmtDate()}</span></div><footer class="lotd-foot"><span>SEE YOU DOWN THE FRONT.</span><a href="https://leftofthedial.nl" target="_blank" rel="noopener">${L("Festivalwebsite", "Festival website")} ↗</a></footer>`;
+  const updLine = () => `<div class="upd"><span>${sv(SI.heart, 13)}${favs.length} ${L("op je programma", "in your plan")}</span><span>${L("Tijden bijgewerkt: ", "Times updated: ")}${fmtDate()}</span></div><footer class="lotd-foot"><span>THE CLUB IS OPEN.</span><a href="https://leftofthedial.nl" target="_blank" rel="noopener">${L("Festivalwebsite", "Festival website")} ↗</a></footer>`;
   const netState = () => navigator.onLine === false ? post("offline", { text: () => L("Offline · je ziet de laatst opgeslagen tijden", "Offline · showing the last saved times") + " (" + fmtDate() + ")" }) : drop("offline");
 
   /* ---- live updates via lineup.json ---- */
