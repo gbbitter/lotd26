@@ -1,0 +1,8 @@
+name: diag
+on: { push: { branches: [diag-buien] } }
+jobs:
+  d:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          for u in "https://lotd.gijsbitter.nl/api/buien?lat=51.92&lon=4.48" "https://gpsgadget.buienradar.nl/data/raintext?lat=51.92&lon=4.48" "https://graphdata.buienradar.nl/2.0/forecast/geo/RainHistoryForecast?lat=51.92&lon=4.48"; do echo "== $u"; curl -sS -m 20 -D - -o body.txt "$u" -H "Origin: https://lotd.gijsbitter.nl" | head -25; head -c 400 body.txt; echo; done
