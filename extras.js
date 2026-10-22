@@ -39,6 +39,7 @@ Doom Fever|NL|grunge,indie rock,rock
 Ebby|NL|art-pop,experimental,rock
 Echo Northstar|IE|alternative rock,indie rock,pop,rock
 Esmeralda Road|IE|math rock,post-punk,rock
+San Jose|UK|
 Family Stereo|UK|alt-country,folk,lyrical-poetry,pop
 Fellatio|NL|alt-disco,alt-rave,avant-garde
 Ferguson Hi-Fi|UK|garage,powerpop,rock
