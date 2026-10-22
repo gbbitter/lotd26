@@ -398,8 +398,8 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
       ${instTab === "ios" ? iosSteps() : androidSteps()}</div>`;
   }
   const iosInstallSheet = () => installSheet("ios");
-  /* installeer-kaartje op de timetable: alleen op telefoons, niet als de app al geïnstalleerd is; weggeklikt = 3 dagen rust */
-  const instCardOk = () => { if (standaloneApp() || !matchMedia("(pointer: coarse)").matches) return false; const t = LS.get("lotd-inst-card-x", 0); return !(typeof t === "number" && Date.now() - t < 3 * 864e5); };
+  /* installeer-kaartje op de timetable: alleen op telefoons, niet als de app al geïnstalleerd is; weggeklikt = 6 uur rust */
+  const instCardOk = () => { if (standaloneApp() || !matchMedia("(pointer: coarse)").matches) return false; const t = LS.get("lotd-inst-card-x2", 0); return !(typeof t === "number" && Date.now() - t < 6 * 3600e3); };
   const instCard = () => instCardOk() ? `<div class="inst-card"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M12 7v7M9 11l3 3 3-3M10.5 18.5h3"/></svg><span><b>${L("Zet de app op je beginscherm", "Add the app to your home screen")}</b><small>${L("Sneller open en werkt ook offline.", "Opens faster and works offline.")}</small></span><button class="ic-go" data-install>${L("Hoe?", "How?")}</button><button class="ic-x" data-inst-x aria-label="${L("Sluiten", "Close")}">×</button></div>` : "";
   const openMenu = () => { sheet = menuHtml(); renderModal(); };
   const refreshMenu = () => { if (sheet && sheet.indexOf("data-menusheet") > -1) { sheet = menuHtml(); renderModal(); } };
@@ -995,7 +995,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     { const b = c("[data-aa-set]"); if (b) { stop(); big = b.dataset.aaSet === "1"; localStorage.setItem("lotd-big", big ? "1" : "0"); document.documentElement.classList.toggle("big", big); paintCtl(); refreshMenu(); return; } }
     if (c("[data-install-now]")) { stop(); if (deferred) { deferred.prompt(); deferred.userChoice && deferred.userChoice.then(() => { deferred = null; }).catch(() => {}); } sheet = null; renderModal(); return; }
     { const it = c("[data-inst-tab]"); if (it) { stop(); sheet = installSheet(it.dataset.instTab); renderModal(); return; } }
-    if (c("[data-inst-x]")) { stop(); LS.set("lotd-inst-card-x", Date.now()); render(true); return; }
+    if (c("[data-inst-x]")) { stop(); LS.set("lotd-inst-card-x2", Date.now()); render(true); return; }
     if (c("[data-install]")) { stop(); sheet = installSheet(); renderModal(); return; }
     if (c("[data-share-app]")) { stop(); const u = location.origin + "/"; if (navigator.share) navigator.share({ title: "Left of the Dial 2026 · Timetable", url: u }).catch(() => {}); else if (navigator.clipboard) navigator.clipboard.writeText(u).then(() => { post("saved", { text: () => L("Link gekopieerd", "Link copied"), x: true }); }); return; }
     { const b = c("[data-layout]"); if (b) { stop(); ttLayout = b.dataset.layout; LS.set("lotd-layout", ttLayout); render(true); if (ttLayout === "grid") setTimeout(() => { if (document.querySelector(".tt .now")) scrollToNow(false); }, 0); return; } }
