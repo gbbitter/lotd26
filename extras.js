@@ -721,7 +721,66 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     return `<div class="m-sub">${L("Locatie", "Location")}</div><h2>${g.name}</h2>${g.c ? `<a class="m-row" href="${routeUrl(g.c)}" target="_blank" rel="noopener">${sv(SI.pin)}<span><b>${L("Route hierheen", "Directions")}</b>${addr ? `<small>${addr}, Rotterdam</small>` : ""}</span></a>` : ""}${seg}<div class="m-list">${rows}</div>`;
   };
   const openMapSheet = n => { mapVen = n; if (!mapDay) mapDay = defMapDay(); sheet = mapSheet(); sheet && (sheet = '<div data-mapsheet>' + sheet + '</div>'); renderModal(); };
-  const vMapView = () => (mapMode === "food" ? vHead(sv(SI.pin, 14), "ROTTERDAM", L("Eten tussen de bands door.", "Food between the bands."), L("Snelle hap, friet en streetfood rond de zalen.", "Quick bites, fries and street food around the venues.")) : vHead(sv(SI.pin, 14), "ROTTERDAM", L("Van podium naar podium.", "From stage to stage."), L("Alle locaties op één plek. Tik op een logo voor de lineup.", "All venues in one place. Tap a logo for the line-up."))) + `<div class="map-tog" role="tablist" aria-label="${L("Kaartweergave", "Map view")}"><button class="${mapMode === "venues" ? "on" : ""}" data-mapmode="venues" role="tab" aria-selected="${mapMode === "venues"}">${L("Locaties", "Venues")}</button><button class="${mapMode === "food" ? "on" : ""}" data-mapmode="food" role="tab" aria-selected="${mapMode === "food"}">${L("Eten", "Food")}</button></div><div class="mapwrap${mapMode === "food" ? " food" : ""}" id="mapwrap"><div id="lmap" aria-label="${L("Kaart met alle locaties", "Map of all venues")}"></div><div class="mapbtns"><button data-maploc aria-label="${L("Mijn locatie", "My location")}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2" fill="currentColor"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg></button><button data-mapfit aria-label="${L("Alles tonen", "Show all")}">${sv(SI.pin, 24)}</button></div><div class="mapnote" id="mapnote"></div></div>${mapMode === "food" ? foodPanel() : ""}<div class="venue-dir"${mapMode === "food" ? " hidden" : ""}>${mapGroups().sort((x, y) => x.name.localeCompare(y.name)).map(g => `<div class="vd-item"><button data-mapven="${g.name.replace(/"/g, "&quot;")}"><span class="vd-name">${g.name}</span><small>${addrOf(g.name) || "Rotterdam"}</small></button>${g.c ? `<a href="${routeUrl(g.c)}" target="_blank" rel="noopener" aria-label="${L("Looproute naar", "Walking route to")} ${g.name}">${L("Looproute", "Route")} ${sv(SI.ext, 14)}</a>` : ""}</div>`).join("")}</div>${updLine()}`;
+  /* ---- weer op de kaartpagina: regen komende 2 uur (Buienradar, via /api/buien) + temperatuur, wind en komende uren (Open-Meteo) ---- */
+  const WX_LAT = 51.9205, WX_LON = 4.4790, WX_KEY = "lotd-wx";
+  let wx = LS.get(WX_KEY, null), wxBusy = false, wxOpen = false;
+  const mmh = v => v > 0 ? Math.pow(10, (v - 109) / 32) : 0;
+  const hm2m = t => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+  const nowM = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
+  async function loadWx(force) {
+    if (wxBusy || navigator.onLine === false) return; if (!force && wx && Date.now() - wx.t < 5 * 60e3) return;
+    wxBusy = true; const out = { t: Date.now(), rain: null, src: "", om: null };
+    try { const r = await fetch(`/api/buien?lat=${WX_LAT}&lon=${WX_LON}`, { cache: "no-store" }); if (!r.ok) throw 0; const rows = (await r.text()).trim().split(/\r?\n/).map(l => { const [v, tm] = l.trim().split("|"); return { tm: (tm || "").trim(), mm: mmh(+v) }; }).filter(x => /^\d\d:\d\d$/.test(x.tm) && !isNaN(x.mm)); if (rows.length >= 6) { out.rain = rows; out.src = "Buienradar"; } } catch (e) {}
+    try { const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${WX_LAT}&longitude=${WX_LON}&current=temperature_2m,apparent_temperature,weather_code,is_day,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,is_day&minutely_15=precipitation&forecast_hours=9&forecast_minutely_15=9&timezone=Europe%2FAmsterdam`); if (!r.ok) throw 0; out.om = await r.json(); } catch (e) {}
+    if (!out.rain && out.om && out.om.minutely_15 && out.om.minutely_15.time) { out.rain = out.om.minutely_15.time.map((t, i) => ({ tm: t.slice(11, 16), mm: (out.om.minutely_15.precipitation[i] || 0) * 4 })); out.src = "Open-Meteo"; }
+    if (out.rain || out.om) { if (!out.om && wx && wx.om) out.om = wx.om; wx = out; LS.set(WX_KEY, wx); }
+    wxBusy = false; paintWx();
+  }
+  const WXI = {
+    sun: '<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/>',
+    moon: '<path d="M19.5 14.6A8 8 0 0 1 9.4 4.5a8 8 0 1 0 10.1 10.1z"/>',
+    part: '<path d="M8.5 3.5v1.4M3.6 8.4H5M5 5l1 1M13.4 5l-1 1"/><path d="M5.6 11.3a3.4 3.4 0 0 1 6.3-2.4"/><path d="M8 20h9.5a3.5 3.5 0 0 0 .3-7 5 5 0 0 0-9.6 1.2A2.9 2.9 0 0 0 8 20z"/>',
+    cloud: '<path d="M7 19h10.5a4 4 0 0 0 .4-8 6 6 0 0 0-11.4 1.5A3.3 3.3 0 0 0 7 19z"/>',
+    rain: '<path d="M7 15h10.5a4 4 0 0 0 .4-8 6 6 0 0 0-11.4 1.5A3.3 3.3 0 0 0 7 15z"/><path d="M8.5 18l-1 2.5M12.5 18l-1 2.5M16.5 18l-1 2.5"/>',
+    storm: '<path d="M7 14h10.5a4 4 0 0 0 .4-8 6 6 0 0 0-11.4 1.5A3.3 3.3 0 0 0 7 14z"/><path d="M12.5 15.5l-2 3.5h3l-2 3.5"/>',
+    fog: '<path d="M4 9h16M6 13h12M4 17h16"/>',
+    snow: '<path d="M7 14h10.5a4 4 0 0 0 .4-8 6 6 0 0 0-11.4 1.5A3.3 3.3 0 0 0 7 14z"/><path d="M8.5 18.5h.01M12 20.5h.01M15.5 18.5h.01"/>'
+  };
+  const wxKind = (c, day) => c === 0 ? (day ? "sun" : "moon") : c <= 2 ? (day ? "part" : "cloud") : c === 3 ? "cloud" : c <= 48 ? "fog" : c >= 95 ? "storm" : (c >= 71 && c <= 77) || c === 85 || c === 86 ? "snow" : "rain";
+  const wxIcon = (k, z = 22) => `<svg class="wx-i" width="${z}" height="${z}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${WXI[k]}</svg>`;
+  const wxText = c => { const T = { 0: ["Helder", "Clear"], 1: ["Overwegend helder", "Mostly clear"], 2: ["Half bewolkt", "Partly cloudy"], 3: ["Bewolkt", "Cloudy"], 45: ["Mist", "Fog"], 48: ["Mist", "Fog"], 51: ["Lichte motregen", "Light drizzle"], 53: ["Motregen", "Drizzle"], 55: ["Motregen", "Drizzle"], 56: ["IJzel", "Freezing drizzle"], 57: ["IJzel", "Freezing drizzle"], 61: ["Lichte regen", "Light rain"], 63: ["Regen", "Rain"], 65: ["Zware regen", "Heavy rain"], 66: ["IJzel", "Freezing rain"], 67: ["IJzel", "Freezing rain"], 71: ["Lichte sneeuw", "Light snow"], 73: ["Sneeuw", "Snow"], 75: ["Zware sneeuw", "Heavy snow"], 77: ["Sneeuw", "Snow"], 80: ["Lichte buien", "Light showers"], 81: ["Buien", "Showers"], 82: ["Zware buien", "Heavy showers"], 85: ["Sneeuwbuien", "Snow showers"], 86: ["Sneeuwbuien", "Snow showers"], 95: ["Onweer", "Thunderstorm"], 96: ["Onweer met hagel", "Thunderstorm, hail"], 99: ["Onweer met hagel", "Thunderstorm, hail"] }[c]; return T ? L(T[0], T[1]) : ""; };
+  const bft = k => [1, 6, 12, 20, 29, 39, 50, 62, 75, 89, 103, 118].filter(x => k >= x).length;
+  const dir16 = d => (lang === "en" ? ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"] : ["N", "NNO", "NO", "ONO", "O", "OZO", "ZO", "ZZO", "Z", "ZZW", "ZW", "WZW", "W", "WNW", "NW", "NNW"])[Math.round(((d % 360) + 360) % 360 / 22.5) % 16];
+  const rainNow = () => { if (!wx || !wx.rain) return []; const n = nowM(); return wx.rain.filter(x => { let d = hm2m(x.tm) - n; if (d < -720) d += 1440; if (d > 720) d -= 1440; return d >= (wx.src === "Buienradar" ? -5 : -15); }); };
+  const intens = mm => mm < 1 ? L("licht", "light") : mm < 4 ? L("matig", "moderate") : L("zwaar", "heavy");
+  function rainSummary(rows) {
+    if (!rows.length) return null; const W = 0.1, wet = rows.map(x => x.mm >= W), last = rows[rows.length - 1].tm;
+    if (wet[0]) { const i = wet.indexOf(false), pk = Math.max(...rows.slice(0, i < 0 ? rows.length : i).map(x => x.mm)); return { wet: true, txt: i < 0 ? L(`Regen (${intens(pk)}), houdt aan tot na ${last}`, `Rain (${intens(pk)}) until after ${last}`) : L(`Nu regen (${intens(pk)}), droog rond ${rows[i].tm}`, `Raining now (${intens(pk)}), dry around ${rows[i].tm}`) }; }
+    const j = wet.indexOf(true); if (j < 0) return { wet: false, txt: L(`Droog tot minstens ${last}`, `Dry until at least ${last}`) };
+    const k = wet.indexOf(false, j), pk = Math.max(...rows.slice(j, k < 0 ? rows.length : k).map(x => x.mm));
+    return { wet: true, soon: true, txt: L(`Regen vanaf ${rows[j].tm} (${intens(pk)})`, `Rain from ${rows[j].tm} (${intens(pk)})`) };
+  }
+  function wxHtml() {
+    if (!wx) return `<div class="wx-load">${L("Weer laden…", "Loading weather…")}</div>`;
+    const c = wx.om && wx.om.current, rows = rainNow(), rs = rainSummary(rows), stale = Date.now() - wx.t > 45 * 60e3;
+    const upd = new Date(wx.t).toTimeString().slice(0, 5);
+    const now = c ? `<span class="wx-now">${wxIcon(wxKind(c.weather_code, c.is_day), 24)}<b>${Math.round(c.temperature_2m)}°</b></span>` : "";
+    const rain = rs ? `<span class="wx-rain${rs.wet ? " wet" : ""}"><svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.5s-6.5 7.3-6.5 12a6.5 6.5 0 0 0 13 0c0-4.7-6.5-12-6.5-12z"/></svg><span>${rs.txt}</span></span>` : `<span class="wx-rain"><span>${c ? wxText(c.weather_code) : L("Weer", "Weather")}</span></span>`;
+    const desc = c ? `<div class="wx-desc"><b>${wxText(c.weather_code)}</b> · ${L("voelt als", "feels like")} ${Math.round(c.apparent_temperature)}° · ${L("wind", "wind")} ${dir16(c.wind_direction_10m)} ${bft(c.wind_speed_10m)} Bft${c.wind_gusts_10m >= 50 ? ` · ${L("windstoten", "gusts")} ${Math.round(c.wind_gusts_10m)} km/u` : ""}</div>` : "";
+    let det = "";
+    if (wxOpen) {
+      const bars = rows.slice(0, 24), mx = Math.max(2, ...bars.map(x => x.mm));
+      const chart = bars.length ? `<div class="wx-chart" role="img" aria-label="${L("Neerslag komende twee uur", "Precipitation next two hours")}">${bars.map(x => `<i style="height:${x.mm >= 0.1 ? Math.max(8, Math.min(100, Math.sqrt(x.mm / mx) * 100)) : 2}%" title="${x.tm} · ${x.mm.toFixed(1)} mm/u"></i>`).join("")}</div><div class="wx-ax">${bars.filter((x, i) => i % (wx.src === "Buienradar" ? 6 : 2) === 0).map(x => `<span>${x.tm}</span>`).join("")}</div>` : "";
+      const h = wx.om && wx.om.hourly, nowH = new Date().getHours();
+      const hrs = h ? h.time.map((t, i) => ({ t, i })).filter(x => +x.t.slice(11, 13) !== nowH || false).slice(0, 6).map(({ t, i }) => `<div class="wx-h"><small>${t.slice(11, 13)}${L("u", "h")}</small>${wxIcon(wxKind(h.weather_code[i], h.is_day[i]), 22)}<b>${Math.round(h.temperature_2m[i])}°</b><em>${h.precipitation_probability[i] != null ? h.precipitation_probability[i] + "%" : ""}</em></div>`).join("") : "";
+      det = `<div class="wx-det">${desc}${chart ? `<div class="wx-sub">${L("Neerslag komende 2 uur", "Rain next 2 hours")}</div>${chart}` : ""}${hrs ? `<div class="wx-sub">${L("Komende uren · kans op regen", "Next hours · chance of rain")}</div><div class="wx-hrs">${hrs}</div>` : ""}<div class="wx-src">${L("Regen", "Rain")}: ${wx.src === "Buienradar" ? `<a href="https://www.buienradar.nl" target="_blank" rel="noopener">Buienradar.nl</a>` : `<a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo.com</a>`} · ${L("Weer", "Weather")}: <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo.com</a> · ${L("bijgewerkt", "updated")} ${upd}</div></div>`;
+    }
+    return `<button class="wx-bar" data-wx aria-expanded="${wxOpen}" aria-label="${L("Weer, tik voor details", "Weather, tap for details")}">${now}${rain}${stale ? `<span class="wx-stale">${upd}</span>` : ""}<i class="wx-chev" aria-hidden="true">${wxOpen ? "−" : "+"}</i></button>${det}`;
+  }
+  function paintWx() { const el = document.getElementById("wx"); if (el) { el.innerHTML = wxHtml(); el.classList.toggle("open", wxOpen); } }
+  setInterval(() => { if (route().p === "map" && document.visibilityState === "visible") loadWx(false); }, 60000);
+
+  const vMapView = () => `<h1 class="sr-only">${mapMode === "food" ? L("Eten tussen de bands door", "Food between the bands") : L("Alle locaties", "All venues")}</h1>`+ `<div class="map-tog" role="tablist" aria-label="${L("Kaartweergave", "Map view")}"><button class="${mapMode === "venues" ? "on" : ""}" data-mapmode="venues" role="tab" aria-selected="${mapMode === "venues"}">${L("Locaties", "Venues")}</button><button class="${mapMode === "food" ? "on" : ""}" data-mapmode="food" role="tab" aria-selected="${mapMode === "food"}">${L("Eten", "Food")}</button></div><div class="wx${wxOpen ? " open" : ""}" id="wx">${wxHtml()}</div><div class="mapwrap${mapMode === "food" ? " food" : ""}" id="mapwrap"><div id="lmap" aria-label="${L("Kaart met alle locaties", "Map of all venues")}"></div><div class="mapbtns"><button data-maploc aria-label="${L("Mijn locatie", "My location")}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2" fill="currentColor"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg></button><button data-mapfit aria-label="${L("Alles tonen", "Show all")}">${sv(SI.pin, 24)}</button></div><div class="mapnote" id="mapnote"></div></div>${mapMode === "food" ? foodPanel() : ""}<div class="venue-dir"${mapMode === "food" ? " hidden" : ""}>${mapGroups().sort((x, y) => x.name.localeCompare(y.name)).map(g => `<div class="vd-item"><button data-mapven="${g.name.replace(/"/g, "&quot;")}"><span class="vd-name">${g.name}</span><small>${addrOf(g.name) || "Rotterdam"}</small></button>${g.c ? `<a href="${routeUrl(g.c)}" target="_blank" rel="noopener" aria-label="${L("Looproute naar", "Walking route to")} ${g.name}">${L("Looproute", "Route")} ${sv(SI.ext, 14)}</a>` : ""}</div>`).join("")}</div>${updLine()}`;
   const loadLeaflet = () => new Promise((ok, no) => {
     if (window.L && window.L.map) return ok();
     if (!document.getElementById("lf-css")) { const l = document.createElement("link"); l.id = "lf-css"; l.rel = "stylesheet"; l.href = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"; document.head.appendChild(l); }
@@ -730,8 +789,8 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
   const killMap = () => { if (lmap) { try { lmap.remove(); } catch (e) {} lmap = null; userDot = null; } };
   const mapFallback = () => { const el = document.getElementById("lmap"); if (!el) return; el.innerHTML = `<div class="mapfb"><p>${L("De kaart kon niet laden (geen internet?). Kies een locatie:", "The map could not load (offline?). Pick a location:")}</p>${mapGroups().map(g => `<button data-mapven="${g.name.replace(/"/g, "&quot;")}">${g.name}</button>`).join("")}</div>`; };
   const initMap = () => {
-    killMap(); const tok = ++mapTok, wrap = document.getElementById("mapwrap"), main = document.getElementById("main"); if (!wrap) return;
-    wrap.style.height = Math.round(Math.max(300, Math.min(main.clientHeight * 0.62, 520))) + "px";
+    killMap(); const tok = ++mapTok, wrap = document.getElementById("mapwrap"), main = document.getElementById("main"); if (!wrap) return; loadWx(false);
+    { const top = wrap.getBoundingClientRect().top - main.getBoundingClientRect().top + main.scrollTop, peek = 72; wrap.style.height = Math.round(Math.max(320, Math.min(main.clientHeight - top - peek, 900))) + "px"; }
     if (mapMode === "food") loadFood().then(() => { if (route().p === "map" && mapMode === "food") { paintFoodList(); drawFoodLayer(); } });
     const groups = mapGroups(), miss = groups.filter(g => !g.c);
     if (miss.length) document.getElementById("mapnote").textContent = L("Nog geen kaartpositie: ", "No map position yet: ") + miss.map(g => g.name).join(", ");
@@ -892,6 +951,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
   document.addEventListener("input", e => { if (e.target.id !== "fq") return; e.stopImmediatePropagation(); foodQ = e.target.value; foodShow = 40; paintFoodList(); drawFoodLayer(); }, true);
   document.addEventListener("click", e => {
     const tg = e.target, c = sel => tg.closest && tg.closest(sel), stop = () => e.stopImmediatePropagation(); let b;
+    if (c("[data-wx]")) { stop(); wxOpen = !wxOpen; paintWx(); if (wxOpen) loadWx(false); return; }
     if ((b = c("[data-mapmode]"))) { stop(); mapMode = b.dataset.mapmode; LS.set("lotd-map-mode", mapMode); if (mapMode === "food") loadFood().then(() => { if (route().p === "map") { paintFoodList(); drawFoodLayer(); } }); render(true); return; }
     if ((b = c("[data-food]"))) { stop(); if (sheet) { sheet = null; } openFood(b.dataset.food); return; }
     if ((b = c("[data-food-cat]"))) { stop(); foodCat = b.dataset.foodCat; foodShow = 40; document.querySelectorAll("[data-food-cat]").forEach(x => { x.classList.toggle("on", x === b); x.setAttribute("aria-pressed", String(x === b)); }); paintFoodList(); drawFoodLayer(); return; }
