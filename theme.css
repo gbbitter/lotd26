@@ -479,3 +479,4 @@ html body .m-also { margin: 12px 0 0; border: 1px solid var(--hair); border-radi
 html body .m-also summary { padding: 10px 12px; font: 600 13.5px var(--font); color: var(--muted-ink); cursor: pointer; }
 html body .m-also button { display: flex; justify-content: space-between; gap: 10px; width: 100%; padding: 9px 12px; border: 0; border-top: 1px solid var(--hair); background: none; text-align: left; color: var(--ink); }
 html body .m-also b { font: 600 14px var(--font); } html body .m-also span { font: 500 12px var(--font); color: var(--muted-ink); white-space: nowrap; }
+html body .lt-track b.lt-heart { display: inline-flex; align-items: center; vertical-align: -1px; }

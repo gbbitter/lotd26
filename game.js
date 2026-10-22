@@ -734,7 +734,7 @@ const leaderboard = (() => {
     return new Promise(res => {
       const c = document.createElement("canvas"); c.width = 1080; c.height = 1350; const g = c.getContext("2d"), keep = [cx, s];
       g.fillStyle = "#1717ff"; g.fillRect(0, 0, 1080, 1350);
-      g.fillStyle = "#141414"; g.fillRect(0, 0, 1080, 70); g.fillStyle = "#fff"; g.font = `700 30px ${FONT_D}`; g.textBaseline = "middle"; g.fillText("LEFT OF THE DIAL 2026  ✳  21 / 22 / 23 / 24 " + Lg("OKTOBER", "OCTOBER") + "  ✳  ROTTERDAM", 40, 37);
+      g.fillStyle = "#141414"; g.fillRect(0, 0, 1080, 70); g.fillStyle = "#fff"; g.font = `700 30px ${FONT_D}`; g.textBaseline = "middle"; g.fillText("LEFT OF THE DIAL 2026  ♥  21 / 22 / 23 / 24 " + Lg("OKTOBER", "OCTOBER") + "  ♥  ROTTERDAM", 40, 37);
       g.textBaseline = "alphabetic"; g.fillStyle = "#fff"; g.font = `800 150px ${FONT_D}`; g.fillText("WAPPERMAN.", 60, 250);
       g.font = `800 420px ${FONT_D}`; g.fillText(String(score), 50, 640);
       g.font = `700 44px ${FONT_B}`; g.fillStyle = "#c6d0ff"; g.fillText(Lg("PUNTEN", "POINTS") + (isRec ? Lg("  ·  NIEUW RECORD!", "  ·  NEW RECORD!") : ""), 64, 720);

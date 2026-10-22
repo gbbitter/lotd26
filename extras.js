@@ -327,7 +327,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     bar.appendChild(home); bar.appendChild(tw); bar.appendChild(tools); }
   function paintTicker() {
     const t = document.getElementById("lotd-ticker"); if (!t) return;
-    const sep = "<b>\u2733</b>", one = ["LEFT OF THE DIAL 2026", L("21 / 22 / 23 / 24 OKTOBER", "21 / 22 / 23 / 24 OCTOBER"), "ROTTERDAM", "SOLD OUT", "THE CLUB IS OPEN"].map(x => `${x}${sep}`).join("");
+    const sep = '<b class="lt-heart" aria-hidden="true"><svg viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M12 21.2l-1.4-1.3C5.4 15.2 2 12.1 2 8.3 2 5.2 4.4 2.8 7.5 2.8c1.7 0 3.4.8 4.5 2.1 1.1-1.3 2.8-2.1 4.5-2.1 3.1 0 5.5 2.4 5.5 5.5 0 3.8-3.4 6.9-8.6 11.6L12 21.2z"/></svg></b>', one = ["LEFT OF THE DIAL 2026", L("21 / 22 / 23 / 24 OKTOBER", "21 / 22 / 23 / 24 OCTOBER"), "ROTTERDAM", "SOLD OUT", "THE CLUB IS OPEN"].map(x => `${x}${sep}`).join("");
     t.innerHTML = `<div class="lt-track"><span>${one}${one}</span><span>${one}${one}</span></div>`;
   }
   /* aftellen tot het festival / live-teller tijdens het festival */
