@@ -521,3 +521,6 @@ html body .wx-rain { flex: 1; min-width: 0; }
 html body .wx-rain > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 html body .wx-desc { margin-top: 10px; font: 500 13px/1.35 var(--font); color: var(--muted-ink); } html body .wx-desc b { color: var(--ink); font-weight: 700; }
 html body .wx-stale { flex: none; }
+html body .wx-h em { color: var(--muted-ink); font-weight: 500; }
+html body .wx-h em.wet { color: var(--blue); font-weight: 700; }
+html body .wx-h em.maybe { color: var(--ink); font-weight: 600; }
