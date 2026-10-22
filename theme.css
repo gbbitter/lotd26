@@ -480,3 +480,32 @@ html body .m-also summary { padding: 10px 12px; font: 600 13.5px var(--font); co
 html body .m-also button { display: flex; justify-content: space-between; gap: 10px; width: 100%; padding: 9px 12px; border: 0; border-top: 1px solid var(--hair); background: none; text-align: left; color: var(--ink); }
 html body .m-also b { font: 600 14px var(--font); } html body .m-also span { font: 500 12px var(--font); color: var(--muted-ink); white-space: nowrap; }
 html body .lt-track b.lt-heart { display: inline-flex; align-items: center; vertical-align: -1px; }
+
+/* weer op de kaartpagina */
+html body .wx { margin: 0 20px 14px; border: 1px solid var(--hair); border-radius: 6px; background: var(--paper); overflow: hidden; }
+@media (min-width: 700px) { html body .wx { margin: 0 32px 16px; max-width: 560px; } }
+html body .wx-load { padding: 12px 14px; font: 500 13px var(--font); color: var(--muted-ink); }
+html body .wx-bar { display: flex; flex-direction: column; gap: 6px; width: 100%; padding: 10px 12px; border: 0; background: none; text-align: left; color: var(--ink); cursor: pointer; }
+html body .wx-top { display: flex; align-items: center; gap: 10px; width: 100%; }
+html body .wx-now { display: flex; align-items: center; gap: 5px; color: var(--ink); }
+html body .wx-now b { font: 800 30px/1 var(--display); }
+html body .wx-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+html body .wx-txt b { font: 700 14.5px/1.2 var(--font); }
+html body .wx-txt small { font: 500 12.5px/1.25 var(--font); color: var(--muted-ink); }
+html body .wx-chev { font: 600 20px/1 var(--font); color: var(--muted-ink); font-style: normal; width: 22px; text-align: center; }
+html body .wx-rain { display: flex; align-items: center; gap: 6px; font: 600 13px var(--font); color: var(--muted-ink); }
+html body .wx-rain svg { color: #9aa6c4; flex: none; }
+html body .wx-rain.wet { color: var(--blue); } html body .wx-rain.wet svg { color: var(--blue); }
+html body .wx-stale { font: 500 11.5px var(--font); color: var(--warn, #d1343e); }
+html body .wx-det { padding: 2px 12px 12px; border-top: 1px solid var(--hair); }
+html body .wx-sub { margin: 10px 0 6px; font: 600 11px var(--font); letter-spacing: .05em; text-transform: uppercase; color: var(--muted-ink); }
+html body .wx-chart { display: flex; align-items: flex-end; gap: 2px; height: 56px; padding: 0 1px; border-bottom: 1px solid var(--hair); }
+html body .wx-chart i { flex: 1; background: var(--blue); border-radius: 2px 2px 0 0; min-height: 1px; opacity: .9; }
+html body .wx-ax { display: flex; justify-content: space-between; margin-top: 3px; font: 500 10.5px var(--font); color: var(--muted-ink); }
+html body .wx-hrs { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+html body .wx-h { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0; border-radius: 6px; background: var(--surface, #f5f5f8); }
+html body .wx-h small { font: 600 11px var(--font); color: var(--muted-ink); }
+html body .wx-h b { font: 700 14px var(--font); }
+html body .wx-h em { font: 600 10.5px var(--font); font-style: normal; color: var(--blue); min-height: 13px; }
+html body .wx-src { margin-top: 10px; font: 500 11px var(--font); color: var(--muted-ink); }
+html body .wx-src a { color: inherit; }
