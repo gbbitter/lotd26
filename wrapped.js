@@ -94,7 +94,7 @@
 @keyframes rwMarR{from{transform:translateX(-50%)}to{transform:translateX(0)}}
 @keyframes rwEq{0%,100%{transform:scaleY(.25)}50%{transform:scaleY(1)}}
 @keyframes rwFloat{0%{transform:translateY(110vh) rotate(0)}100%{transform:translateY(-20vh) rotate(var(--r,180deg))}}
-@keyframes rwCred{from{transform:translateY(0)}to{transform:translateY(-100%)}}
+@keyframes rwCred{from{transform:translateY(0)}to{transform:translateY(calc(-100% - var(--sh,100vh)))}}
 @keyframes rwDash{to{stroke-dashoffset:0}}
 @keyframes rwPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
 #rw .in{opacity:0;animation:rwIn .6s ease forwards}
@@ -217,7 +217,8 @@
       S.push({ dur: 5600, cls: "yellow rw-wm", html: () => `<div class="k in">Wapperman</div><canvas width="420" height="520"></canvas><h2 class="h2">${words(L(`${fmt(D.best)} punten record.`, `${fmt(D.best)} points high score.`), 300)}</h2><p class="rw-p in" style="animation-delay:1.2s">${L(`${D.prof.games || 1}× gespeeld · ${(D.prof.crate || []).length} bands in je platenkast · skin: ${esc(window.WappermanGame && WappermanGame.skinName ? WappermanGame.skinName() : "Klassiek")}`, `${D.prof.games || 1} games · ${(D.prof.crate || []).length} bands in your crate · skin: ${esc(window.WappermanGame && WappermanGame.skinName ? WappermanGame.skinName() : "Classic")}`)}</p>${rankTxt()}`, after: el => wmAnim(el) });
     }
     /* 10. bedankt (aftiteling) */
-    S.push({ dur: 7600, cls: "ink", html: () => `<div class="cred"><small>Thanks to</small>${["Everyone", "All the bands", "All the venues", "Every crew member", "Every volunteer", "You"].map(x => `<div>${x}</div>`).join("")}<small>${L("Op de podia van", "On the stages of")}</small>${D.venues.map(v => `<div>${esc(v)}</div>`).join("")}</div><div style="position:relative;z-index:2;background:linear-gradient(rgba(11,11,20,0),#0b0b14 40px,#0b0b14 calc(100% - 44px),rgba(11,11,20,0));padding:40px 0 50px;margin:-40px 0 0"><div class="k in">Thanks to everyone</div><h2 class="h2">${words("Thanks for supporting live music.", 200, 110)}</h2></div>` });
+    const cred = { dur: 16000, cls: "ink", after: el => { const c = el.querySelector(".cred"); if (!c) return; const H = c.offsetHeight, V = el.offsetHeight, sec = 9 * (H + V) / Math.max(1, H); c.style.setProperty("--sh", V + "px"); c.style.animationDuration = sec + "s"; cred.dur = Math.round(sec * 1000) + 400; }, html: () => `<div class="cred"><small>Thanks to</small>${["Everyone", "All the bands", "All the venues", "Every crew member", "Every volunteer", "You"].map(x => `<div>${x}</div>`).join("")}<small>${L("Op de podia van", "On the stages of")}</small>${D.venues.map(v => `<div>${esc(v)}</div>`).join("")}</div><div style="position:relative;z-index:2;background:linear-gradient(rgba(11,11,20,0),#0b0b14 40px,#0b0b14 calc(100% - 44px),rgba(11,11,20,0));padding:40px 0 50px;margin:-40px 0 0"><div class="k in">Thanks to everyone</div><h2 class="h2">${words("Thanks for supporting live music.", 200, 110)}</h2></div>` };
+    S.push(cred);
     /* 11. it was a blast */
     S.push({ dur: 4400, cls: "pink", html: () => `${hearts(34, ["#fff", "#ffd23f", "#1717ff", "#141414"], 0)}<h1 class="rw-h" style="font-size:clamp(70px,24vw,150px);color:#1717ff!important">${words("It was", 100)}<br>${words("a blast.", 400)}</h1>` });
     /* 12. outro + tickets */
