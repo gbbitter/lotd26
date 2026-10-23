@@ -89,7 +89,7 @@
 @keyframes rwUp{to{opacity:1;transform:none}}
 @keyframes rwIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
 @keyframes rwPop{0%{opacity:0;transform:scale(.3) rotate(-8deg)}70%{opacity:1;transform:scale(1.08) rotate(2deg)}100%{opacity:1;transform:none}}
-@keyframes rwSpin{to{transform:rotate(360deg)}}
+@keyframes rwSpin{to{transform:rotate(-360deg)}}
 @keyframes rwMarL{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 @keyframes rwMarR{from{transform:translateX(-50%)}to{transform:translateX(0)}}
 @keyframes rwEq{0%,100%{transform:scaleY(.25)}50%{transform:scaleY(1)}}
@@ -205,8 +205,8 @@
       D.pick = pick;
       S.push({ dur: 6200, cls: "ink", html: () => `<div class="rdial pop">${dialSvg("#fff", "#ff3d9a")}</div><div class="k in">${D.has ? L("De knop draait nog één keer…", "One last turn of the dial…") : L("Draai aan de knop…", "Turn the dial…")}</div><h2 class="h2">${words(D.has ? L("Deze miste je nog:", "The one that got away:") : L("Jouw ontdekking:", "Your discovery:"), 150)}</h2><div class="roul"><b>…</b></div><p class="rw-p reveal">${esc([ctry, gen].filter(Boolean).join(" — "))}${ctry || gen ? "<br>" : ""}${L("Zet ’m op voor de terugweg.", "Put them on for the ride home.")}</p>`, after: el => {
         const b = el.querySelector(".roul b"), dl = el.querySelector(".rdial svg"); let d = 45, n = 0, rot = 0;
-        const spin = () => { if (!b.isConnected) return; if (d > 340 || reduced) { b.textContent = pick; b.classList.add("land"); el.querySelector(".reveal").classList.add("on"); if (dl) dl.style.transform = `rotate(${rot + 20}deg)`; return; }
-          b.textContent = pool[(n++ * 7 + Math.floor(Math.random() * pool.length)) % pool.length]; rot += 37; if (dl) dl.style.transform = `rotate(${rot}deg)`; d *= 1.13; setTimeout(spin, d); };
+        const spin = () => { if (!b.isConnected) return; if (d > 340 || reduced) { b.textContent = pick; b.classList.add("land"); el.querySelector(".reveal").classList.add("on"); if (dl) dl.style.transform = `rotate(${rot - 20}deg)`; return; }
+          b.textContent = pool[(n++ * 7 + Math.floor(Math.random() * pool.length)) % pool.length]; rot -= 37; if (dl) dl.style.transform = `rotate(${rot}deg)`; d *= 1.13; setTimeout(spin, d); };
         setTimeout(spin, 500); } });
     }
     /* 9. wapperman (of een uitnodiging als je nog niet speelde) */
