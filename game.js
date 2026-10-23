@@ -828,6 +828,6 @@ const leaderboard = (() => {
     root.remove(); root = null; state = "start";
   }
   /* voor Rewind the Dial: je gekozen skin tekenen en de naam ervan */
-  window.WappermanGame = { mount, unmount, preview: (cv2, t, w, h, sc) => skinPreview(cv2, skinOf(), t, w, h, sc), skinName: () => { const k = skinOf(); return Lg(k.nl, k.en); } };
+  window.WappermanGame = { mount, unmount, top: () => getTopScores(), preview: (cv2, t, w, h, sc) => skinPreview(cv2, skinOf(), t, w, h, sc), skinName: () => { const k = skinOf(); return Lg(k.nl, k.en); } };
   if (window.__WG_TEST) window.__WG_API = { get: () => ({ state, x, W, H, s, groundY, laneW, obstacles, pickups, tokens, score, elapsed, mult, found, slow, evKind, evPhase, windDir, maxV, stage, prof, misDoneRun }), setKey: d => { keyDir = d; }, start, setBonus: n => { bonus = n; }, setInv: n => { inv = n; }, skin: (cv2, id, t, sc) => { const SK = SKINS.find(k => k.id === id), keep = [cx, s]; const g = cv2.getContext("2d"); cx = g; s = sc; try { wapper(cv2.width / 2, cv2.height - 14, t, 0, PALS[0], SK); } finally { cx = keep[0]; s = keep[1]; } }, skins: () => SKINS.map(k => [k.id, k.nl, k.how ? k.how[0] : "", k.stars || 0]), card: () => scoreCard().then(b => new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(b); })) };
 })();

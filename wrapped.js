@@ -52,11 +52,17 @@
     const prof = LS.get("lotd-wapperman-profile", null) || {};
     const best = +(LS.get("lotd-wapperman-best", 0) || 0);
     const name = (() => { try { return (localStorage.getItem("lotd-wapperman-name") || "").trim(); } catch (e) { return ""; } })();
+    const shows = all.filter(a => a.genre !== "Extra" && !a.after), festMin = shows.reduce((n, a) => n + (a.endUnknown ? 45 : Math.max(0, mins(a.end) - mins(a.start))), 0);
+    const cTop = {}; bands.forEach(n => { const a = all.find(x => x.name === n); (a && a.country ? a.country.split("/") : []).forEach(c => { cTop[c] = (cTop[c] || 0) + 1; }); });
+    const topC = Object.entries(cTop).sort((x, y) => y[1] - x[1])[0] || ["UK", 0];
+    const lastEnd = Math.max(...all.filter(a => a.day === "z").map(a => mins(a.end) || 0)), hhmm = m => { m = m % 1440; return String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0"); };
     const oo = mine.filter(a => (a.day === "v" || a.day === "z") && mins(a.start) < 960).length;
     return {
       all, bands, venues, countries: cc(all), myCountries: cc(mine), mine, myBands, must, genres, festGenres, busiest, favVenue,
       first: sorted[0], last: sorted[sorted.length - 1], route, musicMin, walkKm: Math.round(walkMin * 80 / 100) / 10, hops,
-      prof, best, name, oo, has: myBands.length > 0
+      prof, best, name, oo, has: myBands.length > 0, played: !!(prof.games || best > 0),
+      festHours: Math.round(festMin / 60), shows: shows.length, topC, lastNote: isFinite(lastEnd) ? hhmm(lastEnd) : "",
+      top: LS.get("lotd-wapperman-top-cache", []) || []
     };
   }
 
@@ -122,7 +128,7 @@
 #rw .rw-route svg{width:100%;height:30vh;margin-top:12px;overflow:visible}
 #rw .rw-route path{fill:none;stroke:#fff;stroke-width:4;stroke-linecap:round;stroke-dasharray:6 10}
 #rw .rw-route .ln{stroke-dasharray:2000;stroke-dashoffset:2000;animation:rwDash 4s ease forwards;stroke-width:5}
-#rw .wm canvas{width:min(46vw,210px);height:auto;display:block;margin:10px 0 0 -8px}
+#rw .rw-wm canvas{width:min(46vw,210px);height:auto;display:block;margin:10px 0 0 -8px}
 #rw .cta{display:flex;flex-direction:column;gap:10px;margin-top:22px;max-width:420px;pointer-events:auto}
 #rw .cta a,#rw .cta button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:54px;border-radius:8px;border:0;font:800 20px/1 "Barlow Condensed",Arial,sans-serif;letter-spacing:.04em;text-transform:uppercase;text-decoration:none;cursor:pointer}
 #rw .cta .t1{background:#fff;color:#1717ff}
@@ -132,6 +138,12 @@
 #rw .cta .rw-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 #rw .tapL,#rw .tapR{position:absolute;top:0;bottom:0;z-index:4}
 #rw.lite .rw-top{color:#141414}#rw.lite .rw-x,#rw.lite .rw-pp{background:rgba(0,0,0,.08);color:#141414}#rw.lite .rw-bars i{background:rgba(0,0,0,.18)}#rw.lite .rw-bars i b{background:#141414}
+#rw .roul{margin-top:18px;min-height:2.1em;display:flex;align-items:center}
+#rw .roul b{font:800 clamp(40px,13vw,80px)/.92 "Barlow Condensed",Arial,sans-serif;text-transform:uppercase;overflow-wrap:anywhere}
+#rw .roul b.land{color:#ffd23f;animation:rwPop .5s cubic-bezier(.2,.9,.3,1.3)}
+#rw .rdial{width:120px;height:120px;margin-bottom:18px}
+#rw .rdial svg{position:static;width:100%;height:100%;animation:none;opacity:1}
+#rw .reveal{opacity:0;transition:opacity .5s}#rw .reveal.on{opacity:1}
 #rw .tapL{left:0;width:33%}#rw .tapR{right:0;width:67%}#rw.last .tapL,#rw.last .tapR{display:none}
 #rw .rw-hint{position:absolute;left:0;right:0;bottom:calc(18px + env(safe-area-inset-bottom,0px));text-align:center;font:700 12px "Barlow",Arial,sans-serif;letter-spacing:.1em;text-transform:uppercase;opacity:.6;z-index:3}
 #rw .paused .sl *,#rw.paused .sl *{animation-play-state:paused!important}
@@ -147,6 +159,9 @@
   function counter(el, to, ms) { if (!el) return; if (reduced) { el.textContent = fmt(to); return; } const t0 = performance.now(); const step = now => { const k = Math.min(1, (now - t0) / ms), e = 1 - Math.pow(1 - k, 3); el.textContent = fmt(Math.round(to * e)); if (k < 1 && el.isConnected) requestAnimationFrame(step); }; requestAnimationFrame(step); }
 
   /* ---------- de slides ---------- */
+  function wmAnim(el) { const cv = el.querySelector("canvas"); if (!cv || !window.WappermanGame || !WappermanGame.preview) { cv && cv.remove(); return; } const t0 = performance.now(); const loop = now => { if (!cv.isConnected) return; try { WappermanGame.preview(cv, (now - t0) / 1000 * 1.4, 140, 175, 0.95); } catch (e) { return; } if (!reduced) requestAnimationFrame(loop); }; requestAnimationFrame(loop); }
+  let curD = null;
+  const rankTxt = () => { const D = curD; if (!D || !D.name || !D.top || !D.top.length) return ""; const i = D.top.findIndex(r => (r.name || "").toLowerCase() === D.name.toLowerCase()); return i >= 0 ? " " + L(`Je staat #${i + 1} in de top 10!`, `You're #${i + 1} in the top 10!`) : ""; };
   function slides(D) {
     const S = [];
     const mineSet = new Set(D.myBands), mustSet = new Set(D.must);
@@ -180,18 +195,33 @@
       const ccs = D.myCountries.length ? D.myCountries : D.countries;
       S.push({ dur: 5200, cls: "white", html: () => `<div class="k in">${L("Jouw wereldkaart", "Your world map")}</div><h2 class="h2">${words(L(`Muziek uit ${ccs.length} ${ccs.length === 1 ? "land" : "landen"}.`, `Music from ${ccs.length} ${ccs.length === 1 ? "country" : "countries"}.`), 150)}</h2><div class="cc">${ccs.slice(0, 16).map((c, i) => `<b class="pop" style="animation-delay:${0.5 + i * 0.12}s;${i % 3 === 0 ? "background:#1717ff;color:#fff;border-color:#1717ff" : i % 3 === 1 ? "background:#ff3d9a;color:#fff;border-color:#ff3d9a" : ""}">${esc(c)}</b>`).join("")}</div>${D.busiest ? `<p class="rw-p in" style="animation-delay:1.8s">${L(`Je drukste dag: ${dayN(D.busiest[0])}, met ${D.busiest[1]} acts.`, `Your busiest day: ${dayN(D.busiest[0])}, with ${D.busiest[1]} acts.`)}${D.favVenue ? " " + L(`Je stamkroeg: ${esc(D.favVenue[0])}.`, `Your local: ${esc(D.favVenue[0])}.`) : ""}</p>` : ""}` });
     } else {
+      S.push({ dur: 6000, cls: "yellow", html: () => `<div class="k in">${L("Het festival in cijfers", "The festival in numbers")}</div><h2 class="h2">${words(L("Vier dagen club.", "Four days of club."), 150)}</h2><div class="stats"><div class="pop" style="animation-delay:.3s"><b data-c="${D.festHours}">0</b><small>${L("uur live muziek", "hours of live music")}</small></div><div class="pop" style="animation-delay:.55s"><b data-c="${D.shows}">0</b><small>${L("optredens", "shows")}</small></div><div class="pop" style="animation-delay:.8s"><b data-c="${D.topC[1]}">0</b><small>${D.topC[0] === "UK" ? L("bands uit het VK", "bands from the UK") : L("bands uit ", "bands from ") + (W.country ? W.country(D.topC[0]) : D.topC[0])}</small></div><div class="pop" style="animation-delay:1.05s"><b>${D.lastNote || "04:00"}</b><small>${L("laatste noot, zaterdagnacht", "last note, Saturday night")}</small></div></div>`, after: el => el.querySelectorAll("[data-c]").forEach((b, i) => setTimeout(() => counter(b, +b.dataset.c, 1300), 300 + i * 250)) });
       S.push({ dur: 5600, cls: "pink", html: () => `${hearts(16, ["#fff", "#ffd23f"])}<div class="k in">${L("De sound van 2026", "The sound of 2026")}</div><div class="chips">${D.festGenres.map(([g], i) => `<b class="pop" style="animation-delay:${0.3 + i * 0.3}s;color:#ff3d9a">${esc(g)}</b>`).join("")}</div><p class="rw-p in" style="animation-delay:1.6s">${L("Volgend jaar maak je je eigen lijst met de app. Dan is deze rewind helemaal van jou.", "Next year, make your own list in the app. Then this rewind is all yours.")}</p>` });
     }
-    /* 9. wapperman */
-    if ((D.prof && D.prof.games) || D.best > 0) {
-      S.push({ dur: 5600, cls: "yellow wm", html: () => `<div class="k in">Wapperman</div><canvas width="420" height="520"></canvas><h2 class="h2">${words(L(`${fmt(D.best)} punten record.`, `${fmt(D.best)} points high score.`), 300)}</h2><p class="rw-p in" style="animation-delay:1.2s">${L(`${D.prof.games || 1}× gespeeld · ${(D.prof.crate || []).length} bands in je platenkast · skin: ${esc(window.WappermanGame && WappermanGame.skinName ? WappermanGame.skinName() : "Klassiek")}`, `${D.prof.games || 1} games · ${(D.prof.crate || []).length} bands in your crate · skin: ${esc(window.WappermanGame && WappermanGame.skinName ? WappermanGame.skinName() : "Classic")}`)}</p>`, after: el => { const cv = el.querySelector("canvas"); if (!cv || !window.WappermanGame || !WappermanGame.preview) { cv && cv.remove(); return; } const t0 = performance.now(); const loop = now => { if (!cv.isConnected) return; try { WappermanGame.preview(cv, (now - t0) / 1000 * 1.4, 140, 175, 0.95); } catch (e) { return; } if (!reduced) requestAnimationFrame(loop); }; requestAnimationFrame(loop); } });
+    /* 8b. de knop draait: een band die je (nog) niet zag, elke keer anders */
+    const pool = D.bands.filter(n => !mineSet.has(n)), pick = pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+    if (pick) {
+      const pa = D.all.find(a => a.name === pick) || {}, ctry = pa.country ? (W.country ? W.country(pa.country) : pa.country) : "", gen = (pa.genres || []).filter(g => g !== "extra").slice(0, 2).join(" · ");
+      D.pick = pick;
+      S.push({ dur: 6200, cls: "ink", html: () => `<div class="rdial pop">${dialSvg("#fff", "#ff3d9a")}</div><div class="k in">${D.has ? L("De knop draait nog één keer…", "One last turn of the dial…") : L("Draai aan de knop…", "Turn the dial…")}</div><h2 class="h2">${words(D.has ? L("Deze miste je nog:", "The one that got away:") : L("Jouw ontdekking:", "Your discovery:"), 150)}</h2><div class="roul"><b>…</b></div><p class="rw-p reveal">${esc([ctry, gen].filter(Boolean).join(" — "))}${ctry || gen ? "<br>" : ""}${L("Zet ’m op voor de terugweg.", "Put them on for the ride home.")}</p>`, after: el => {
+        const b = el.querySelector(".roul b"), dl = el.querySelector(".rdial svg"); let d = 45, n = 0, rot = 0;
+        const spin = () => { if (!b.isConnected) return; if (d > 340 || reduced) { b.textContent = pick; b.classList.add("land"); el.querySelector(".reveal").classList.add("on"); if (dl) dl.style.transform = `rotate(${rot + 20}deg)`; return; }
+          b.textContent = pool[(n++ * 7 + Math.floor(Math.random() * pool.length)) % pool.length]; rot += 37; if (dl) dl.style.transform = `rotate(${rot}deg)`; d *= 1.13; setTimeout(spin, d); };
+        setTimeout(spin, 500); } });
+    }
+    /* 9. wapperman (of een uitnodiging als je nog niet speelde) */
+    if (!D.played) {
+      S.push({ dur: 5600, cls: "yellow rw-wm", html: () => { const t = (D.top || [])[0]; return `<div class="k in">Wapperman</div><canvas width="420" height="520"></canvas><h2 class="h2">${t ? words(L(`${t.name} staat bovenaan met ${fmt(t.score)} punten.`, `${t.name} tops the board with ${fmt(t.score)} points.`), 300) : words(L("Het scorebord staat nog open.", "The leaderboard is still open."), 300)}</h2><p class="rw-p in" style="animation-delay:1.3s">${L("Je hebt nog geen potje gespeeld. Wapperman blijft gewoon in de app: pak zoveel mogelijk bands en kom in de top 10.", "You haven't played yet. Wapperman stays in the app: catch as many bands as you can and make the top 10.")}</p>`; }, after: el => wmAnim(el) });
+    }
+    if (D.played) {
+      S.push({ dur: 5600, cls: "yellow rw-wm", html: () => `<div class="k in">Wapperman</div><canvas width="420" height="520"></canvas><h2 class="h2">${words(L(`${fmt(D.best)} punten record.`, `${fmt(D.best)} points high score.`), 300)}</h2><p class="rw-p in" style="animation-delay:1.2s">${L(`${D.prof.games || 1}× gespeeld · ${(D.prof.crate || []).length} bands in je platenkast · skin: ${esc(window.WappermanGame && WappermanGame.skinName ? WappermanGame.skinName() : "Klassiek")}`, `${D.prof.games || 1} games · ${(D.prof.crate || []).length} bands in your crate · skin: ${esc(window.WappermanGame && WappermanGame.skinName ? WappermanGame.skinName() : "Classic")}`)}</p>${rankTxt()}`, after: el => wmAnim(el) });
     }
     /* 10. bedankt (aftiteling) */
-    S.push({ dur: 7600, cls: "ink", html: () => `<div class="cred"><small>Thanks to</small>${["Everyone", "All the bands", "All the venues", "Every crew member", "Every volunteer", "You"].map(x => `<div>${x}</div>`).join("")}<small>${L("Op de podia van", "On the stages of")}</small>${D.venues.map(v => `<div>${esc(v)}</div>`).join("")}</div><div style="position:relative;z-index:2;background:linear-gradient(#0b0b14 70%,rgba(11,11,20,0));padding-bottom:30px"><div class="k in">Thanks to everyone</div><h2 class="h2">${words("Thanks for supporting live music.", 200, 110)}</h2></div>` });
+    S.push({ dur: 7600, cls: "ink", html: () => `<div class="cred"><small>Thanks to</small>${["Everyone", "All the bands", "All the venues", "Every crew member", "Every volunteer", "You"].map(x => `<div>${x}</div>`).join("")}<small>${L("Op de podia van", "On the stages of")}</small>${D.venues.map(v => `<div>${esc(v)}</div>`).join("")}</div><div style="position:relative;z-index:2;background:linear-gradient(rgba(11,11,20,0),#0b0b14 40px,#0b0b14 calc(100% - 44px),rgba(11,11,20,0));padding:40px 0 50px;margin:-40px 0 0"><div class="k in">Thanks to everyone</div><h2 class="h2">${words("Thanks for supporting live music.", 200, 110)}</h2></div>` });
     /* 11. it was a blast */
     S.push({ dur: 4400, cls: "pink", html: () => `${hearts(34, ["#fff", "#ffd23f", "#1717ff", "#141414"], 0)}<h1 class="rw-h" style="font-size:clamp(70px,24vw,150px);color:#1717ff!important">${words("It was", 100)}<br>${words("a blast.", 400)}</h1>` });
     /* 12. outro + tickets */
-    S.push({ dur: 0, cls: "blue", html: () => { const now = W.now ? W.now() : new Date(), open = now >= SALE; return `${dialSvg("#fff", "#ffd23f")}<div class="k in">The club was open</div><h1 class="rw-h">${words("This was", 100)}<br>${words("Left of the Dial.", 350)}</h1><p class="rw-p in" style="animation-delay:1s">See you next year!</p><div class="cta in" style="animation-delay:1.4s"><a class="t1${open ? "" : " soon"}" href="${TICKETS}" target="_blank" rel="noopener">${open ? L("Tickets 2027 →", "Tickets 2027 →") : `${L("Tickets 2027", "Tickets 2027")}<small>${L("verkoop start zondag 25 oktober, 10:00", "on sale Sunday 25 October, 10:00")}</small>`}</a><div class="rw-row"><button class="t2" data-rw="replay">↺ ${L("Opnieuw", "Replay")}</button><button class="t2" data-rw="share">${L("Delen", "Share")}</button></div><button class="t2" data-rw="close">${L("Naar de app", "Back to the app")}</button></div>`; } });
+    S.push({ dur: 0, cls: "blue", html: () => { const now = W.now ? W.now() : new Date(), open = now >= SALE; return `${dialSvg("#fff", "#ffd23f")}<div class="k in">The club was open</div><h1 class="rw-h">${words("This was", 100)}<br>${words("Left of the Dial.", 350)}</h1><p class="rw-p in" style="animation-delay:1s">See you next year!</p><div class="cta in" style="animation-delay:1.4s"><a class="t1${open ? "" : " soon"}" href="${TICKETS}" target="_blank" rel="noopener">${open ? L("Tickets 2027 →", "Tickets 2027 →") : `${L("Tickets 2027", "Tickets 2027")}<small>${L("verkoop start zondag 25 oktober, 10:00", "on sale Sunday 25 October, 10:00")}</small>`}</a><div class="rw-row"><button class="t2" data-rw="replay">↺ ${L("Opnieuw", "Replay")}</button><button class="t2" data-rw="share">${L("Delen", "Share")}</button></div>${D.played ? "" : `<button class="t2" data-rw="game">${L("Speel Wapperman", "Play Wapperman")}</button>`}<button class="t2" data-rw="close">${L("Naar de app", "Back to the app")}</button></div>`; } });
     return S;
   }
 
@@ -204,10 +234,10 @@
       g.fillStyle = "#fff"; g.font = `800 44px ${F}`; g.fillText("LEFT OF THE DIAL 2026  ♥  ROTTERDAM", 70, 120);
       g.font = `800 190px ${F}`; g.fillText("REWIND", 64, 340); g.fillText("THE DIAL.", 64, 510);
       g.font = `600 44px ${B}`; g.fillStyle = "#c6d0ff"; g.fillText(D.name ? `${D.name}'s festival` : L("Mijn festival", "My festival"), 70, 600);
-      const st = [[D.myBands.length || D.bands.length, D.has ? L("bands op mijn lijst", "bands on my list") : "bands"], [D.must.length, L("moest ik zien", "must-sees")], [D.myCountries.length || D.countries.length, L("landen", "countries")]];
+      const st = D.has ? [[D.myBands.length, L("bands op mijn lijst", "bands on my list")], [D.must.length, L("moest ik zien", "must-sees")], [D.myCountries.length || D.countries.length, L("landen", "countries")]] : [[D.bands.length, "bands"], [D.venues.length, L("zalen", "venues")], [D.countries.length, L("landen", "countries")]];
       st.forEach(([n, l], i) => { const x = 70 + i * 330; g.fillStyle = "#fff"; g.font = `800 150px ${F}`; g.fillText(String(n), x, 820); g.font = `700 34px ${B}`; g.fillStyle = "#c6d0ff"; g.fillText(l.toUpperCase(), x, 875); });
-      g.fillStyle = "#fff"; g.font = `800 50px ${F}`; g.fillText((D.must.length ? L("MOEST IK ZIEN", "MY MUST-SEES") : L("OP MIJN LIJST", "ON MY LIST")), 70, 1010);
-      (D.must.length ? D.must : D.myBands).slice(0, 7).forEach((n, i) => { g.fillStyle = i % 2 ? "#fff" : "#ffd23f"; g.font = `800 92px ${F}`; let t = n.toUpperCase(); while (g.measureText(t).width > 940 && t.length > 3) t = t.slice(0, -2); g.fillText(t, 70, 1110 + i * 100); });
+      g.fillStyle = "#fff"; g.font = `800 50px ${F}`; g.fillText((D.must.length ? L("MOEST IK ZIEN", "MY MUST-SEES") : D.has ? L("OP MIJN LIJST", "ON MY LIST") : L("MIJN ONTDEKKING", "MY DISCOVERY")), 70, 1010);
+      (D.must.length ? D.must : D.has ? D.myBands : [D.pick].filter(Boolean)).slice(0, 7).forEach((n, i) => { g.fillStyle = i % 2 ? "#fff" : "#ffd23f"; g.font = `800 92px ${F}`; let t = n.toUpperCase(); while (g.measureText(t).width > 940 && t.length > 3) t = t.slice(0, -2); g.fillText(t, 70, 1110 + i * 100); });
       g.fillStyle = "#141414"; g.fillRect(0, 1790, 1080, 130); g.fillStyle = "#fff"; g.font = `800 58px ${F}`; g.fillText("THE CLUB WAS OPEN.", 70, 1872); g.font = `600 30px ${B}`; g.fillStyle = "#c6d0ff"; g.fillText(location.host, 760, 1868);
       c.toBlob(b => res(b), "image/png");
     });
@@ -244,7 +274,8 @@
   }
   function onKey(e) { if (!root) return; if (e.key === "Escape") close(); else if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); show(idx + 1); } else if (e.key === "ArrowLeft") show(idx - 1); }
   function play() {
-    if (root) return; D = data(); S = slides(D); idx = 0;
+    if (root) return; D = data(); curD = D; S = slides(D); idx = 0;
+    try { window.WappermanGame && WappermanGame.top && WappermanGame.top().then(r => { if (r && r.list && r.list.length) D.top = r.list; }).catch(() => {}); } catch (e) {}
     try { localStorage.setItem("lotd-rewind-seen", JSON.stringify(Date.now())); } catch (e) {}
     if (!document.getElementById("rw-css")) { const st = document.createElement("style"); st.id = "rw-css"; st.textContent = CSS; document.head.appendChild(st); }
     root = document.createElement("div"); root.id = "rw"; root.setAttribute("role", "dialog"); root.setAttribute("aria-label", "Rewind the Dial");
@@ -259,7 +290,7 @@
       el.addEventListener("pointerup", e => { clearTimeout(hold); const long = performance.now() - holdT > 300; if (long) { setPaused(false); holdT = 0; return; } holdT = 0; show(idx + (k ? 1 : -1)); });
       el.addEventListener("pointercancel", () => { clearTimeout(hold); setPaused(false); holdT = 0; });
       el.addEventListener("contextmenu", e => e.preventDefault()); });
-    root.addEventListener("click", e => { const b = e.target.closest && e.target.closest("[data-rw]"); if (!b) return; const a = b.dataset.rw; if (a === "replay") { setPaused(false); S = slides(D); show(0); } else if (a === "share") share(); else if (a === "close") close(); });
+    root.addEventListener("click", e => { const b = e.target.closest && e.target.closest("[data-rw]"); if (!b) return; const a = b.dataset.rw; if (a === "replay") { setPaused(false); S = slides(D); show(0); } else if (a === "share") share(); else if (a === "close") close(); else if (a === "game") { close(); location.hash = "#/game"; } });
     root.addEventListener("touchmove", e => { if (e.cancelable) e.preventDefault(); }, { passive: false });
     document.addEventListener("keydown", onKey);
     setPaused(false); show(0); t0 = performance.now(); raf = requestAnimationFrame(tick);
