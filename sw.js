@@ -1,12 +1,12 @@
-const VERSION = "2026-10-25-31";
+const VERSION = "2026-10-25-32";
 const CACHE = `lotd-${VERSION}`;
-const APP_SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-512.png", "./icon-192.png", "./apple-touch-icon.png", "./game.js", "./extras.js", "./theme.css",
+const APP_SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-512.png", "./icon-192.png", "./apple-touch-icon.png", "./game.js", "./extras.js", "./theme.css", "./wrapped.js",
   "./fonts/barlow-latin-400-normal.woff2", "./fonts/barlow-latin-500-normal.woff2", "./fonts/barlow-latin-600-normal.woff2", "./fonts/barlow-latin-700-normal.woff2",
   "./fonts/barlow-condensed-latin-600-normal.woff2", "./fonts/barlow-condensed-latin-700-normal.woff2", "./fonts/barlow-condensed-latin-800-normal.woff2"];
 /* Zuinig met requests: alles uit de cache, nieuwe versies komen binnen via een nieuwe sw.js (VERSION ophogen bij elke deploy).
    Vangnet als VERSION ooit vergeten wordt: code-bestanden ouder dan REVALIDATE worden op de achtergrond ververst. */
 const REVALIDATE = 6 * 3600 * 1000;
-const CODE = /\/(index\.html|game\.js|extras\.js|theme\.css)$/;
+const CODE = /\/(index\.html|game\.js|extras\.js|theme\.css|wrapped\.js)$/;
 
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE)

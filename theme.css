@@ -564,3 +564,14 @@ html body .lay-tog button { width: auto !important; height: 40px !important; pad
 html body .lay-tog button + button { border-left: 1px solid var(--hair) !important; }
 html body .lay-tog button.on { background: var(--ink) !important; color: #fff !important; }
 @media (max-width: 440px) { html body .tt-count { display: none; } }
+
+/* Rewind the Dial: kaartje bovenaan de timetable (vanaf zondag) */
+html body .rw-card { display: flex; align-items: center; gap: 12px; width: calc(100% - 32px); margin: 10px 16px 6px; padding: 12px 12px 12px 12px; border: 0; border-radius: 10px; background: #1717ff; color: #fff; text-align: left; cursor: pointer; font: inherit; overflow: hidden; position: relative; }
+html body .rw-card > span:not(.rw-dial) { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+html body .rw-card b { font: 800 22px/1 "Barlow Condensed", Arial Narrow, sans-serif; text-transform: uppercase; letter-spacing: .02em; }
+html body .rw-card small { font: 600 13px/1.25 "Barlow", Arial, sans-serif; color: #dfe3ff; }
+html body .rw-card em { flex: none; width: 40px; height: 40px; border-radius: 50%; background: #fff; color: #1717ff; display: grid; place-items: center; font-style: normal; font-size: 16px; padding-left: 2px; }
+html body .rw-card .rw-dial { flex: none; width: 40px; height: 40px; border-radius: 50%; border: 3px solid rgba(255,255,255,.55); position: relative; animation: rwCardSpin 6s linear infinite; }
+html body .rw-card .rw-dial::after { content: ""; position: absolute; left: 50%; top: 3px; width: 4px; height: 15px; margin-left: -2px; border-radius: 2px; background: #ff3d9a; }
+@keyframes rwCardSpin { to { transform: rotate(-360deg); } }
+@media (prefers-reduced-motion: reduce) { html body .rw-card .rw-dial { animation: none; } }
