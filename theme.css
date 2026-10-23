@@ -546,3 +546,21 @@ html body .inst-warn { margin: 12px 0 0 !important; padding: 10px 12px; backgrou
 html body main { -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; }
 html body .tt { overflow-x: auto !important; overflow-y: hidden !important; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; touch-action: pan-x pan-y; }
 html body .tt-head .trackh { backface-visibility: hidden; }
+
+/* iPhone/iPad in Safari: de pagina scrollt zelf (Safari-werkbalk kan inklappen), navigatie vast onderin boven de werkbalk */
+html.docscroll, html.docscroll body { height: auto !important; min-height: 100%; overflow: visible !important; }
+html.docscroll body { display: block !important; }
+html.docscroll main { overflow: visible !important; min-height: 100vh; padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)) !important; -webkit-overflow-scrolling: auto; }
+html.docscroll nav#nav { position: fixed !important; left: 0; right: 0; bottom: 0; z-index: 900; }
+html.docscroll .sheet, html.docscroll .wg-ov { overscroll-behavior: contain; }
+html.docscroll.wg-on, html.docscroll.wg-on body { overflow: hidden !important; height: 100% !important; }
+html.docscroll header#app-header { display: flow-root; }
+html.docscroll main#main { display: flow-root; }
+
+/* weergavekeuze Schema | Lijst duidelijker, met tekst (zoals bij favorieten) */
+html body .tt-tools { flex-wrap: wrap !important; row-gap: 8px; overflow-x: visible !important; }
+html body .lay-tog { gap: 0 !important; border: 1px solid var(--hair); border-radius: 6px; overflow: hidden; }
+html body .lay-tog button { width: auto !important; height: 40px !important; padding: 0 9px !important; gap: 5px; border-radius: 0 !important; background: var(--paper) !important; color: var(--muted-ink) !important; font: 600 13.5px var(--font); }
+html body .lay-tog button + button { border-left: 1px solid var(--hair) !important; }
+html body .lay-tog button.on { background: var(--ink) !important; color: #fff !important; }
+@media (max-width: 440px) { html body .tt-count { display: none; } }

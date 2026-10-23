@@ -184,6 +184,7 @@ const leaderboard = (() => {
 .wg-head{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}.wg-head>div{min-width:0}
 .wg-me{flex:none;display:flex;flex-direction:column;align-items:center;gap:1px;margin:0 0 12px;padding:6px 8px 8px;border:1px solid #e2e2e8;border-radius:8px;background:#fff;cursor:pointer;color:#141414;font:800 15px/1.05 "Barlow Condensed",Arial,sans-serif;text-transform:uppercase}
 .wg-me canvas{width:84px;height:108px;box-shadow:none;margin:0}.wg-me small{font:600 10px/1.2 "Barlow",Arial,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#1717ff}
+.wg-home{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:48px;margin:10px 0 0;border:0;border-radius:6px;background:#eef0ff;color:#1717ff;font:700 14.5px "Barlow",Arial,sans-serif;cursor:pointer}
 .wg-stick{position:sticky;bottom:0;margin:0 -4px;padding:10px 4px calc(10px + env(safe-area-inset-bottom,0px));background:linear-gradient(rgba(255,255,255,0),#fff 14px);z-index:2}.wg-stick .wg-btn:last-child{margin-bottom:0}
 .wg-pulse{animation:wgPulse .45s ease}@keyframes wgPulse{40%{transform:scale(1.04)}}
 .wg-how li{align-items:flex-start;font-weight:500;font-size:15px;line-height:1.35}
@@ -626,8 +627,9 @@ const leaderboard = (() => {
       <div class="wg-stats"><div class="hl"><b>${best}</b><small>Record</small></div><div><b>${prof.crate.length}</b><small>${Lg("Platen", "Records")}</small></div><div><b>★${prof.stars || 0}</b><small>${Lg("Sterren", "Stars")}</small></div><div><b>${streakNow()}</b><small>${Lg("Dagen op rij", "Day streak")}</small></div></div>
       ${misHtml()}
       <button class="wg-btn" id="a">${Lg("Spelen", "Play")} →</button>
-      <div class="wg-row"><button class="wg-btn alt" id="b">Top 10</button><button class="wg-btn alt" id="c">${Lg("Platenkast", "Crate")}</button><button class="wg-btn alt" id="d">Skins</button><button class="wg-btn alt" id="e">${Lg("Hoe werkt het?", "How to play")}</button></div>`,
-      () => { on("#a", start); on("#b", () => showTop()); on("#c", showCrate); on("#d", showSkins); on("#e", showHow); on("#f", showSkins); animMe(ov.querySelector(".wg-me canvas")); });
+      <div class="wg-row"><button class="wg-btn alt" id="b">Top 10</button><button class="wg-btn alt" id="c">${Lg("Platenkast", "Crate")}</button><button class="wg-btn alt" id="d">Skins</button><button class="wg-btn alt" id="e">${Lg("Hoe werkt het?", "How to play")}</button></div>
+      <button class="wg-home" id="hm"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>${Lg("Terug naar timetable, kaart en favorieten", "Back to timetable, map and favourites")}</button>`,
+      () => { on("#a", start); on("#b", () => showTop()); on("#c", showCrate); on("#d", showSkins); on("#e", showHow); on("#f", showSkins); on("#hm", goHome); animMe(ov.querySelector(".wg-me canvas")); });
   }
   function showHow() {
     state = "start"; lock = performance.now() + 200;
@@ -701,14 +703,15 @@ const leaderboard = (() => {
       <p class="wg-q" id="qm"></p><div id="sbox"><input id="n" maxlength="16" placeholder="${Lg("Je naam", "Your name")}" autocomplete="off" enterkeyhint="done" aria-label="${Lg("Naam", "Name")}"><button class="wg-btn ink" id="sv" disabled>${Lg("Opslaan in Top 10", "Save to Top 10")}</button></div>
       <button class="wg-btn" id="r">${Lg("Nog een keer", "Play again")} ↻</button>
       <div class="wg-row"><button class="wg-btn alt" id="t">Top 10</button><button class="wg-btn alt" id="sh">${Lg("Deel score", "Share score")}</button></div>
-      <button class="wg-btn alt" id="m">${Lg("Missies, platen & skins", "Missions, crate & skins")}</button>`, () => {
+      <button class="wg-btn alt" id="m">${Lg("Missies, platen & skins", "Missions, crate & skins")}</button>
+      <button class="wg-home" id="hm"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>${Lg("Terug naar timetable, kaart en favorieten", "Back to timetable, map and favourites")}</button>`, () => {
       ov.querySelectorAll(".wg-chip").forEach(c => c.addEventListener("click", () => { if (performance.now() < lock) return; if (typeof openAct === "function") { try { openAct(c.dataset.f); } catch {} } }));
       on("#sh", el => shareScore(el));
       const n = ov.querySelector("#n"), sv = ov.querySelector("#sv"), qm = ov.querySelector("#qm"), box = ov.querySelector("#sbox");
       n.value = ""; sv.disabled = true;
       n.addEventListener("input", () => { sv.disabled = !n.value.trim(); });
       n.addEventListener("keydown", e => { if (e.key === "Enter" && !sv.disabled) sv.click(); });
-      on("#r", start); on("#t", () => showTop()); on("#m", showStart);
+      on("#r", start); on("#t", () => showTop()); on("#m", showStart); on("#hm", goHome);
       on("#sv", async () => {
         const name = n.value.trim().slice(0, 16); if (!name) return; sv.disabled = true;
         const res = await leaderboard.submitScore(name, score); showTop({ name, score }, res);
@@ -798,6 +801,7 @@ const leaderboard = (() => {
     prevOverflow = [document.documentElement.style.overflow, document.body.style.overflow];
     document.documentElement.style.overflow = document.body.style.overflow = "hidden";
     mainEl = document.getElementById("main"); if (mainEl) { prevMain = mainEl.style.overflow; mainEl.style.overflow = "hidden"; }
+    document.documentElement.classList.add("wg-on");
     sprites = [makeSprite(false), makeSprite(true)]; mouseX = null; keyDir = touchDir = 0; active = null; last = 0; x = 0; obstacles = []; pickups = []; tokens = []; particles = []; pops = []; def = 0; stage = 0; banner = null;
     const sndIco = () => { sndEl.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/>${muted ? '<path d="m22 9-6 6M16 9l6 6"/>' : '<path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/>'}</svg>`; sndEl.setAttribute("aria-pressed", String(!muted)); };
     sndIco(); if (document.fonts && document.fonts.load) { try { document.fonts.load(`800 40px ${FONT_D}`); document.fonts.load(`700 16px ${FONT_B}`); } catch {} }
@@ -806,11 +810,12 @@ const leaderboard = (() => {
     root.addEventListener("pointerdown", onDown); root.addEventListener("pointermove", onMove);
     root.addEventListener("touchmove", onTouchMove, { passive: false });
     ["pointerup", "pointercancel", "lostpointercapture"].forEach(t => root.addEventListener(t, onUp));
-    root.querySelector(".wg-x").addEventListener("click", () => { unmount(); location.hash = "#/"; });
+    root.querySelector(".wg-x").addEventListener("click", goHome);
     window.addEventListener("keydown", onKeyDown); window.addEventListener("keyup", onKeyUp);
     document.addEventListener("visibilitychange", onVis); window.addEventListener("hashchange", unmount);
     showStart(); raf = requestAnimationFrame(loop);
   }
+  function goHome() { unmount(); location.hash = "#/"; }
   function unmount() {
     if (!root) return;
     cancelAnimationFrame(raf); ro && ro.disconnect();
@@ -818,6 +823,7 @@ const leaderboard = (() => {
     document.removeEventListener("visibilitychange", onVis); window.removeEventListener("hashchange", unmount);
     document.documentElement.style.overflow = prevOverflow[0]; document.body.style.overflow = prevOverflow[1];
     if (mainEl) { mainEl.style.overflow = prevMain || ""; mainEl = null; }
+    document.documentElement.classList.remove("wg-on");
     if (root) root.removeEventListener("touchmove", onTouchMove);
     root.remove(); root = null; state = "start";
   }
