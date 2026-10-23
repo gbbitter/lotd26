@@ -581,7 +581,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
       return `<div class="row"><div class="lab${(n => n >= 12 ? " long xlong" : n >= 10 ? " long" : "")(Math.max(...v.name.split(/\s+/).map(w => w.length)))}"><i class="dot" style="background:${v.color}"></i><span class="lab-t" lang="nl">${v.name}<small>${(n => L(n === 1 ? "1 optreden" : n + " optredens", n === 1 ? "1 show" : n + " shows"))(list.filter(a => a.venueId === v.id).length)}</small></span></div><div class="track" style="width:${W}px;background-size:${PPH}px 100%">${acts}</div></div>`; }).join("");
     const ooA = list.filter(isOO), ooL = ooA.length ? (Math.min(720, ...ooA.map(a => mins(a.start))) - start) / 60 * PPH : 0, ooW = ooA.length ? (960 - start) / 60 * PPH - ooL : 0;
     const ooBand = ooA.length ? `<div class="oo-band" style="left:${ooL}px;width:${ooW}px"><span>${OO_NAME} · ${ooFree()}</span></div>` : "", ooZone = ooA.length ? `<div class="oo-zone" style="left:calc(var(--labw) + ${ooL}px);width:${ooW}px" aria-hidden="true"></div>` : "";
-    const now = today && f.m >= start && f.m <= end ? `<div class="now" style="left:calc(var(--labw) + ${(f.m - start) / 60 * PPH}px)"></div>` : "";
+    const now = today && f.m >= start && f.m <= end ? `<div class="now" data-s="${start}" data-e="${end}" data-pph="${PPH}" style="left:calc(var(--labw) + ${(f.m - start) / 60 * PPH}px)"></div>` : "";
     /* tijdsbalk staat los boven de timetable en blijft onder de dagknoppen plakken; horizontaal loopt hij mee met de timetable */
     setTimeout(syncHead, 0);
     return segHtml + caption + `<div class="tt-head" aria-hidden="true"><div class="lab"></div><div class="tt-head-track"><div class="trackh" style="width:${W}px">${ticks}${ooBand}</div></div></div><div class="tt-wrap"><div class="tt"><div class="tt-in" style="width:calc(var(--labw) + ${W}px)">${ooZone}${rows}${now}</div></div></div>`;
@@ -1136,6 +1136,24 @@ html.big .row{height:104px}html.big .pill,html.big .checkrow{font-size:15px!impo
   { const th = document.getElementById("theme-css"); if (th) document.head.insertBefore(css, th); else document.head.appendChild(css); }
 
   setInterval(() => { if (route().p === "now" && !openId && !venueOpen && !genreOpen && !sheet) render(true); }, 30000);
+  /* timetable bij de tijd houden: nu-lijn schuift mee, NU-labels kloppen, ook na terugkomen uit de achtergrond */
+  let liveSig = null;
+  function ttTick() {
+    if (document.visibilityState !== "visible" || (route().p !== "tt" && route().p !== "favorites")) return;
+    const f = festNow(), sig = f.ds + "|" + ACTS.filter(a => !a.cancelled && isLive(a)).map(a => a.id).join();
+    const line = document.querySelector("#main .tt .now");
+    if (line) { const st = +line.dataset.s, en = +line.dataset.e, pph = +line.dataset.pph; if (f.m >= st && f.m <= en) line.style.left = `calc(var(--labw) + ${(f.m - st) / 60 * pph}px)`; else if (liveSig !== null) liveSig = "";
+    }
+    if (liveSig === null) { liveSig = sig; return; }
+    if (sig === liveSig) return;
+    liveSig = sig;
+    if (openId || venueOpen || genreOpen || sheet || document.getElementById("rw")) return;
+    const tt = document.querySelector("#main .tt"), mainEl = document.getElementById("main"), sx = tt ? tt.scrollLeft : 0, sy = mainEl ? mainEl.scrollTop : 0, wy = window.scrollY;
+    render(true);
+    const tt2 = document.querySelector("#main .tt"); if (tt2) tt2.scrollLeft = sx; if (mainEl) mainEl.scrollTop = sy; if (wy) window.scrollTo(0, wy); setTimeout(syncHead, 0);
+  }
+  setInterval(ttTick, 20000); setTimeout(ttTick, 1500);
+  document.addEventListener("visibilitychange", () => setTimeout(ttTick, 50)); window.addEventListener("pageshow", () => setTimeout(ttTick, 50)); window.addEventListener("focus", () => setTimeout(ttTick, 50));
   /* line-up: elke 15 min terwijl de app open is, en bij terugkeren hooguit eens per 5 min */
   let lastLineup = Date.now();
   const lineupTick = force => { if (document.visibilityState !== "visible") return; if (!force && Date.now() - lastLineup < 3e5) return; lastLineup = Date.now(); checkLineup(); };
