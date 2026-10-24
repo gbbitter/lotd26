@@ -418,7 +418,7 @@
         ccs.forEach((c, i) => {
           const p = CC[c], k = clamp((t - .4 - i * .12) / 1.2, 0, 1); if (!k || c === "NL") return;
           const A = v3(p[0], p[1]), B = v3(RTM[0], RTM[1]); g.strokeStyle = i % 2 ? YEL : PINK; g.lineWidth = 2; g.beginPath(); let on = false;
-          for (let s = 0; s <= 30 * k; s++) { const f = s / 30, m = [A[0] + (B[0] - A[0]) * f, A[1] + (B[1] - A[1]) * f, A[2] + (B[2] - A[2]) * f], n = Math.hypot(...m) || 1, lift = 1 + Math.sin(f * Math.PI) * .18, q = back(m.map(v => v / n)), [x, y, cz] = pr(q[0], q[1]); const X = cx + (x - cx) * lift, Y = cy + (y - cy) * lift; if (cz > -.05) { on ? g.lineTo(X, Y) : g.moveTo(X, Y); on = true; } else on = false; }
+          for (let s = 0; s <= 30 * k; s++) { const f = s / 30, m = [A[0] + (B[0] - A[0]) * f, A[1] + (B[1] - A[1]) * f, A[2] + (B[2] - A[2]) * f], n = Math.hypot(...m) || 1, q = back(m.map(v => v / n)), [x, y, cz] = pr(q[0], q[1]), lift = 1 + Math.sin(f * Math.PI) * .14 * clamp(cz, 0, 1), X = cx + (x - cx) * lift, Y = cy + (y - cy) * lift; if (cz > .02) { on ? g.lineTo(X, Y) : g.moveTo(X, Y); on = true; } else on = false; }
           g.stroke();
         });
         ccs.forEach((c, i) => { const p = CC[c], [x, y, z] = pr(p[0], p[1]); if (z <= 0) return; const pu = (t * 1.4 + i * .3) % 1; g.strokeStyle = `rgba(255,255,255,${1 - pu})`; g.lineWidth = 2; g.beginPath(); g.arc(x, y, 4 + pu * 14, 0, 7); g.stroke(); g.fillStyle = "#fff"; g.beginPath(); g.arc(x, y, 3.5, 0, 7); g.fill(); });
