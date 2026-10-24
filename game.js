@@ -159,6 +159,12 @@ const leaderboard = (() => {
 .wg-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.wg-row .wg-btn{margin:0 0 8px}
 .wg input{display:block;width:100%;min-height:54px;margin:0 0 8px;padding:0 14px;border:1px solid #d6d6dd;font:600 17px "Barlow",Arial,sans-serif;border-radius:6px;text-align:center;background:#fff;color:#141414;box-sizing:border-box}
 .wg input:focus{outline:2px solid #1717ff;border-color:#1717ff}
+.wg-name{display:flex;align-items:center;gap:10px;margin:0 0 14px;padding:10px 12px;border:1px solid #e2e2e8;border-radius:8px;background:#fff}
+.wg-name label{flex:1;min-width:0;font:800 17px/1.05 "Barlow Condensed",Arial,sans-serif;text-transform:uppercase;letter-spacing:.02em}
+.wg-name label small{display:block;margin-top:3px;font:500 12px/1.25 "Barlow",Arial,sans-serif;text-transform:none;letter-spacing:0;color:#5e5e66}
+.wg-name span{flex:0 0 52%;position:relative}
+.wg .wg-name input{min-height:46px;margin:0;text-align:left;font-size:16px}
+.wg-name em{position:absolute;right:10px;top:50%;transform:translateY(-50%);font:700 13px "Barlow",Arial,sans-serif;font-style:normal;color:#0a8a3a;pointer-events:none}
 .wg ol{list-style:none;margin:0 0 16px;padding:0;text-align:left}
 .wg li{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid #ececf1;font-size:17px;font-weight:600}
 .wg-top li i{font:800 22px/1 "Barlow Condensed",Arial,sans-serif;font-style:normal;width:26px;color:#a0a0aa}
@@ -626,12 +632,20 @@ const leaderboard = (() => {
     show(`<div class="wg-head"><div><div class="wg-kick">Left of the Dial · ${Lg("het spel", "the game")}</div><h2>Wapper<br>man<em>.</em></h2></div><button class="wg-me" id="f" aria-label="${Lg("Jouw skin", "Your skin")}: ${Lg(me.nl, me.en)}"><canvas></canvas><b>${Lg(me.nl, me.en)}</b><small>${Lg("Wijzig", "Change")}</small></button></div>
       <p>${Lg("Wapper, ontwijk de logo's en verzamel onderweg bands van het festival.", "Flap, dodge the logos and collect festival bands along the way.")}</p>
       <div class="wg-stats"><div class="hl"><b>${best}</b><small>Record</small></div><div><b>${prof.crate.length}</b><small>${Lg("Platen", "Records")}</small></div><div><b>★${prof.stars || 0}</b><small>${Lg("Sterren", "Stars")}</small></div><div><b>${streakNow()}</b><small>${Lg("Dagen op rij", "Day streak")}</small></div></div>
+      <div class="wg-name"><label for="nm">${Lg("Jouw naam", "Your name")}<small>${Lg("Voor de Top 10 en je Rewind van morgen", "For the Top 10 and tomorrow's Rewind")}</small></label><span><input id="nm" maxlength="16" value="${esc(myName())}" placeholder="${Lg("Je naam", "Your name")}" autocomplete="off" enterkeyhint="done" aria-label="${Lg("Jouw naam", "Your name")}"><em id="nmok"></em></span></div>
       ${misHtml()}
       <button class="wg-btn" id="a">${Lg("Spelen", "Play")} →</button>
       <div class="wg-row"><button class="wg-btn alt" id="b">Top 10</button><button class="wg-btn alt" id="c">${Lg("Platenkast", "Crate")}</button><button class="wg-btn alt" id="d">Skins</button><button class="wg-btn alt" id="e">${Lg("Hoe werkt het?", "How to play")}</button></div>
       <button class="wg-home" id="hm"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>${Lg("Terug naar timetable, kaart en favorieten", "Back to timetable, map and favourites")}</button>`,
-      () => { on("#a", start); on("#b", () => showTop()); on("#c", showCrate); on("#d", showSkins); on("#e", showHow); on("#f", showSkins); on("#hm", goHome); animMe(ov.querySelector(".wg-me canvas")); });
+      () => { on("#a", start); on("#b", () => showTop()); on("#c", showCrate); on("#d", showSkins); on("#e", showHow); on("#f", showSkins); on("#hm", goHome); animMe(ov.querySelector(".wg-me canvas"));
+        const nm = ov.querySelector("#nm"), ok = ov.querySelector("#nmok"); let tm = 0;
+        const save = () => { const v = nm.value.trim().slice(0, 16); try { if (v) localStorage.setItem("lotd-wapperman-name", v); else localStorage.removeItem("lotd-wapperman-name"); } catch {} ok.textContent = v ? "✓" : ""; };
+        nm.addEventListener("input", () => { ok.textContent = ""; clearTimeout(tm); tm = setTimeout(save, 500); });
+        nm.addEventListener("change", save); nm.addEventListener("blur", save);
+        nm.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); save(); nm.blur(); } });
+        if (myName()) ok.textContent = "✓"; });
   }
+  function myName() { try { return (localStorage.getItem("lotd-wapperman-name") || "").trim().slice(0, 16); } catch { return ""; } }
   function showHow() {
     state = "start"; lock = performance.now() + 200;
     const row = (ic, t, d) => `<li>${ICON[ic]}<span><b>${t}</b>${d}</span></li>`;
@@ -709,7 +723,7 @@ const leaderboard = (() => {
       ov.querySelectorAll(".wg-chip").forEach(c => c.addEventListener("click", () => { if (performance.now() < lock) return; if (typeof openAct === "function") { try { openAct(c.dataset.f); } catch {} } }));
       on("#sh", el => shareScore(el));
       const n = ov.querySelector("#n"), sv = ov.querySelector("#sv"), qm = ov.querySelector("#qm"), box = ov.querySelector("#sbox");
-      n.value = ""; sv.disabled = true;
+      n.value = myName(); sv.disabled = !n.value.trim();
       n.addEventListener("input", () => { sv.disabled = !n.value.trim(); });
       n.addEventListener("keydown", e => { if (e.key === "Enter" && !sv.disabled) sv.click(); });
       on("#r", start); on("#t", () => showTop()); on("#m", showStart); on("#hm", goHome);
