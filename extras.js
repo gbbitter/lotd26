@@ -634,7 +634,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
   }
 
   /* gegevens voor Rewind the Dial (wrapped.js) */
-  window.__lotdWrap = { route: () => planRoute(), walk: (a, b) => walk(a, b), isStar: id => isStar(id), isGreen: id => isGreen(id), country: c => c.split("/").map(x => t((CTRY[x] || [x])[0])).join(" / "), base: n => baseName(n), now: () => getNow(), lang: () => lang };
+  window.__lotdWrap = { route: () => planRoute(), walk: (a, b) => walk(a, b), isStar: id => isStar(id), isGreen: id => isGreen(id), country: c => c.split("/").map(x => t((CTRY[x] || [x])[0])).join(" / "), base: n => baseName(n), coord: n => coordOf(n) || null, allCoords: () => Object.assign({}, coords), now: () => getNow(), lang: () => lang };
   /* Rewind the Dial: vanaf zondag 25 oktober 08:00 (of ?wrapped=1), script wordt pas dan geladen */
   const REWIND_FROM = new Date("2026-10-25T08:00:00+01:00");
   const rewindForce = /[?&]wrapped=1/.test(location.search);
