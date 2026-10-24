@@ -145,7 +145,7 @@
 @keyframes rwGlx{0%{clip-path:inset(12% 0 58% 0);transform:translate(-14px,0)}20%{clip-path:inset(46% 0 22% 0);transform:translate(12px,0)}40%{clip-path:inset(0 0 80% 0);transform:translate(-8px,0)}60%{clip-path:inset(68% 0 4% 0);transform:translate(6px,0)}80%{clip-path:inset(20% 0 40% 0);transform:translate(-3px,0)}100%{clip-path:inset(0);transform:none}}
 #rw .sl{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:calc(84px + env(safe-area-inset-top,0px)) 24px calc(40px + env(safe-area-inset-bottom,0px));overflow:hidden}
 #rw .sl.bottom{justify-content:flex-end;padding-bottom:calc(48px + env(safe-area-inset-bottom,0px))}
-#rw .sl.topal{justify-content:flex-start}
+#rw .sl.topal{justify-content:flex-start;padding-top:calc(16vh + env(safe-area-inset-top,0px))}
 #rw.lite .sl{color:#141414}
 #rw .k{font:800 13px/1 ${F};letter-spacing:.18em;text-transform:uppercase;opacity:.9;margin-bottom:12px}
 #rw .sl .rw-h,#rw .sl .h2{color:inherit!important}
@@ -366,7 +366,7 @@
     if (D.has) {
       /* 5. jouw sound: spectrum-analyser op 128 bpm */
       const gs = D.genres.length ? D.genres : D.festGenres, top = gs[0] ? gs[0][0] : "indie", share = gs[0] ? Math.round(gs[0][1] / Math.max(1, D.mine.length) * 100) : 0;
-      S.push({ dur: 6000, bg: YEL, lite: true, html: () => `<div class="k in">${L("Jouw sound van 2026", "Your sound of 2026")}</div><span class="gen pop" style="animation-delay:.2s">${esc(top)}</span><p class="rw-p in" style="animation-delay:.9s">${L(`${share}% van jouw acts. Daarna:`, `${share}% of your acts. Followed by:`)}</p><div class="chips">${gs.slice(1, 5).map(([gn], i) => `<b class="pop" style="animation-delay:${1.2 + i * .25}s;background:#141414;color:${YEL}">${esc(gn)}</b>`).join("")}</div>`,
+      S.push({ dur: 6000, bg: YEL, lite: true, cls: "topal", html: () => `<div class="k in">${L("Jouw sound van 2026", "Your sound of 2026")}</div><span class="pop" style="display:block;animation-delay:.2s"><span class="gen">${esc(top)}</span></span><p class="rw-p in" style="animation-delay:.9s">${L(`${share}% van jouw acts. Daarna:`, `${share}% of your acts. Followed by:`)}</p><div class="chips">${gs.slice(1, 5).map(([gn], i) => `<b class="pop" style="animation-delay:${1.2 + i * .25}s;background:#141414;color:${YEL}">${esc(gn)}</b>`).join("")}</div>`,
         fx: (g, t, w, h, st) => { const n = 28, bw = w / n, base = h, beat = Math.pow(1 - ((t * 2.133) % 1), 3);
           if (!st.ph) st.ph = Array.from({ length: n }, () => rnd(0, 6));
           for (let i = 0; i < n; i++) { const f = i / n, v = (.25 + .55 * Math.abs(Math.sin(t * (2 + f * 5) + st.ph[i])) * (1 - f * .5) + beat * (1 - f) * .45) * clamp(t * 1.5, 0, 1), bh = v * h * .42;
