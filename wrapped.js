@@ -22,7 +22,7 @@
   const rnd = (a, b) => a + Math.random() * (b - a);
   const hhmm = m => { m = ((m % 1440) + 1440) % 1440; return String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0"); };
   const F = '"Barlow Condensed","Arial Narrow",Arial,sans-serif', FB = '"Barlow",Arial,sans-serif', FM = '"DM Mono",ui-monospace,Menlo,Consolas,monospace';
-  const BLUE = "#1717ff", PINK = "#ff3d9a", YEL = "#ffd23f", INK = "#0b0b14", CYAN = "#5cf";
+  const BLUE = "#1717ff", PINK = "#ff3d9a", YEL = "#ffd23f", INK = "#0b0b14", CYAN = "#55ccff";
 
   /* ---------- gegevens ---------- */
   const HEAVY = /punk|post-punk|noise|hardcore|garage|metal|grunge|thrash|sludge|doom|stoner/;
@@ -443,14 +443,21 @@
           if (!landed) noise(g, w, h, .22); else waves(g, w, h, t, cx, cy, "255,210,63", 6, 50);
           particles(g, st, dt); } });
     }
-    /* 12. Wapperman */
+    /* 12. Wapperman: de officiële Wapperman op het podium, met bewegende lichtbundels */
+    const wmFx = confettiAt => (g, t, w, h, st) => { const dt = stepT(st, t);
+      const im = WMIMG; if (im && im.complete && im.naturalWidth) { const iw = im.naturalWidth, ih = im.naturalHeight, k = 1.1 - .1 * ease(t / 6.5), sc = Math.max(w / iw, h * .74 / ih) * k, dw = iw * sc, dh = ih * sc, x0 = clamp(w * .55 - dw * .72, w - dw, 0), y0 = 64 - (dh - h * .74 * 1) * .3; g.drawImage(im, x0, y0, dw, dh); const gt = g.createLinearGradient(0, y0, 0, y0 + 60); gt.addColorStop(0, "#05050f"); gt.addColorStop(1, "rgba(5,5,15,0)"); g.fillStyle = gt; g.fillRect(0, 0, w, y0 + 60); const gbm = g.createLinearGradient(0, y0 + dh - 180, 0, y0 + dh); gbm.addColorStop(0, "rgba(5,5,15,0)"); gbm.addColorStop(1, "#05050f"); g.fillStyle = gbm; g.fillRect(0, y0 + dh - 180, w, 181); }
+      g.save(); g.globalCompositeOperation = "lighter";
+      [[CYAN, .15, 1.1], [BLUE, .4, .8], ["#33ff66", .65, 1.3], [PINK, .85, .9], [BLUE, .95, 1.6]].forEach(([c, x, sp], i) => { const a = Math.sin(t * sp + i * 1.7) * .55, X = w * x, L = h * 1.1; g.save(); g.translate(X, -10); g.rotate(a); const gr = g.createLinearGradient(0, 0, 0, L); gr.addColorStop(0, c + "55"); gr.addColorStop(1, c + "00"); g.fillStyle = gr; g.beginPath(); g.moveTo(-4, 0); g.lineTo(4, 0); g.lineTo(L * .14, L); g.lineTo(-L * .14, L); g.closePath(); g.fill(); g.restore(); });
+      if (!st.b) st.b = Array.from({ length: 26 }, (_, i) => ({ x: rnd(0, 1), y: rnd(0, .7), r: rnd(3, 9), c: [CYAN, "#3f6", "#f93", PINK, "#fff"][i % 5], ph: rnd(0, 6) }));
+      st.b.forEach(o => { const a = .25 + .35 * Math.max(0, Math.sin(t * 3 + o.ph)); g.fillStyle = o.c; g.globalAlpha = a; g.beginPath(); g.arc(o.x * w, o.y * h, o.r, 0, 7); g.fill(); });
+      g.restore(); g.globalAlpha = 1;
+      const gb = g.createLinearGradient(0, h * .45, 0, h); gb.addColorStop(0, "rgba(5,5,15,0)"); gb.addColorStop(.55, "rgba(5,5,15,.88)"); gb.addColorStop(1, "rgba(5,5,15,.96)"); g.fillStyle = gb; g.fillRect(0, h * .45, w, h * .55);
+      if (confettiAt && !st.c && t > confettiAt) { st.c = 1; confetti(st, w, 140); FX.shake = 8; FX.flash = .5; }
+      particles(g, st, dt); };
     if (!D.played) {
-      S.push({ dur: 5800, bg: YEL, lite: true, cls: "rw-wm", html: () => { const tp = (D.top || [])[0]; return `<div class="k in">Wapperman</div><canvas width="420" height="520"></canvas><h2 class="h2">${tp ? words(L(`${tp.name} staat bovenaan met ${fmt(tp.score)} punten.`, `${tp.name} tops the board with ${fmt(tp.score)} points.`), 300) : words(L("Het scorebord staat nog open.", "The leaderboard is still open."), 300)}</h2><p class="rw-p in" style="animation-delay:1.3s">${L("Je hebt nog geen potje gespeeld. Wapperman blijft gewoon in de app: pak zoveel mogelijk bands en kom in de top 10.", "You haven't played yet. Wapperman stays in the app: catch as many bands as you can and make the top 10.")}</p>`; }, after: el => wmAnim(el),
-        fx: (g, t, w, h, st) => { if (!st.r) st.r = Array.from({ length: 9 }, (_, i) => ({ x: rnd(0, w), y: rnd(-h, 0), v: rnd(60, 140), r: rnd(22, 40), a: rnd(0, 6), c: [PINK, BLUE, "#fff"][i % 3] })); const dt = stepT(st, t);
-          st.r.forEach(o => { o.y += o.v * dt; o.a += dt * 3; if (o.y > h + 50) { o.y = -50; o.x = rnd(0, w); } g.save(); g.translate(o.x, o.y); g.rotate(o.a); g.globalAlpha = .55; g.fillStyle = "#141414"; g.beginPath(); g.arc(0, 0, o.r, 0, 7); g.fill(); g.strokeStyle = "rgba(255,255,255,.18)"; g.lineWidth = 1; for (let k = .45; k < .95; k += .12) { g.beginPath(); g.arc(0, 0, o.r * k, 0, 7); g.stroke(); } g.fillStyle = o.c; g.beginPath(); g.arc(0, 0, o.r * .32, 0, 7); g.fill(); g.fillStyle = "#141414"; g.fillRect(-o.r * .3, -1.5, o.r * .3, 3); g.restore(); }); } });
+      S.push({ dur: 6200, bg: "#05050f", cls: "bottom", html: () => { const tp = (D.top || [])[0]; return `<div class="shadow"><div class="k in">${L("De officiële Wapperman", "The official Wapperman")}</div><h2 class="h2">${tp ? words(L(`${tp.name} staat bovenaan met ${fmt(tp.score)} punten.`, `${tp.name} tops the board with ${fmt(tp.score)} points.`), 300) : words(L("Het scorebord staat nog open.", "The leaderboard is still open."), 300)}</h2><p class="rw-p in" style="animation-delay:1.3s">${L("Je hebt nog geen potje gespeeld. Wapperman blijft gewoon in de app: pak zoveel mogelijk bands en kom in de top 10.", "You haven't played yet. Wapperman stays in the app: catch as many bands as you can and make the top 10.")}</p></div>`; }, fx: wmFx(0) });
     } else {
-      S.push({ dur: 6000, bg: YEL, lite: true, cls: "rw-wm", html: () => `<div class="k in">Wapperman</div><canvas width="420" height="520"></canvas><h2 class="h2"><span data-c="${D.best}">0</span> ${L("punten record.", "points high score.")}</h2><p class="rw-p in" style="animation-delay:1.2s">${L(`${D.prof.games || 1}× gespeeld · ${(D.prof.crate || []).length} bands in je platenkast · skin: ${esc(window.WappermanGame && WappermanGame.skinName ? WappermanGame.skinName() : "Klassiek")}.`, `${D.prof.games || 1} games · ${(D.prof.crate || []).length} bands in your crate · skin: ${esc(window.WappermanGame && WappermanGame.skinName ? WappermanGame.skinName() : "Classic")}.`)}${rankTxt(D)}</p>`, after: el => { wmAnim(el); countAll(el, 300, 0, 1600); },
-        fx: (g, t, w, h, st) => { const dt = stepT(st, t); if (!st.c && t > 1.8) { st.c = 1; confetti(st, w, 140); FX.shake = 8; } particles(g, st, dt); } });
+      S.push({ dur: 6400, bg: "#05050f", cls: "bottom", html: () => `<div class="shadow"><div class="k in">Wapperman</div><h2 class="h2"><span data-c="${D.best}">0</span> ${L("punten record.", "points high score.")}</h2><p class="rw-p in" style="animation-delay:1.2s">${L(`${D.prof.games || 1}× gespeeld · ${(D.prof.crate || []).length} bands in je platenkast · skin: ${esc(window.WappermanGame && WappermanGame.skinName ? WappermanGame.skinName() : "Klassiek")}.`, `${D.prof.games || 1} games · ${(D.prof.crate || []).length} bands in your crate · skin: ${esc(window.WappermanGame && WappermanGame.skinName ? WappermanGame.skinName() : "Classic")}.`)}${rankTxt(D)}</p></div>`, after: el => countAll(el, 300, 0, 1600), fx: wmFx(1.8) });
     }
     /* 13. bedankt: aftiteling over een sterrenhemel */
     const cred = { dur: 16000, bg: INK, after: el => { const c = el.querySelector(".cred"); if (!c) return; const H = c.offsetHeight, V = el.offsetHeight, sec = 8 * (H + V) / Math.max(1, H); c.style.setProperty("--sh", V + "px"); c.style.animationDuration = sec + "s"; cred.dur = Math.round(sec * 1000) + 400; },
@@ -511,6 +518,7 @@
   }
 
   /* ---------- speler ---------- */
+  let WMIMG = null;
   let root = null, S = [], idx = 0, t0 = 0, elapsed = 0, paused = false, raf = 0, D = null, holdT = 0, prevOverflow = "", cv = null, g = null, dpr = 1, st = {}, clock = 0, glxT = 0;
   function show(i) {
     idx = Math.max(0, Math.min(S.length - 1, i)); elapsed = 0; t0 = performance.now(); st = {}; FX.flashCol = "255,255,255";
@@ -554,7 +562,8 @@
   }
   function onKey(e) { if (!root) return; if (e.key === "Escape") close(); else if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); show(idx + 1); } else if (e.key === "ArrowLeft") show(idx - 1); }
   function play() {
-    if (root) return; D = data(); S = slides(D); idx = 0; clock = 0; FX.flash = 0; FX.shake = 0;
+    if (root) return; if (!WMIMG) { WMIMG = new Image(); WMIMG.src = "wapperman.jpg"; }
+    D = data(); S = slides(D); idx = 0; clock = 0; FX.flash = 0; FX.shake = 0;
     try { window.WappermanGame && WappermanGame.top && WappermanGame.top().then(r => { if (r && r.list && r.list.length) D.top = r.list; }).catch(() => {}); } catch (e) {}
     try { localStorage.setItem("lotd-rewind-seen", JSON.stringify(Date.now())); } catch (e) {}
     if (!document.getElementById("rw-css")) { const s = document.createElement("style"); s.id = "rw-css"; s.textContent = CSS; document.head.appendChild(s); }

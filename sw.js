@@ -1,6 +1,6 @@
-const VERSION = "2026-10-25-40";
+const VERSION = "2026-10-25-41";
 const CACHE = `lotd-${VERSION}`;
-const APP_SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-512.png", "./icon-192.png", "./apple-touch-icon.png", "./game.js", "./extras.js", "./theme.css", "./wrapped.js",
+const APP_SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-512.png", "./icon-192.png", "./apple-touch-icon.png", "./game.js", "./extras.js", "./theme.css", "./wrapped.js", "./wapperman.jpg",
   "./fonts/barlow-latin-400-normal.woff2", "./fonts/barlow-latin-500-normal.woff2", "./fonts/barlow-latin-600-normal.woff2", "./fonts/barlow-latin-700-normal.woff2",
   "./fonts/barlow-condensed-latin-600-normal.woff2", "./fonts/barlow-condensed-latin-700-normal.woff2", "./fonts/barlow-condensed-latin-800-normal.woff2"];
 /* Zuinig met requests: alles uit de cache, nieuwe versies komen binnen via een nieuwe sw.js (VERSION ophogen bij elke deploy).

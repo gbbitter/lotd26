@@ -437,9 +437,10 @@ const leaderboard = (() => {
     cx.closePath(); cx.fill(); cx.shadowBlur = 0;
     if (SK.pat) { cx.save(); cx.clip(); drawPat(SK.pat, px, gy, bh, t); cx.restore(); cx.beginPath(); for (let i = 0; i <= N; i++) { const f = i / N, w = (15 - 4 * f) * s, bx = px + sw(f) - w, by = gy - bh * f; i ? cx.lineTo(bx, by) : cx.moveTo(bx, by); } for (let i = N; i >= 0; i--) { const f = i / N, w = (15 - 4 * f) * s; cx.lineTo(px + sw(f) + w, gy - bh * f); } cx.closePath(); }
     if (outline || SK.pat) { cx.strokeStyle = outline ? INK : "rgba(0,0,0,.35)"; cx.lineWidth = (outline ? 2 : 1.2) * s; cx.stroke(); }
+    if (SK.id === "classic") { const band = (f0, f1, col) => { cx.fillStyle = col; cx.beginPath(); cx.moveTo(px + sw(f0) - (15 - 4 * f0) * s, gy - bh * f0); cx.lineTo(px + sw(f1) - (15 - 4 * f1) * s, gy - bh * f1); cx.lineTo(px + sw(f1) + (15 - 4 * f1) * s, gy - bh * f1); cx.lineTo(px + sw(f0) + (15 - 4 * f0) * s, gy - bh * f0); cx.closePath(); cx.fill(); }; band(.3, .37, "#ffffff"); band(.26, .3, "#f2d23c"); }
     if (SK.vinyl) { cx.strokeStyle = SK.arm; cx.lineWidth = 2 * s; for (const f of [.3, .42]) { cx.beginPath(); cx.moveTo(px + sw(f) - 12 * s, gy - bh * f); cx.lineTo(px + sw(f) + 12 * s, gy - bh * f); cx.stroke(); } }
     if (d < .5) { cx.save(); cx.translate(px + sw(.62), gy - bh * .62); cx.rotate(-Math.PI / 2); cx.fillStyle = SK.body ? (isLight(BODY) ? "#141414" : "#ffffff") : P.paper; cx.font = `800 ${10 * s}px ${FONT_D}`; cx.textAlign = "center"; cx.textBaseline = "middle"; if (SK.pat) { cx.strokeStyle = isLight(BODY) ? "#ffffff" : "#141414"; cx.lineWidth = 3 * s; cx.lineJoin = "round"; cx.strokeText("LEFT OF THE DIAL", 0, 0); } cx.fillText("LEFT OF THE DIAL", 0, 0); cx.restore(); }
-    for (const p of G.arms) { poly(p, 0, outline ? INK : BODY, 17 * s); poly(p, 4, ARM, 12 * s); }
+    for (const p of G.arms) { poly(p, 0, outline ? INK : BODY, 17 * s); poly(p, 4, ARM, 12 * s); if (SK.id === "classic") { const e = p[p.length - 1]; cx.fillStyle = "#141414"; cx.beginPath(); cx.arc(e[0], e[1], 7.5 * s, 0, 7); cx.fill(); } }
     cx.save(); cx.translate(G.hx, G.hy); cx.rotate(d * .7 + Math.sin(t * 6) * .07 * (1 - d));
     if (SK.hat) hatBack(SK, t);
     cx.beginPath(); cx.ellipse(0, 0, 20 * s, 25 * s, 0, 0, 7); cx.fillStyle = "#ffffff"; cx.fill();
