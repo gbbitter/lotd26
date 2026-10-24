@@ -53,7 +53,7 @@
     const dCount = {}; mine.forEach(a => { dCount[a.day] = (dCount[a.day] || 0) + 1; });
     const busiest = Object.entries(dCount).sort((x, y) => y[1] - x[1])[0];
     const vCount = {}; mine.forEach(a => { const n = base(vname(a)); vCount[n] = (vCount[n] || 0) + 1; });
-    const favVenue = Object.entries(vCount).sort((x, y) => y[1] - x[1])[0];
+    const favVenue = Object.entries(vCount).sort((x, y) => y[1] - x[1])[0], favVenues = Object.keys(vCount).length;
     let route = null; try { route = W.route ? W.route() : null; } catch (e) {}
     const chosen = route && route.chosen ? route.chosen.slice() : [];
     let musicMin = 0, walkMin = 0;
@@ -82,7 +82,7 @@
       first, last, route, chosen, musicMin, walkKm: Math.round(walkMin * 80 / 100) / 10, hops, skipped, legs, allPts,
       prof, best, name, has: myBands.length > 0, played: !!(prof.games || best > 0),
       festHours: Math.round(festMin / 60), shows: shows.length, topC, lastNote: isFinite(lastEnd) ? hhmm(lastEnd) : "",
-      late, early, heavy, soft, genreSpread: Object.keys(gCount).length,
+      late, early, heavy, soft, favVenues, genreSpread: Object.keys(gCount).length,
       top: LS.get("lotd-wapperman-top-cache", []) || [], vname, base
     };
     D.arch = archetype(D);
@@ -107,7 +107,7 @@
     if (!D.has) return { k: "free", t: L("De Vrije Vogel", "The Free Spirit"), d: L("Geen lijstje, geen plan. Gewoon gaan waar de muziek je brengt. Respect.", "No list, no plan. Just going wherever the music takes you. Respect."),
       bars: [[L("Spontaniteit", "Spontaneity"), 100], [L("Planning", "Planning"), 3], [L("Vibes", "Vibes"), 100]] };
     const A = [
-      { k: "hop", s: D.hops.length / 9, t: L("De Zaalhopper", "The Venue Hopper"), d: L(`${D.hops.length} zalen, nul stilstand. Jij kent elke stoeprand tussen Rotown en De Doelen.`, `${D.hops.length} venues, zero standing still. You know every kerb between Rotown and De Doelen.`) },
+      { k: "hop", s: D.favVenues / 13, t: L("De Zaalhopper", "The Venue Hopper"), d: L(`Je favorieten stonden in ${D.favVenues} zalen. Jij kent elke stoeprand tussen Rotown en De Doelen.`, `Your favourites played ${D.favVenues} venues. You know every kerb between Rotown and De Doelen.`) },
       { k: "owl", s: D.late / n * 3.2, t: L("De Nachtbraker", "The Night Owl"), d: L(`${D.late} acts na elven. Jouw festival begint pas echt als de rest naar huis gaat.`, `${D.late} acts after 11pm. Your festival only really starts when the rest go home.`) },
       { k: "bird", s: D.early / n * 2.6, t: L("De Vroege Vogel", "The Early Bird"), d: L(`${D.early} acts vóór 19:00. Jij stond al vooraan toen de rest nog moest ontbijten.`, `${D.early} acts before 7pm. You were front row while others were still having breakfast.`) },
       { k: "globe", s: D.myCountries.length / 7, t: L("De Wereldreiziger", "The Globetrotter"), d: L(`Muziek uit ${D.myCountries.length} landen, zonder één keer te vliegen.`, `Music from ${D.myCountries.length} countries without boarding a single plane.`) },
@@ -118,7 +118,7 @@
       { k: "omni", s: D.genreSpread / 11, t: L("De Alleseter", "The Omnivore"), d: L(`${D.genreSpread} genres op je lijst. Hokjes zijn voor anderen.`, `${D.genreSpread} genres on your list. Boxes are for other people.`) }
     ].sort((x, y) => y.s - x.s);
     const a = A[0], pc = v => clamp(Math.round(v), 4, 100);
-    a.bars = [[L("Zaalhoppen", "Venue hopping"), pc(D.hops.length / 12 * 100)], [L("Nachtbrakerij", "Night owling"), pc(D.late / n * 220)], [L("Ontdekkingsdrang", "Discovery drive"), pc(D.myCountries.length / 9 * 100)]];
+    a.bars = [[L("Zaalhoppen", "Venue hopping"), pc(D.favVenues / 18 * 100)], [L("Nachtbrakerij", "Night owling"), pc(D.late / n * 220)], [L("Ontdekkingsdrang", "Discovery drive"), pc(D.myCountries.length / 9 * 100)]];
     return a;
   }
   const icon = (k, z = 44, c = "currentColor") => `<svg width="${z}" height="${z}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k] || ICON.omni}</svg>`;
@@ -199,6 +199,12 @@
 #rw .arch .bar i{grid-column:1/-1;height:8px;border-radius:4px;background:rgba(255,255,255,.18);overflow:hidden;display:block}
 #rw .arch .bar i::after{content:"";display:block;height:100%;width:0;background:linear-gradient(90deg,${PINK},${YEL});border-radius:4px;animation:rwBar 1.2s var(--dl,3.4s) cubic-bezier(.2,.9,.3,1) forwards}
 #rw .arch .no{position:absolute;right:16px;top:16px;font:500 12px ${FM};opacity:.7}
+#rw .wall{margin-top:12px;max-height:34vh;overflow:hidden;-webkit-mask-image:linear-gradient(#000 78%,transparent);mask-image:linear-gradient(#000 78%,transparent)}
+#rw .wall > div{display:flex;flex-wrap:wrap;gap:3px 12px}
+#rw .wall > div.scroll{animation:rwWall 4.8s 3.6s ease-in-out forwards}
+@keyframes rwWall{to{transform:translateY(var(--wy,0))}}
+#rw .wall span{font:800 clamp(17px,5vw,24px)/1.08 ${F};text-transform:uppercase;opacity:0;animation:rwPop .35s cubic-bezier(.2,.9,.3,1.3) forwards}
+#rw .wall span.m{color:${BLUE}}
 #rw .t5{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
 #rw .t5 li{display:flex;align-items:center;gap:14px;opacity:0;animation:rwIn .5s cubic-bezier(.2,.9,.3,1.2) forwards}
 #rw .t5 li em{font:800 clamp(46px,14vw,70px)/.9 ${F};font-style:normal;color:transparent;-webkit-text-stroke:2px #fff;width:1.1ch;flex:none;text-align:center}
@@ -232,6 +238,11 @@
 #rw .cta a,#rw .cta button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;border-radius:8px;border:0;font:800 19px/1 ${F};letter-spacing:.04em;text-transform:uppercase;text-decoration:none;cursor:pointer}
 #rw .cta .t1{background:#fff;color:${BLUE};box-shadow:0 0 0 0 rgba(255,255,255,.6);animation:rwPulseBtn 1.8s 2.2s infinite}
 @keyframes rwPulseBtn{0%{box-shadow:0 0 0 0 rgba(255,255,255,.55)}70%{box-shadow:0 0 0 14px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
+#rw .cta .tix{min-height:84px;flex-direction:column;gap:6px;background:${YEL};color:#141414;font-size:clamp(26px,8vw,34px);animation:rwPulseY 1.4s 2s infinite,rwWiggle 4s 2.5s infinite}
+#rw .cta .tix small{font:700 13px/1 ${FB};letter-spacing:.02em;text-transform:none}
+#rw .cta .tix.soon{background:#fff;color:${BLUE}}
+@keyframes rwPulseY{0%{box-shadow:0 0 0 0 rgba(255,210,63,.75)}70%{box-shadow:0 0 0 18px rgba(255,210,63,0)}100%{box-shadow:0 0 0 0 rgba(255,210,63,0)}}
+@keyframes rwWiggle{0%,86%,100%{transform:none}88%{transform:rotate(-2.5deg) scale(1.03)}91%{transform:rotate(2.5deg) scale(1.03)}94%{transform:rotate(-1.5deg)}97%{transform:rotate(1deg)}}
 #rw .cta .t1.soon{background:${YEL};color:#141414;flex-direction:column;gap:3px}
 #rw .cta .t1 small{font:700 12px/1 ${FB};letter-spacing:.04em;text-transform:none}
 #rw .cta .t2{background:rgba(23,23,255,.88);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);color:#fff;border:2px solid #fff}
@@ -331,12 +342,14 @@
         g.textAlign = "left";
       } });
     if (D.has) {
-      /* 3. jouw lijst: getal + hartjes-explosie */
+      /* 3. jouw lijst: het getal + een muur met al je bands */
       const pct = Math.max(1, Math.round(D.myBands.length / Math.max(1, D.bands.length) * 100));
-      S.push({ dur: 5400, bg: PINK, html: () => `<div class="k in">${L("Jouw lijst", "Your list")}</div><span class="rw-big pop" data-c="${D.myBands.length}">0</span><h2 class="h2">${words(L("bands op je lijst.", "bands on your list."), 500)}</h2><p class="rw-p in" style="animation-delay:1.2s">${L(`Dat is ${pct}% van de hele line-up.`, `That's ${pct}% of the whole line-up.`)} ${D.must.length ? L(`${D.must.length} daarvan moest je écht zien.`, `${D.must.length} of them you just had to see.`) : ""}</p>`, after: el => counter(el.querySelector("[data-c]"), D.myBands.length, 1300),
+      const wall = D.myBands.slice().sort(() => Math.random() - .5).slice(0, 110);
+      S.push({ dur: 8600, bg: PINK, html: () => `<div class="k in">${L("Jouw lijst", "Your list")}</div><span class="rw-big pop" style="font-size:clamp(96px,32vw,180px)" data-c="${D.myBands.length}">0</span><h2 class="h2">${words(L("bands op je lijst.", "bands on your list."), 500)}</h2><p class="rw-p in" style="animation-delay:1.1s">${L(`Dat is ${pct}% van de line-up.`, `That's ${pct}% of the line-up.`)}${D.must.length ? " " + L(`<b style="color:${BLUE}">Blauw</b> = moest je zien (${D.must.length}).`, `<b style="color:${BLUE}">Blue</b> = must-see (${D.must.length}).`) : ""}</p><div class="wall"><div>${wall.map((n, i) => `<span class="${mustSet.has(n) ? "m" : ""}" style="animation-delay:${(1.5 + i * .035).toFixed(2)}s">${esc(n)}</span>`).join("")}</div></div>`,
+        after: el => { counter(el.querySelector("[data-c]"), D.myBands.length, 1300); const w = el.querySelector(".wall"), inner = w && w.firstElementChild; if (inner) setTimeout(() => { const dy = inner.scrollHeight - w.clientHeight; if (dy > 10) { inner.style.setProperty("--wy", -dy + "px"); inner.classList.add("scroll"); } }, 60); },
         fx: (g, t, w, h, st) => { const dt = stepT(st, t);
-          if (!st.b && t > .9) { st.b = 1; FX.shake = 12; burst(st, w * .3, h * .38, 70, { cols: ["#fff", YEL, BLUE, "#141414"], kind: "heart", size: () => rnd(14, 34), sp: 900, up: 250, drag: 1.4, life: 2.6 }); }
-          if (t > 1 && Math.random() < .25) (st.p = st.p || []).push({ x: rnd(0, w), y: h + 30, vx: rnd(-20, 20), vy: rnd(-260, -140), s: rnd(12, 30), c: ["#fff", YEL, BLUE][Math.floor(rnd(0, 3))], life: 4, max: 4, r: rnd(-.4, .4), vr: rnd(-.6, .6), drag: 0, g: 0, kind: "heart" });
+          if (!st.b && t > .9) { st.b = 1; FX.shake = 12; burst(st, w * .3, h * .3, 70, { cols: ["#fff", YEL, BLUE, "#141414"], kind: "heart", size: () => rnd(14, 34), sp: 900, up: 250, drag: 1.4, life: 2.6 }); }
+          if (t > 1 && Math.random() < .2) (st.p = st.p || []).push({ x: rnd(0, w), y: h + 30, vx: rnd(-20, 20), vy: rnd(-260, -140), s: rnd(12, 30), c: ["#fff", YEL, BLUE][Math.floor(rnd(0, 3))], life: 4, max: 4, r: rnd(-.4, .4), vr: rnd(-.6, .6), drag: 0, g: 0, kind: "heart" });
           particles(g, st, dt); } });
     } else {
       S.push({ dur: 6000, bg: YEL, lite: true, html: () => `<div class="k in">${L("Het festival in cijfers", "The festival in numbers")}</div><h2 class="h2">${words(L("Vier dagen club.", "Four days of club."), 150)}</h2><div class="stats"><div class="pop" style="animation-delay:.3s"><b data-c="${D.festHours}">0</b><small>${L("uur live muziek", "hours of live music")}</small></div><div class="pop" style="animation-delay:.55s"><b data-c="${D.shows}">0</b><small>${L("optredens", "shows")}</small></div><div class="pop" style="animation-delay:.8s"><b data-c="${D.topC[1]}">0</b><small>${D.topC[0] === "UK" ? L("bands uit het VK", "bands from the UK") : L("bands uit ", "bands from ") + esc(W.country ? W.country(D.topC[0]) : D.topC[0])}</small></div><div class="pop" style="animation-delay:1.05s"><b>${D.lastNote || "04:00"}</b><small>${L("laatste noot, zaterdagnacht", "last note, Saturday night")}</small></div></div>`, after: el => countAll(el, 300, 250),
@@ -360,73 +373,34 @@
             g.fillStyle = i % 2 ? "#141414" : "rgba(20,20,20,.85)"; g.fillRect(i * bw + 2, base - bh, bw - 4, bh);
             st.pk = st.pk || []; st.pk[i] = Math.max((st.pk[i] || 0) - .006, v); g.fillStyle = PINK; g.fillRect(i * bw + 2, base - st.pk[i] * h * .42 - 8, bw - 4, 4); }
           g.fillStyle = `rgba(255,61,154,${beat * .12})`; g.fillRect(0, 0, w, h); } });
-      /* 6. top 5, aftellen naar jouw #1 */
-      if (D.top5.length >= 3) {
-        const list = D.top5, nn = list.length, d1 = .5 + (nn - 1) * .85 + .5;
-        S.push({ dur: 7800, bg: INK, html: () => `<div class="k in">${D.must.length ? L("Jouw top " + nn + " · moest je zien", "Your top " + nn + " · must-see") : L("Jouw top " + nn, "Your top " + nn)}</div><ol class="t5">${list.map((n, i) => `<li class="${i ? "" : "one"}" style="animation-delay:${i ? .5 + (nn - 1 - i) * .85 : d1}s"><em>${i + 1}</em><b>${esc(n)}</b></li>`).join("")}</ol>`,
-          fx: (g, t, w, h, st) => { const dt = stepT(st, t);
-            if (t > d1) { const k = ease((t - d1) / .8); g.save(); g.translate(w * .2, h * .28); g.rotate(-t * .25); for (let i = 0; i < 18; i++) { g.rotate(Math.PI * 2 / 18); g.fillStyle = `rgba(255,210,63,${.1 * k})`; g.beginPath(); g.moveTo(0, 0); g.lineTo(w * 1.6, -40); g.lineTo(w * 1.6, 40); g.closePath(); g.fill(); } g.restore(); }
-            if (!st.b && t > d1 + .1) { st.b = 1; FX.flash = .7; FX.flashCol = "255,210,63"; FX.shake = 18; burst(st, w * .25, h * .3, 90, { cols: [YEL, "#fff", PINK], sp: 820, drag: 1.5, life: 2 }); }
-            particles(g, st, dt, 500); } });
-      }
-      /* 7. begin en eind: de klok spoelt terug */
-      if (D.first && D.last && D.first !== D.last) {
-        const f = D.first, l = D.last, tag = a => `${dayN(a.day)} ${a.start} · ${esc(D.base(D.vname(a)))}`;
-        S.push({ dur: 6400, bg: BLUE, html: () => `<div class="k in">${L("Van eerste tot laatste noot", "From first to last note")}</div><div class="fl"><div class="in" style="animation-delay:.3s"><small>▶ ${L("Het begon met", "It started with")}</small><b>${esc(f.name)}</b><span>${tag(f)}</span></div><div class="in" style="animation-delay:1.3s"><small>■ ${L("En eindigde met", "And ended with")}</small><b>${esc(l.name)}</b><span>${tag(l)}</span></div></div>${D.busiest ? `<p class="rw-p in" style="animation-delay:2.3s">${L(`Drukste dag: ${dayN(D.busiest[0])}, ${D.busiest[1]} acts.`, `Busiest day: ${dayN(D.busiest[0])}, ${D.busiest[1]} acts.`)}${D.favVenue ? " " + L(`Stamkroeg: ${esc(D.favVenue[0])}.`, `Your local: ${esc(D.favVenue[0])}.`) : ""}</p>` : ""}`,
-          fx: (g, t, w, h, st) => { const cx = w * .78, cy = h * .2, R = Math.min(w * .3, 120);
-            g.save(); g.globalAlpha = .9; g.strokeStyle = "rgba(255,255,255,.55)"; g.lineWidth = 3; g.beginPath(); g.arc(cx, cy, R, 0, 7); g.stroke();
-            for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; g.beginPath(); g.moveTo(cx + Math.cos(a) * R * .82, cy + Math.sin(a) * R * .82); g.lineTo(cx + Math.cos(a) * R * .95, cy + Math.sin(a) * R * .95); g.stroke(); }
-            const sp = t < 3 ? ease(t / 3) * 14 + t * 2 : 16 + (t - 3) * .3, mA = -sp * Math.PI * 2, hA = mA / 12;
-            g.lineCap = "round"; g.strokeStyle = "#fff"; g.lineWidth = 6; g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.sin(hA) * R * .5, cy - Math.cos(hA) * R * .5); g.stroke();
-            g.strokeStyle = PINK; g.lineWidth = 4; g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.sin(mA) * R * .78, cy - Math.cos(mA) * R * .78); g.stroke();
-            g.fillStyle = YEL; g.beginPath(); g.arc(cx, cy, 7, 0, 7); g.fill(); g.restore();
-            g.font = `500 14px ${FM}`; g.fillStyle = "rgba(255,255,255,.8)"; g.textAlign = "center"; g.fillText("◀◀ " + L("TERUG", "BACK"), cx, cy + R + 24); g.textAlign = "left"; } });
-      }
-      /* 8. de echte routekaart door Rotterdam */
-      if (D.chosen.length > 1 && D.allPts.length > 2) {
-        const hours = Math.floor(D.musicMin / 60), restM = D.musicMin % 60;
-        S.push({ dur: 8800, bg: "#07071a", cls: "bottom", html: () => `<div class="shadow"><div class="k in">${L("Jouw route door Rotterdam", "Your route through Rotterdam")}</div><div class="nums" style="grid-template-columns:repeat(3,1fr)"><div class="pop" style="animation-delay:.6s"><b><span data-c="${hours}">0</span>${L("u", "h")}${restM ? `<span style="font-size:.55em">${restM}</span>` : ""}</b><small>${L("live muziek", "live music")}</small></div><div class="pop" style="animation-delay:.85s"><b>${String(D.walkKm).replace(".", L(",", "."))}</b><small>${L("km gelopen", "km walked")}</small></div><div class="pop" style="animation-delay:1.1s"><b data-c="${D.hops.length}">0</b><small>${L("zalen", "venues")}</small></div></div><p class="rw-p in" style="animation-delay:4.6s">${D.chosen.length} ${L("optredens in je route. Elke lijn een dag.", "shows in your route. Every line is a day.")}</p></div>`, after: el => countAll(el, 600, 250),
-          fx: (g, t, w, h, st) => {
-            if (!st.proj) {
-              const pts = D.allPts.map(p => p.c), la = pts.map(p => p[0]), lo = pts.map(p => p[1]);
-              let a0 = Math.min(...la), a1 = Math.max(...la), o0 = Math.min(...lo), o1 = Math.max(...lo); const k = Math.cos(51.92 * Math.PI / 180);
-              const top = 104, bot = h * .56, left = 30, right = w - 30, sx = (right - left) / ((o1 - o0) * k || 1e-3), sy = (bot - top) / ((a1 - a0) || 1e-3), s = Math.min(sx, sy) * .92;
-              const cxo = (o0 + o1) / 2, cxa = (a0 + a1) / 2;
-              st.proj = c => [w / 2 + (c[1] - cxo) * k * s, (top + bot) / 2 - (c[0] - cxa) * s];
-              st.days = ["w", "d", "v", "z"].filter(d => D.legs[d] && D.legs[d].length).map(d => ({ d, pts: D.legs[d].map(p => ({ n: p.n, xy: st.proj(p.c) })) }));
-              st.len = st.days.reduce((n, x) => n + Math.max(1, x.pts.length - 1), 0);
-            }
-            const P = st.proj;
-            g.strokeStyle = "rgba(255,255,255,.05)"; g.lineWidth = 1; for (let x = 0; x < w; x += 28) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); } for (let y = 0; y < h; y += 28) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
-            const river = [[51.9085, 4.43], [51.9058, 4.455], [51.9075, 4.47], [51.909, 4.482], [51.9083, 4.495], [51.904, 4.51], [51.9, 4.53]];
-            g.strokeStyle = "rgba(92,204,255,.16)"; g.lineWidth = 26; g.lineCap = "round"; g.lineJoin = "round"; g.beginPath(); river.forEach((c, i) => { const [x, y] = P(c); i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke();
-            { const [x, y] = P([51.906, 4.462]); g.font = `500 11px ${FM}`; g.fillStyle = "rgba(92,204,255,.55)"; g.fillText("MAAS", x, y + 4); }
-            D.allPts.forEach(p => { const [x, y] = P(p.c); g.fillStyle = "rgba(255,255,255,.28)"; g.beginPath(); g.arc(x, y, 3, 0, 7); g.fill(); });
-            let budget = clamp((t - .5) / 4.2, 0, 1) * st.len, head = null; const seen = new Set();
-            st.days.forEach(({ d, pts }) => {
-              const col = DAYCOL[d]; seen.add(pts[0].n); g.lineCap = "round";
-              for (let i = 1; i < pts.length && budget > 0; i++) {
-                const k = Math.min(1, budget), [x0, y0] = pts[i - 1].xy, [x1, y1] = pts[i].xy, xe = x0 + (x1 - x0) * k, ye = y0 + (y1 - y0) * k;
-                g.strokeStyle = col + "44"; g.lineWidth = 10; g.beginPath(); g.moveTo(x0, y0); g.lineTo(xe, ye); g.stroke();
-                g.strokeStyle = col; g.lineWidth = 3.5; g.beginPath(); g.moveTo(x0, y0); g.lineTo(xe, ye); g.stroke();
-                budget -= 1; head = [xe, ye, col]; if (k >= 1) seen.add(pts[i].n);
-              }
-              if (pts.length === 1 && budget > 0) { budget -= 1; seen.add(pts[0].n); }
-            });
-            g.font = `800 13px ${F}`;
-            const lab = []; D.allPts.forEach(p => { if (!seen.has(p.n)) return; const [x, y] = P(p.c); g.fillStyle = "#fff"; g.beginPath(); g.arc(x, y, 5.5, 0, 7); g.fill(); const tw = g.measureText(p.n.toUpperCase()).width, right = x + 8 + tw < w - 6, lx = right ? x + 8 : x - 8 - tw, ly = y - 6; if (lab.some(b => Math.abs(b[1] - ly) < 14 && lx < b[0] + b[2] && lx + tw > b[0])) return; lab.push([lx, ly, tw]); g.fillStyle = "rgba(255,255,255,.9)"; g.fillText(p.n.toUpperCase(), lx, ly); });
-            if (head && t < 5) { const [x, y, c] = head; g.fillStyle = c; g.shadowColor = c; g.shadowBlur = 20; g.beginPath(); g.arc(x, y, 7 + Math.sin(t * 12) * 2, 0, 7); g.fill(); g.shadowBlur = 0; }
-            g.font = `500 11px ${FM}`; st.days.forEach(({ d }, i) => { g.fillStyle = DAYCOL[d]; g.fillRect(24 + i * 54, 92, 14, 4); g.fillText(L(DAYSH[d][0], DAYSH[d][1]), 42 + i * 54, 97); });
-          } });
-      }
-      /* 9. hartverscheurende keuzes */
-      if (D.skipped.length) {
-        const vs = D.skipped.slice(0, 3);
-        S.push({ dur: 6000, bg: YEL, lite: true, html: () => `<div class="k in">${L("Hartverscheurende keuzes", "Heartbreaking choices")}</div><h2 class="h2">${words(D.skipped.length === 1 ? L("Eén keer moest je kiezen.", "Once, you had to choose.") : L(`${D.skipped.length} keer moest je kiezen.`, `${D.skipped.length} times you had to choose.`), 150)}</h2><div class="vs">${vs.map((x, i) => `<div class="in" style="animation-delay:${.9 + i * .7}s"><b>${esc(x.by.name)}</b><small>${L("WON VAN", "BEAT")}</small><s style="--dl:${1.4 + i * .7}s">${esc(x.a.name)}</s></div>`).join("")}</div><p class="rw-p in" style="animation-delay:${1.2 + vs.length * .7}s">${L("Zo gaat dat op Left of the Dial. Volgend jaar weer.", "That's Left of the Dial for you. Same again next year.")}</p>`,
-          fx: (g, t, w, h, st) => { const dt = stepT(st, t); g.save(); g.fillStyle = "rgba(20,20,20,.07)"; g.translate(w / 2, h / 2); g.rotate(-.35); for (let i = -8; i < 8; i++) g.fillRect(i * 70 + ((t * 30) % 70), -h, 34, h * 2); g.restore();
-            vs.forEach((x, i) => { const at = 1.4 + i * .7; if (t > at && !(st["s" + i])) { st["s" + i] = 1; FX.shake = 7; burst(st, w * .55, h * (.45 + i * .07), 22, { cols: ["#141414", PINK], sp: 380, drag: 2, life: .9, g: 300 }); } });
-            particles(g, st, dt); } });
-      }
+    }
+    /* 6. alle zalen op de kaart van Rotterdam (geel = daar speelden jouw favorieten) */
+    if (D.allPts.length > 2) {
+      const favV = new Set(D.mine.map(a => D.base(D.vname(a))));
+      const nFav = D.allPts.filter(p => favV.has(p.n)).length;
+      S.push({ dur: 7800, bg: "#07071a", cls: "bottom", html: () => `<div class="shadow"><div class="k in">${L("Eén stad, één festival", "One city, one festival")}</div><h2 class="h2">${words(L(`${D.venues.length} zalen.`, `${D.venues.length} venues.`), 200)}<br>${words(L("Eén rondje Rotterdam.", "One big loop of Rotterdam."), 550)}</h2>${D.has && nFav ? `<p class="rw-p in" style="animation-delay:3.6s">${L(`<b style="color:${YEL}">Geel</b> = daar speelden jouw favorieten. ${nFav} zalen.`, `<b style="color:${YEL}">Yellow</b> = where your favourites played. ${nFav} venues.`)}</p>` : ""}</div>`,
+        fx: (g, t, w, h, st) => {
+          if (!st.proj) {
+            const pts = D.allPts.map(p => p.c), la = pts.map(p => p[0]), lo = pts.map(p => p[1]);
+            const a0 = Math.min(...la), a1 = Math.max(...la), o0 = Math.min(...lo), o1 = Math.max(...lo), k = Math.cos(51.92 * Math.PI / 180);
+            const top = 100, bot = h * .6, sx = (w - 70) / ((o1 - o0) * k || 1e-3), sy = (bot - top) / ((a1 - a0) || 1e-3), sc = Math.min(sx, sy) * .9, cxo = (o0 + o1) / 2, cxa = (a0 + a1) / 2;
+            st.proj = c => [w / 2 + (c[1] - cxo) * k * sc, (top + bot) / 2 - (c[0] - cxa) * sc];
+            const mid = [cxa, cxo];
+            st.v = D.allPts.map(p => ({ n: p.n, xy: st.proj(p.c), fav: favV.has(p.n), d: Math.hypot(p.c[0] - mid[0], (p.c[1] - mid[1]) * k) })).sort((a, b) => a.d - b.d);
+            st.v.forEach((v, i) => { v.at = .5 + i * (3 / Math.max(1, st.v.length)); let best = null, bd = 1e9; for (let j = 0; j < i; j++) { const o = st.v[j], dd = Math.hypot(o.xy[0] - v.xy[0], o.xy[1] - v.xy[1]); if (dd < bd) { bd = dd; best = o; } } v.link = best; });
+          }
+          const P = st.proj;
+          g.strokeStyle = "rgba(255,255,255,.05)"; g.lineWidth = 1; for (let x = 0; x < w; x += 28) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); } for (let y = 0; y < h; y += 28) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
+          const river = [[51.9085, 4.43], [51.9058, 4.455], [51.9075, 4.47], [51.909, 4.482], [51.9083, 4.495], [51.904, 4.51], [51.9, 4.53]];
+          g.strokeStyle = "rgba(92,204,255,.16)"; g.lineWidth = 26; g.lineCap = "round"; g.lineJoin = "round"; g.beginPath(); river.forEach((c, i) => { const [x, y] = P(c); i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke();
+          { const [x, y] = P([51.906, 4.462]); g.font = `500 11px ${FM}`; g.fillStyle = "rgba(92,204,255,.55)"; g.fillText("MAAS", x, y + 4); }
+          st.v.forEach(v => { if (t < v.at || !v.link) return; const k = ease((t - v.at) / .5), [x0, y0] = v.link.xy, [x1, y1] = v.xy; g.strokeStyle = v.fav && v.link.fav ? "rgba(255,210,63,.55)" : "rgba(255,255,255,.22)"; g.lineWidth = 1.5; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x0 + (x1 - x0) * k, y0 + (y1 - y0) * k); g.stroke(); });
+          st.v.forEach(v => { if (t < v.at) return; const [x, y] = v.xy, a = t - v.at, col = v.fav ? YEL : "#fff";
+            if (a < 1.2) { g.strokeStyle = v.fav ? `rgba(255,210,63,${1 - a / 1.2})` : `rgba(255,255,255,${(1 - a / 1.2) * .7})`; g.lineWidth = 2; g.beginPath(); g.arc(x, y, 6 + a * 30, 0, 7); g.stroke(); }
+            const r = (v.fav ? 6.5 : 4.5) * Math.min(1, a * 4) + (v.fav ? Math.sin(t * 5 + v.d * 400) * 1.2 : 0); if (v.fav) { g.shadowColor = YEL; g.shadowBlur = 14; } g.fillStyle = col; g.beginPath(); g.arc(x, y, Math.max(0, r), 0, 7); g.fill(); g.shadowBlur = 0; });
+          g.font = `800 13px ${F}`; const lab = [];
+          st.v.slice().sort((a, b) => b.fav - a.fav).forEach(v => { if (t < v.at + .15) return; const [x, y] = v.xy, txt = v.n.toUpperCase(), tw = g.measureText(txt).width, lx = x + 9 + tw < w - 6 ? x + 9 : x - 9 - tw, ly = y - 6; if (lab.some(b => Math.abs(b[1] - ly) < 14 && lx < b[0] + b[2] + 4 && lx + tw + 4 > b[0])) return; lab.push([lx, ly, tw]); g.fillStyle = v.fav ? YEL : "rgba(255,255,255,.85)"; g.fillText(txt, lx, ly); });
+        } });
     }
     /* 10. de wereld: draaiende globe met lijnen naar Rotterdam */
     const ccs = (D.myCountries.length ? D.myCountries : D.countries).filter(c => CC[c]);
@@ -485,16 +459,22 @@
         st.s.forEach(o => { const y = (o.y - t * 18 * o.z + h * 10) % h; g.fillStyle = `rgba(255,255,255,${o.z * .8})`; g.fillRect(o.x, y, o.z * 2.2, o.z * 2.2); });
         const sh = (t % 3.3) / .7; if (sh < 1) { const x0 = w * (.9 - sh * .8), y0 = h * (.1 + sh * .3); const gr = g.createLinearGradient(x0, y0, x0 + 90, y0 - 30); gr.addColorStop(0, "rgba(255,255,255,.9)"); gr.addColorStop(1, "rgba(255,255,255,0)"); g.strokeStyle = gr; g.lineWidth = 2; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x0 + 90, y0 - 30); g.stroke(); } } };
     S.push(cred);
-    /* 14. it was a blast: hartjes-vuurwerk */
-    S.push({ dur: 5600, bg: PINK, html: () => `<h1 class="rw-h rgb" style="font-size:clamp(76px,26vw,160px);color:${BLUE}!important">${words("It was", 100, 0, "slam")}<br>${words("a blast.", 450, 0, "slam")}</h1>`,
-      fx: (g, t, w, h, st) => { const dt = stepT(st, t); st.r = st.r || []; st.nx = st.nx == null ? .2 : st.nx;
-        if (t > st.nx) { st.nx = t + rnd(.25, .55); st.r.push({ x: rnd(w * .15, w * .85), y: h + 10, vy: -rnd(h * .9, h * 1.25), ty: rnd(h * .12, h * .45) }); }
-        st.r = st.r.filter(r => { r.y += r.vy * dt; r.vy *= .985; g.fillStyle = "#fff"; g.fillRect(r.x - 1.5, r.y, 3, 14); if (r.y <= r.ty) { FX.shake = 9; if (Math.random() < .5) heartBurst(st, r.x, r.y, ["#fff", YEL, BLUE, "#141414"], 260); else burst(st, r.x, r.y, 70, { cols: ["#fff", YEL, BLUE], sp: 360, drag: 1.6, g: 160, life: 1.6 }); return false; } return true; });
-        if (!st.big && t > .55) { st.big = 1; FX.flash = 1; FX.shake = 22; heartBurst(st, w / 2, h * .4, ["#fff"], 420); }
+    /* 15. slot: See you next year + tickets, met vuurwerk */
+    S.push({ dur: 0, bg: BLUE, osd: () => "■ STOP", html: () => `${dialSvg("#fff", YEL)}<div class="k in">${L("Dit was Left of the Dial 2026", "This was Left of the Dial 2026")}</div><h1 class="rw-h rgb" style="font-size:clamp(66px,22vw,132px)">${words("See you", 200, 0, "slam")}<br>${words("next year!", 520, 0, "slam")}</h1><p class="rw-p in" style="animation-delay:1s">${L("The club was open. Bedankt dat je erbij was.", "The club was open. Thanks for being there.")}</p><div class="cta in" style="animation-delay:1.3s"><a class="t1 tix" href="${TICKETS}" target="_blank" rel="noopener"><span class="tix-a"></span><small class="tix-b"></small></a><div class="rw-row"><button class="t2" data-rw="replay">↺ ${L("Opnieuw", "Replay")}</button><button class="t2" data-rw="share">${L("Deel je kaart", "Share card")}</button></div>${D.played ? "" : `<button class="t2" data-rw="game">${L("Speel Wapperman", "Play Wapperman")}</button>`}<button class="t2" data-rw="close">${L("Naar de app", "Back to the app")}</button></div>`,
+      after: el => { const off = (W.now ? W.now().getTime() : Date.now()) - Date.now(), a = el.querySelector(".tix-a"), b = el.querySelector(".tix-b"), btn = el.querySelector(".tix");
+        const upd = () => { if (!a.isConnected) return; const left = SALE.getTime() - (Date.now() + off);
+          if (left <= 0) { btn.classList.remove("soon"); a.textContent = L("Koop je tickets nu!", "Get your tickets now!"); b.textContent = "Left of the Dial 2027 →"; return; }
+          btn.classList.add("soon"); a.textContent = L("Tickets 2027", "Tickets 2027");
+          if (left > 864e5) b.textContent = L("verkoop start zondag 25 oktober om 10:00", "on sale Sunday 25 October at 10:00");
+          else { const s2 = Math.floor(left / 1000); b.textContent = L("verkoop start om 10:00 · nog ", "on sale at 10:00 · ") + `${Math.floor(s2 / 3600)}:${String(Math.floor(s2 / 60) % 60).padStart(2, "0")}:${String(s2 % 60).padStart(2, "0")}`; }
+          setTimeout(upd, 1000); };
+        upd(); },
+      fx: (g, t, w, h, st) => { const dt = stepT(st, t); waves(g, w, h, t, w * .92, h * .92, "255,255,255", 7, 60);
+        st.r = st.r || []; st.nx = st.nx == null ? .3 : st.nx;
+        if (t > st.nx && t < 60) { st.nx = t + (t < 6 ? rnd(.3, .6) : rnd(1.2, 2.4)); st.r.push({ x: rnd(w * .15, w * .85), y: h + 10, vy: -rnd(h * .9, h * 1.2), ty: rnd(h * .08, h * .3) }); }
+        st.r = st.r.filter(r => { r.y += r.vy * dt; r.vy *= .985; g.fillStyle = "#fff"; g.fillRect(r.x - 1.5, r.y, 3, 14); if (r.y <= r.ty) { if (t < 6) FX.shake = 7; if (Math.random() < .55) heartBurst(st, r.x, r.y, [YEL, PINK, "#fff"], 240); else burst(st, r.x, r.y, 70, { cols: ["#fff", YEL, PINK], sp: 340, drag: 1.6, g: 160, life: 1.6 }); return false; } return true; });
+        if (!st.big && t > .75) { st.big = 1; FX.flash = .9; FX.shake = 20; heartBurst(st, w / 2, h * .2, [YEL], 380); }
         particles(g, st, dt, 160); } });
-    /* 15. outro + tickets */
-    S.push({ dur: 0, bg: BLUE, osd: () => "■ STOP", html: () => { const now = W.now ? W.now() : new Date(), open = now >= SALE; return `${dialSvg("#fff", YEL)}<div class="k in">The club was open</div><h1 class="rw-h">${words("This was", 100)}<br>${words("Left of the Dial.", 350)}</h1><p class="rw-p in" style="animation-delay:1s">See you next year!</p><div class="cta in" style="animation-delay:1.4s"><a class="t1${open ? "" : " soon"}" href="${TICKETS}" target="_blank" rel="noopener">${open ? L("Tickets 2027 →", "Tickets 2027 →") : `${L("Tickets 2027", "Tickets 2027")}<small>${L("verkoop start zondag 25 oktober, 10:00", "on sale Sunday 25 October, 10:00")}</small>`}</a><div class="rw-row"><button class="t2" data-rw="replay">↺ ${L("Opnieuw", "Replay")}</button><button class="t2" data-rw="share">${L("Deel je kaart", "Share card")}</button></div>${D.played ? "" : `<button class="t2" data-rw="game">${L("Speel Wapperman", "Play Wapperman")}</button>`}<button class="t2" data-rw="close">${L("Naar de app", "Back to the app")}</button></div>`; },
-      fx: (g, t, w, h, st) => { const dt = stepT(st, t); waves(g, w, h, t, w * .92, h * .92, "255,255,255", 7, 60); st.nx = st.nx == null ? .6 : st.nx; if (t > st.nx && t < 30) { st.nx = t + rnd(1.2, 2.4); heartBurst(st, rnd(w * .2, w * .8), rnd(h * .1, h * .3), [YEL, PINK, "#fff"], 200); } particles(g, st, dt, 120); } });
     return S;
   }
 
@@ -520,11 +500,11 @@
       g.font = `600 34px ${FB}`; g.fillStyle = "#e6e8ff"; const wl = D.arch.d.split(" "); let line = "", ly = cy + 340; wl.forEach(wd => { if (g.measureText(line + wd).width > cw - 80) { g.fillText(line, cx + 40, ly); ly += 44; line = ""; } line += wd + " "; }); g.fillText(line, cx + 40, ly);
       D.arch.bars.forEach(([lb, v], i) => { const y = ly + 50 + i * 44; if (y > cy + ch - 30) return; g.font = `800 26px ${F}`; g.fillStyle = "#fff"; g.textAlign = "left"; g.fillText(lb.toUpperCase(), cx + 40, y); g.textAlign = "right"; g.fillText(String(v), cx + cw - 40, y); g.textAlign = "left"; g.fillStyle = "rgba(255,255,255,.18)"; rr(cx + 40, y + 10, cw - 80, 12, 6); g.fill(); const bgr = g.createLinearGradient(cx + 40, 0, cx + cw - 40, 0); bgr.addColorStop(0, PINK); bgr.addColorStop(1, YEL); g.fillStyle = bgr; rr(cx + 40, y + 10, Math.max(12, (cw - 80) * v / 100), 12, 6); g.fill(); });
       /* cijfers */
-      const st = D.has ? [[D.myBands.length, L("bands", "bands")], [D.must.length, L("moest ik zien", "must-sees")], [D.walkKm ? String(D.walkKm).replace(".", L(",", ".")) : D.myCountries.length, D.walkKm ? L("km gelopen", "km walked") : L("landen", "countries")]] : [[D.bands.length, "bands"], [D.venues.length, L("zalen", "venues")], [D.countries.length, L("landen", "countries")]];
+      const st = D.has ? [[D.myBands.length, L("bands", "bands")], [D.must.length, L("moest ik zien", "must-sees")], [D.myCountries.length, L("landen", "countries")]] : [[D.bands.length, "bands"], [D.venues.length, L("zalen", "venues")], [D.countries.length, L("landen", "countries")]];
       st.forEach(([n, l], i) => { const x = 70 + i * 330; g.fillStyle = "#fff"; g.font = `800 130px ${F}`; g.fillText(String(n), x, 1290); g.font = `700 30px ${FB}`; g.fillStyle = "#c6d0ff"; g.fillText(l.toUpperCase(), x, 1338); });
-      const list = D.has ? D.top5 : [D.pick].filter(Boolean);
-      g.fillStyle = "#fff"; g.font = `500 32px ${FM}`; g.fillText(D.has ? L("MIJN TOP " + list.length, "MY TOP " + list.length) : L("MIJN ONTDEKKING", "MY DISCOVERY"), 70, 1420);
-      list.slice(0, 5).forEach((n, i) => { g.fillStyle = i ? "#fff" : YEL; g.font = `800 64px ${F}`; let t = (D.has ? (i + 1) + "  " : "") + n.toUpperCase(); while (g.measureText(t).width > 940 && t.length > 3) t = t.slice(0, -2); g.fillText(t, 70, 1500 + i * 64); });
+      g.fillStyle = "#fff"; g.font = `500 32px ${FM}`; g.fillText(D.has ? L("OP MIJN LIJST", "ON MY LIST") : L("MIJN ONTDEKKING", "MY DISCOVERY"), 70, 1420);
+      { const names = D.has ? D.myBands.slice().sort(() => Math.random() - .5) : [D.pick].filter(Boolean); let x = 70, y = 1486, line = 0; g.font = `800 50px ${F}`;
+        for (const n of names) { const t = n.toUpperCase(), tw = g.measureText(t).width; if (x + tw + g.measureText("  ♥").width > 1010) { line++; x = 70; y += 60; } if (line > 4) break; g.fillStyle = D.has && D.must.includes(n) ? YEL : "#fff"; g.fillText(t, x, y); x += tw; g.fillStyle = PINK; g.fillText("  ♥  ", x, y); x += g.measureText("  ♥  ").width; } }
       g.fillStyle = "#141414"; g.fillRect(0, 1810, 1080, 110); g.fillStyle = "#fff"; g.font = `800 54px ${F}`; g.fillText("THE CLUB WAS OPEN.", 70, 1882); g.font = `600 28px ${FB}`; g.fillStyle = "#c6d0ff"; g.textAlign = "right"; g.fillText(location.host, 1010, 1878);
       c.toBlob(b => res(b), "image/png");
     });
