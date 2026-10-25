@@ -194,6 +194,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
   const tagX = a => [a.country ? codes(a.country) : "", shown(a)[0] ? cap(shown(a)[0]) : ""].filter(Boolean).join(" · ");
 
   /* ---- tijd: "nu" klopt ook na middernacht en in de lokale tijdzone. Test met  ?now=2026-10-22T21:15  ---- */
+  function postFest() { return getNow() >= new Date("2026-10-25T08:00:00+01:00"); } /* na het festival: geen line-up-meldingen meer */
   const getNow = () => { let d = null; try { const p = new URLSearchParams(location.search).get("now"); if (p) d = new Date(p); } catch (e) {} return d && !isNaN(d) ? d : new Date(); };
   const ymd = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   function festNow() { const n = getNow(); let m = n.getHours() * 60 + n.getMinutes(), ds = ymd(n); if (m < 360) { ds = ymd(new Date(n.getTime() - 864e5)); m += 1440; } return { ds, m }; }
@@ -443,12 +444,12 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     }
     coords = Object.assign({}, coords, j.coords || {});
     const text = lang === "en" && j.notice_en ? j.notice_en : j.notice, key = j.notice || "";
-    if (text && LS.get("lotd-notice-x", "") !== key) post("notice", { text: () => (lang === "en" && j.notice_en ? j.notice_en : j.notice), x: true, key }); else drop("notice");
+    if (text && !postFest() && LS.get("lotd-notice-x", "") !== key) post("notice", { text: () => (lang === "en" && j.notice_en ? j.notice_en : j.notice), x: true, key }); else drop("notice");
   }
   let checking = false;
   async function checkLineup() { if (checking || navigator.onLine === false) return; checking = true; try { const r = await fetch("lineup.json?x=" + Date.now(), { cache: "no-store" }); if (!r.ok) throw 0; const j = await r.json(); if (!Array.isArray(j.raw) || !j.raw.length) throw 0; handleLineup(j); } catch (e) {} checking = false; }
   if (cached && Array.isArray(cached.raw) && cached.raw.length) { try { applyLineup(cached, true); } catch (e) { cached = null; } }
-  if (cached && cached.notice && LS.get("lotd-notice-x", "") !== cached.notice) post("notice", { text: () => (lang === "en" && cached.notice_en ? cached.notice_en : cached.notice), x: true, key: cached.notice });
+  if (cached && cached.notice && !postFest() && LS.get("lotd-notice-x", "") !== cached.notice) post("notice", { text: () => (lang === "en" && cached.notice_en ? cached.notice_en : cached.notice), x: true, key: cached.notice });
 
   /* ---- installeer-tip ---- */
   const visits = (LS.get("lotd-visits", 0) || 0) + 1; LS.set("lotd-visits", visits);
@@ -645,6 +646,33 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     const sc = document.createElement("script"); sc.id = "rw-js"; sc.src = "wrapped.js"; sc.onload = () => { window.LotdRewind && window.LotdRewind.play(); }; sc.onerror = () => { sc.remove(); }; document.head.appendChild(sc);
   }
   const rewindCard = () => `<button class="rw-card" data-rewind><span class="rw-dial" aria-hidden="true"></span><span><b>Rewind the Dial</b><small>${L("Jouw Left of the Dial 2026 in één minuut", "Your Left of the Dial 2026 in one minute")}</small></span><em>▶</em></button>`;
+  /* eindscherm na het festival: vanaf zondag 08:00 het startscherm, de timetable blijft via de navigatie bereikbaar */
+  const endOn = () => rewindOn() && !/^#[fst]=/.test(location.hash);
+  function vEnd() {
+    const esc2 = x => String(x).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+    let name = ""; try { name = (localStorage.getItem("lotd-wapperman-name") || "").trim().slice(0, 16); } catch (e) {}
+    const shows = ACTS.filter(a => !a.cancelled && a.genre !== "Extra" && !a.after), bands = [...new Set(shows.map(a => a.name))];
+    const venues = new Set(ACTS.map(a => baseName(venue(a.venueId).name))).size, cc = new Set(shows.flatMap(a => (a.country || "").split("/").filter(Boolean))).size;
+    const mine = [...new Set(ACTS.filter(a => isFav(a.id)).map(a => a.name))].length, open = getNow() >= new Date("2026-10-25T10:00:00+01:00");
+    const tick = bands.slice().sort(() => Math.random() - .5).map(n => `<span>${esc2(n)}</span><i>♥</i>`).join("");
+    const hearts = Array.from({ length: 14 }, (_, i) => `<i style="left:${(i * 7.3 + 3) % 96}%;--d:${7 + (i % 5) * 1.6}s;--dl:${(i * 1.13) % 7}s;--s:${14 + (i % 4) * 9}px;--c:${["#ffd23f", "#ff3d9a", "#fff", "#55ccff"][i % 4]}">♥</i>`).join("");
+    const dial = `<svg class="end-dial" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="96" fill="none" stroke="#fff" stroke-width="3" opacity=".5"/>${Array.from({ length: 60 }, (_, i) => { const a = i * 6 * Math.PI / 180, r1 = i % 5 ? 84 : 76; return `<line x1="${(100 + Math.cos(a) * r1).toFixed(1)}" y1="${(100 + Math.sin(a) * r1).toFixed(1)}" x2="${(100 + Math.cos(a) * 92).toFixed(1)}" y2="${(100 + Math.sin(a) * 92).toFixed(1)}" stroke="#fff" stroke-width="${i % 5 ? 1.5 : 3}" opacity=".8"/>`; }).join("")}<circle cx="100" cy="100" r="44" fill="none" stroke="#fff" stroke-width="2"/><line x1="100" y1="100" x2="100" y2="22" stroke="#ffd23f" stroke-width="6" stroke-linecap="round"/><circle cx="100" cy="100" r="8" fill="#ffd23f"/></svg>`;
+    return `<section class="end" aria-labelledby="end-h">${dial}<div class="end-waves" aria-hidden="true"><b></b><b></b><b></b><b></b></div><div class="end-hearts" aria-hidden="true">${hearts}</div><div class="end-scan" aria-hidden="true"></div>
+      <div class="end-in">
+        <div class="end-osd" aria-hidden="true"><b>■ STOP</b><span>25.10.2026 · LOTD 2026</span></div>
+        <h1 id="end-h" class="end-h">${name ? L(`Bedankt, <em>${esc2(name)}</em>!`, `Thank you, <em>${esc2(name)}</em>!`) : L("Bedankt!", "Thank you!")}</h1>
+        <p class="end-l1">The show is over.</p>
+        <p class="end-l2">The club was open.</p>
+        <p class="end-p">${L("Vier dagen, " + venues + " zalen, " + bands.length + " bands uit " + cc + " landen." + (mine ? ` Jij had er <b>${mine}</b> op je lijst.` : ""), "Four days, " + venues + " venues, " + bands.length + " bands from " + cc + " countries." + (mine ? ` You had <b>${mine}</b> on your list.` : ""))}</p>
+        <p class="end-p">${L("Spoel je festival nog één keer terug.", "Rewind your festival one more time.")}</p>
+        <button class="end-go" data-rewind><span class="end-play">▶</span><span>Rewind the Dial<small>${L("Jouw festival in anderhalve minuut", "Your festival in ninety seconds")}</small></span></button>
+        <a class="end-tix" href="https://leftofthedial.nl/tickets/" target="_blank" rel="noopener">${open ? L("Koop je tickets voor 2027 →", "Get your tickets for 2027 →") : L("Tickets 2027 · verkoop start vandaag om 10:00", "Tickets 2027 · on sale today at 10:00")}</a>
+        <div class="end-row"><button data-go="/timetable">${L("Timetable", "Timetable")}</button><button data-go="/favorites">${L("Favorieten", "Favorites")}</button><button data-go="/game">Wapperman</button></div>
+        <p class="end-see">See you next year ♥</p>
+      </div>
+      <div class="end-tick" aria-hidden="true"><div>${tick}${tick}</div></div>
+    </section>`;
+  }
 
   /* ---- favorieten-pagina (agenda, vriend, jullie allebei) ---- */
   vFavs = function () {
@@ -726,17 +754,19 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
   const DOCSCROLL = () => document.documentElement.classList.contains("docscroll");
   render = function (keep) {
     renderModal();
-    const r = route(), main = document.getElementById("main"), tt0 = main.querySelector(".tt"), sc = keep ? [DOCSCROLL() ? window.scrollY : main.scrollTop, tt0 ? tt0.scrollLeft : 0, tt0 ? tt0.scrollTop : 0] : [0, 0, 0];
+    const r = Object.assign({}, route()), main = document.getElementById("main"), tt0 = main.querySelector(".tt"), sc = keep ? [DOCSCROLL() ? window.scrollY : main.scrollTop, tt0 ? tt0.scrollLeft : 0, tt0 ? tt0.scrollTop : 0] : [0, 0, 0];
     const titles = { tt: "Timetable", now: L("Nu & straks", "Now & next"), search: L("Zoeken", "Search"), favorites: L("Favorieten", "Favorites"), game: "Wapperman", map: L("Kaart", "Map"), act: "Act" };
+    if (r.p === "timetable") r.p = "tt"; else if (r.p === "tt" && endOn()) r.p = "end";
+    titles.end = "The end";
     document.getElementById("title").textContent = titles[r.p] || "Timetable";
-    main.innerHTML = r.p === "search" ? vSearch() : r.p === "favorites" ? vFavs() : r.p === "act" ? vAct(r.id) : r.p === "now" ? vNowView() : r.p === "game" ? `<div id="wapperman-root"></div>` : r.p === "map" ? vMapView() : vTimetable(favOnly);
+    main.innerHTML = r.p === "search" ? vSearch() : r.p === "favorites" ? vFavs() : r.p === "act" ? vAct(r.id) : r.p === "now" ? vNowView() : r.p === "game" ? `<div id="wapperman-root"></div>` : r.p === "map" ? vMapView() : r.p === "end" ? vEnd() : vTimetable(favOnly);
     if (!keep && DOCSCROLL() && r.p !== "act" && render._last !== r.p) window.scrollTo(0, 0);
     render._last = r.p;
     if (r.p !== "map") killMap();
     if (r.p === "game") WappermanGame.mount(); else if (r.p === "map") { trNode(main); initMap(); } else trNode(main);
     { const sb = document.querySelector("[data-tb-search]"); if (sb) sb.classList.toggle("on", r.p === "search"); }
     const tab = r.p === "act" ? (sessionStorage.getItem("from") || "tt") : r.p, icon = { tt: "tt", now: "clock", search: "se", favorites: "fa", game: "game", map: "map" }, nav = document.getElementById("nav");
-    nav.innerHTML = [["tt", "Timetable", "/"], ["now", L("Nu", "Now"), "/now"], ["map", L("Kaart", "Map"), "/map"], ["favorites", L("Favorieten", "Favorites"), "/favorites"], ["game", "Wapperman", "/game"]].map(([k, l, h]) => `<button class="${tab === k ? "on" : ""}" data-go="${h}" aria-current="${tab === k ? "page" : "false"}">${ico[icon[k]] || "◉"}${l}${k === "favorites" && favs.length ? `<i class="nav-badge" aria-label="${favs.length}">${favs.length}</i>` : ""}</button>`).join("");
+    nav.innerHTML = [["tt", "Timetable", endOn() ? "/timetable" : "/"], ["now", L("Nu", "Now"), "/now"], ["map", L("Kaart", "Map"), "/map"], ["favorites", L("Favorieten", "Favorites"), "/favorites"], ["game", "Wapperman", "/game"]].map(([k, l, h]) => `<button class="${tab === k ? "on" : ""}" data-go="${h}" aria-current="${tab === k ? "page" : "false"}">${ico[icon[k]] || "◉"}${l}${k === "favorites" && favs.length ? `<i class="nav-badge" aria-label="${favs.length}">${favs.length}</i>` : ""}</button>`).join("");
     if (!keep && (r.p === "tt" || r.p === "favorites") && main.querySelector(".tt .now") && autoNowDone !== day + r.p) { autoNowDone = day + r.p; scrollToNow(false); }
     if (keep) { if (DOCSCROLL()) window.scrollTo(0, sc[0]); else main.scrollTop = sc[0]; const tt = main.querySelector(".tt"); if (tt) { tt.scrollLeft = sc[1]; tt.scrollTop = sc[2]; } }
     if (r.p === "search" && !keep) { const i = document.getElementById("q"); if (i && q) i.focus(); }
@@ -1143,7 +1173,7 @@ html.big .row{height:104px}html.big .pill,html.big .checkrow{font-size:15px!impo
   /* timetable bij de tijd houden: nu-lijn schuift mee, NU-labels kloppen, ook na terugkomen uit de achtergrond */
   let liveSig = null;
   function ttTick() {
-    if (document.visibilityState !== "visible" || (route().p !== "tt" && route().p !== "favorites")) return;
+    if (document.visibilityState !== "visible" || (route().p !== "tt" && route().p !== "timetable" && route().p !== "favorites")) return;
     const f = festNow(), sig = f.ds + "|" + ACTS.filter(a => !a.cancelled && isLive(a)).map(a => a.id).join();
     const line = document.querySelector("#main .tt .now");
     if (line) { const st = +line.dataset.s, en = +line.dataset.e, pph = +line.dataset.pph; if (f.m >= st && f.m <= en) line.style.left = `calc(var(--labw) + ${(f.m - st) / 60 * pph}px)`; else if (liveSig !== null) liveSig = "";
