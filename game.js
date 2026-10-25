@@ -200,6 +200,10 @@ const leaderboard = (() => {
 .wg-prog{height:8px;border-radius:4px;background:#ececf1;overflow:hidden;margin:2px 0 14px}.wg-prog b{display:block;height:100%;background:#1717ff}
 #modal .ov{z-index:2100}
 @media (max-width:360px){.wg h2{font-size:54px}.wg-stats b{font-size:22px}.wg-big b{font-size:76px}}
+/* kleine telefoons: HUD past in de breedte, Spelen-knop altijd in beeld */
+@media (max-width:360px){.wg-hud{padding-left:8px;padding-right:8px;gap:4px}.wg-score{font-size:42px}.wg-x,.wg-snd{width:38px;height:38px;font-size:16px}.wg-btns{gap:4px}.wg-stage{font-size:10px;letter-spacing:.03em;padding:5px 6px 4px}.wg-recbar{width:40px}.wg-name label{font-size:15px}}
+.wg-btn.wg-play{position:sticky;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:3;box-shadow:0 10px 26px rgba(23,23,255,.35)}
+@media (max-height:720px){.wg-head h2{font-size:52px}.wg-card > p{font-size:14px;margin-bottom:10px}.wg-stats{margin-bottom:10px}.wg-stats div{padding:7px 7px 6px}.wg-stats b{font-size:22px}.wg-name{margin-bottom:10px;padding:7px 10px}.wg .wg-name input{min-height:40px}.wg-mis{margin-bottom:10px}.wg-mis li{padding:8px 12px!important;font-size:14px!important}}
 @media (prefers-reduced-motion:reduce){.wg-card{animation:none}.wg{transition:none}}`;
 
   let root, cv, cx, scoreEl, bestEl, ov, sndEl, ro, raf, last = 0, sprites, prevOverflow, mainEl = null, prevMain = "", ac = null;
@@ -634,7 +638,7 @@ const leaderboard = (() => {
       <div class="wg-stats"><div class="hl"><b>${best}</b><small>Record</small></div><div><b>${prof.crate.length}</b><small>${Lg("Platen", "Records")}</small></div><div><b>★${prof.stars || 0}</b><small>${Lg("Sterren", "Stars")}</small></div><div><b>${streakNow()}</b><small>${Lg("Dagen op rij", "Day streak")}</small></div></div>
       <div class="wg-name"><label for="nm">${Lg("Voer je naam in", "Enter your name")}</label><span><input id="nm" maxlength="16" value="${esc(myName())}" placeholder="${Lg("Je naam", "Your name")}" autocomplete="off" enterkeyhint="done" aria-label="${Lg("Jouw naam", "Your name")}"><em id="nmok"></em></span></div>
       ${misHtml()}
-      <button class="wg-btn" id="a">${Lg("Spelen", "Play")} →</button>
+      <button class="wg-btn wg-play" id="a">${Lg("Spelen", "Play")} →</button>
       <div class="wg-row"><button class="wg-btn alt" id="b">Top 10</button><button class="wg-btn alt" id="c">${Lg("Platenkast", "Crate")}</button><button class="wg-btn alt" id="d">Skins</button><button class="wg-btn alt" id="e">${Lg("Hoe werkt het?", "How to play")}</button></div>
       <button class="wg-home" id="hm"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>${Lg("Terug naar timetable, kaart en favorieten", "Back to timetable, map and favourites")}</button>`,
       () => { on("#a", start); on("#b", () => showTop()); on("#c", showCrate); on("#d", showSkins); on("#e", showHow); on("#f", showSkins); on("#hm", goHome); animMe(ov.querySelector(".wg-me canvas"));

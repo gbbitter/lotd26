@@ -541,7 +541,7 @@
   const tc = s => { s = Math.floor(s); return `${Math.floor(s / 3600)}:${String(Math.floor(s / 60) % 60).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`; };
   function tick(now) {
     raf = requestAnimationFrame(tick); if (!root) return;
-    const dt = now - t0; t0 = now; if (!paused) { elapsed += dt; clock += dt; }
+    const dt = now - t0; t0 = now; if (!paused && dt > 0) { elapsed += dt; clock += dt; }
     const sl = S[idx], bars = root.querySelectorAll(".rw-bars i b");
     if (sl.dur) { const k = Math.min(1, elapsed / sl.dur); if (bars[idx]) bars[idx].style.width = (k * 100) + "%"; if (k >= 1) { show(idx + 1); return; } } else if (bars[idx]) bars[idx].style.width = "100%";
     const t = elapsed / 1000, osd = root.querySelector(".rw-osd");
