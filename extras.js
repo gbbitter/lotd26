@@ -667,7 +667,6 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
         <p class="end-p">${L("Spoel je festival nog één keer terug.", "Rewind your festival one more time.")}</p>
         <button class="end-go" data-rewind><span class="end-play">▶</span><span>Rewind the Dial<small>${L("Jouw festival in anderhalve minuut", "Your festival in ninety seconds")}</small></span></button>
         <a class="end-tix" href="https://leftofthedial.nl/tickets/" target="_blank" rel="noopener">${open ? L("Koop je tickets voor 2027 →", "Get your tickets for 2027 →") : L("Tickets 2027 · verkoop start vandaag om 10:00", "Tickets 2027 · on sale today at 10:00")}</a>
-        <div class="end-row"><button data-go="/timetable">${L("Timetable", "Timetable")}</button><button data-go="/favorites">${L("Favorieten", "Favorites")}</button><button data-go="/game">Wapperman</button></div>
         <p class="end-see">See you next year ♥</p>
       </div>
       <div class="end-tick" aria-hidden="true"><div>${tick}${tick}</div></div>
