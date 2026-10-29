@@ -73,6 +73,18 @@ const leaderboard = (() => {
     { bg: "#141414", ink: "#ffffff", paper: "#141414", lane: "#2a2a2e", floor: "#1c1c20", crowd: "#2e2e36", acc: "#7d8bff", dark: true },
     { bg: "#07070c", ink: "#ffffff", paper: "#07070c", lane: "#1a1a2c", floor: "#0e0e1a", crowd: "#22224a", acc: "#8f9cff", dark: true, beams: true }
   ];
+  /* Halloween: spooky mode (29 okt – 2 nov, uit te zetten op het beginscherm; ?spooky=1 om te testen) */
+  const SPOOK = [
+    { bg: "#1b1030", ink: "#ffffff", paper: "#1b1030", lane: "rgba(255,122,26,.16)", floor: "#120a22", crowd: "#2c1b4a", acc: "#ff7a1a", dark: true, spooky: true },
+    { bg: "#24103c", ink: "#ffffff", paper: "#24103c", lane: "rgba(170,120,255,.18)", floor: "#170a2a", crowd: "#3a2160", acc: "#ff7a1a", dark: true, spooky: true },
+    { bg: "#2c0f2e", ink: "#ffffff", paper: "#2c0f2e", lane: "rgba(255,122,26,.2)", floor: "#1d0a1f", crowd: "#4a1a48", acc: "#9dff5c", dark: true, spooky: true },
+    { bg: "#0f0b1a", ink: "#ffffff", paper: "#0f0b1a", lane: "#251c3a", floor: "#0a0712", crowd: "#241a3a", acc: "#ff7a1a", dark: true, spooky: true },
+    { bg: "#07050c", ink: "#ffffff", paper: "#07050c", lane: "#1c1230", floor: "#0b0714", crowd: "#2a1840", acc: "#ff7a1a", dark: true, beams: true, spooky: true }
+  ];
+  const spookyDate = () => { const n = new Date(), m = n.getMonth(), d = n.getDate(); return (m === 9 && d >= 29) || (m === 10 && d <= 2); };
+  const spookyAvail = () => spookyDate() || /[?&]spooky=1/.test(location.search);
+  const spooky = () => spookyAvail() && store.get("lotd-wapperman-spooky") !== "0";
+  const pal = st => (spooky() ? SPOOK : PALS)[st] || (spooky() ? SPOOK : PALS)[0];
   /* skins: Klassiek, Afterparty (record) en tien genre-skins (sterren uit missies) */
   const SKINS = [
     { id: "classic", nl: "Klassiek", en: "Classic", body: null, arm: null, band: "#1717ff", need: () => true, how: ["Altijd beschikbaar", "Always available"] },
@@ -202,6 +214,14 @@ const leaderboard = (() => {
 @media (max-width:360px){.wg h2{font-size:54px}.wg-stats b{font-size:22px}.wg-big b{font-size:76px}}
 /* kleine telefoons: HUD past in de breedte, Spelen-knop altijd in beeld */
 @media (max-width:360px){.wg-hud{padding-left:8px;padding-right:8px;gap:4px}.wg-score{font-size:42px}.wg-x,.wg-snd{width:38px;height:38px;font-size:16px}.wg-btns{gap:4px}.wg-stage{font-size:10px;letter-spacing:.03em;padding:5px 6px 4px}.wg-recbar{width:40px}.wg-name label{font-size:15px}}
+.wg-spook{display:flex;align-items:center;gap:10px;width:100%;margin:0 0 12px;padding:8px 12px;border:1px solid #e2e2e8;border-radius:8px;background:#fff;color:#141414;text-align:left;cursor:pointer;font:inherit}
+.wg-spook.on{background:#1b1030;border-color:#1b1030;color:#fff}
+.wg-spook svg{flex:none}.wg-spook span{flex:1;min-width:0}
+.wg-spook b{display:block;font:800 18px/1 "Barlow Condensed",Arial,sans-serif;text-transform:uppercase;letter-spacing:.02em}
+.wg-spook small{display:block;margin-top:3px;font:600 12px/1 "Barlow",Arial,sans-serif;opacity:.75}
+.wg-spook em{flex:none;font:800 14px/1 "Barlow Condensed",Arial,sans-serif;font-style:normal;text-transform:uppercase;letter-spacing:.06em;padding:6px 10px;border-radius:20px;background:#ececf1;color:#141414}
+.wg-spook.on em{background:#ff7a1a;color:#141414}
+.wg.spooky{background:#120a22}
 .wg-btn.wg-play{position:sticky;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:3;box-shadow:0 10px 26px rgba(23,23,255,.35)}
 @media (max-height:720px){.wg-head h2{font-size:52px}.wg-card > p{font-size:14px;margin-bottom:10px}.wg-stats{margin-bottom:10px}.wg-stats div{padding:7px 7px 6px}.wg-stats b{font-size:22px}.wg-name{margin-bottom:10px;padding:7px 10px}.wg .wg-name input{min-height:40px}.wg-mis{margin-bottom:10px}.wg-mis li{padding:8px 12px!important;font-size:14px!important}}
 @media (prefers-reduced-motion:reduce){.wg-card{animation:none}.wg{transition:none}}`;
@@ -276,6 +296,54 @@ const leaderboard = (() => {
     return c;
   }
 
+  /* spooky: pompoenen en spookjes in plaats van logo's (zelfde botsrondje) */
+  function makeSpook(kind) {
+    const D = 128, c = document.createElement("canvas"); c.width = c.height = D; const g = c.getContext("2d");
+    if (kind === "pumpkin") {
+      g.fillStyle = "#3d7a1e"; g.beginPath(); g.moveTo(60, 8); g.quadraticCurveTo(66, 0, 76, 4); g.lineTo(70, 22); g.lineTo(58, 22); g.closePath(); g.fill();
+      [[26, 30], [102, 30], [46, 40], [82, 40], [64, 44]].forEach(([x, rx], i) => { g.fillStyle = i < 2 ? "#e0620e" : i < 4 ? "#f07318" : "#ff8a24"; g.beginPath(); g.ellipse(x, 70, rx * .78, 50, 0, 0, 7); g.fill(); });
+      g.strokeStyle = "rgba(120,40,0,.35)"; g.lineWidth = 2.5; [40, 64, 88].forEach(x => { g.beginPath(); g.moveTo(x, 26); g.quadraticCurveTo(x + (x - 64) * .5, 70, x, 116); g.stroke(); });
+      g.fillStyle = "#ffe14d"; g.shadowColor = "#ffd23f"; g.shadowBlur = 10;
+      g.beginPath(); g.moveTo(34, 64); g.lineTo(50, 46); g.lineTo(56, 66); g.closePath(); g.fill();
+      g.beginPath(); g.moveTo(94, 64); g.lineTo(78, 46); g.lineTo(72, 66); g.closePath(); g.fill();
+      g.beginPath(); g.moveTo(58, 74); g.lineTo(64, 66); g.lineTo(70, 74); g.closePath(); g.fill();
+      g.beginPath(); g.moveTo(28, 82); g.quadraticCurveTo(64, 112, 100, 82); g.lineTo(92, 84); g.lineTo(86, 94); g.lineTo(78, 87); g.lineTo(70, 98); g.lineTo(62, 88); g.lineTo(54, 98); g.lineTo(46, 88); g.lineTo(40, 94); g.lineTo(34, 85); g.closePath(); g.fill();
+    } else {
+      g.fillStyle = "#f4f2ff"; g.shadowColor = "rgba(190,170,255,.9)"; g.shadowBlur = 14;
+      g.beginPath(); g.moveTo(18, 120); g.lineTo(18, 60); g.bezierCurveTo(18, 14, 110, 14, 110, 60); g.lineTo(110, 120); g.lineTo(96, 108); g.lineTo(82, 120); g.lineTo(68, 108); g.lineTo(54, 120); g.lineTo(40, 108); g.lineTo(28, 120); g.closePath(); g.fill();
+      g.shadowBlur = 0; g.fillStyle = "#141414"; g.beginPath(); g.ellipse(48, 56, 9, 13, 0, 0, 7); g.fill(); g.beginPath(); g.ellipse(80, 56, 9, 13, 0, 0, 7); g.fill();
+      g.beginPath(); g.ellipse(64, 84, 9, 12, 0, 0, 7); g.fill();
+    }
+    return c;
+  }
+  let spookSprites = null, bats = null;
+  function spookyBack(P) {
+    if (!spookSprites) spookSprites = [makeSpook("pumpkin"), makeSpook("ghost")];
+    if (!bats) bats = Array.from({ length: 6 }, (_, i) => ({ y: .08 + i * .07, sp: 30 + i * 9, ph: i * 1.7, sz: 7 + (i % 3) * 3 }));
+    const mx = W * .8, my = H * .14, mr = Math.min(W, H) * .11;
+    const gl = cx.createRadialGradient(mx, my, mr * .8, mx, my, mr * 3); gl.addColorStop(0, "rgba(255,240,200,.18)"); gl.addColorStop(1, "rgba(255,240,200,0)"); cx.fillStyle = gl; cx.fillRect(0, 0, W, H * .5);
+    cx.fillStyle = "#fff4d6"; cx.beginPath(); cx.arc(mx, my, mr, 0, 7); cx.fill();
+    cx.fillStyle = "rgba(200,180,140,.35)"; [[-.3, -.2, .22], [.25, .1, .16], [-.05, .35, .12]].forEach(([dx, dy, r]) => { cx.beginPath(); cx.arc(mx + dx * mr, my + dy * mr, r * mr, 0, 7); cx.fill(); });
+    cx.fillStyle = "rgba(255,255,255,.7)"; for (let i = 0; i < 28; i++) { const sx = (i * 137.5) % W, sy = (i * 71.3) % (H * .55), tw = .5 + .5 * Math.sin(clock * 2 + i); cx.globalAlpha = tw * .8; cx.fillRect(sx, sy, 1.6, 1.6); } cx.globalAlpha = 1;
+    cx.fillStyle = "#07050c";
+    for (const b of bats) { const bx = ((clock * b.sp + b.ph * 90) % (W + 80)) - 40, by = H * b.y + Math.sin(clock * 2 + b.ph) * 14, f = Math.sin(clock * 14 + b.ph) * .9, z = b.sz * s;
+      cx.beginPath(); cx.moveTo(bx, by); cx.quadraticCurveTo(bx - z * 1.2, by - z * f - z * .4, bx - z * 2.2, by - z * f * 1.2); cx.quadraticCurveTo(bx - z * 1.3, by - z * f * .3 + z * .2, bx, by + z * .4); cx.quadraticCurveTo(bx + z * 1.3, by - z * f * .3 + z * .2, bx + z * 2.2, by - z * f * 1.2); cx.quadraticCurveTo(bx + z * 1.2, by - z * f - z * .4, bx, by); cx.fill(); }
+    /* spinnenweb in de hoek */
+    cx.strokeStyle = "rgba(255,255,255,.22)"; cx.lineWidth = 1; const wr = 70 * s;
+    for (let i = 0; i <= 4; i++) { const a = i / 4 * Math.PI / 2; cx.beginPath(); cx.moveTo(0, 0); cx.lineTo(Math.cos(a) * wr, Math.sin(a) * wr); cx.stroke(); }
+    for (let k = 1; k <= 3; k++) { cx.beginPath(); for (let i = 0; i <= 4; i++) { const a = i / 4 * Math.PI / 2, r = wr * k / 3.4; const px = Math.cos(a) * r, py = Math.sin(a) * r; i ? cx.quadraticCurveTo(Math.cos(a - Math.PI / 8) * r * .82, Math.sin(a - Math.PI / 8) * r * .82, px, py) : cx.moveTo(px, py); } cx.stroke(); }
+  }
+  function spookyFog(P) {
+    for (let i = 0; i < 5; i++) { const fx = ((clock * (14 + i * 6) + i * 140) % (W + 300)) - 150, fy = groundY - 6 * s + (i % 2) * 10 * s; const g = cx.createRadialGradient(fx, fy, 0, fx, fy, 130 * s); g.addColorStop(0, "rgba(200,190,255,.16)"); g.addColorStop(1, "rgba(200,190,255,0)"); cx.fillStyle = g; cx.fillRect(fx - 130 * s, fy - 60 * s, 260 * s, 120 * s); }
+    cx.fillStyle = "#4a3870"; for (let i = 0; i < 4; i++) { const tx = ((i * 157 + 40) % (W - 30)) + 15, tw = 20 * s, th = (28 + (i % 2) * 8) * s, ty = groundY + 9 * s; cx.beginPath(); cx.moveTo(tx - tw / 2, ty); cx.lineTo(tx - tw / 2, ty - th + tw / 2); cx.arc(tx, ty - th + tw / 2, tw / 2, Math.PI, 0); cx.lineTo(tx + tw / 2, ty); cx.closePath(); cx.fill(); cx.fillStyle = "#5a4680"; cx.fillRect(tx - 1.5 * s, ty - th + 4 * s, 3 * s, 8 * s); cx.fillRect(tx - 4 * s, ty - th + 7 * s, 8 * s, 2.5 * s); cx.fillStyle = "#4a3870"; }
+  }
+  function witchHat() {
+    cx.fillStyle = "#3b1766"; cx.strokeStyle = "#c9a3ff"; cx.lineWidth = 1.6 * s; cx.lineJoin = "round";
+    cx.beginPath(); cx.ellipse(0, -21 * s, 31 * s, 7 * s, -.08, 0, 7); cx.fill(); cx.stroke();
+    cx.beginPath(); cx.moveTo(-17 * s, -23 * s); cx.quadraticCurveTo(-6 * s, -48 * s, 10 * s, -66 * s); cx.quadraticCurveTo(4 * s, -50 * s, 17 * s, -23 * s); cx.closePath(); cx.fill(); cx.stroke();
+    cx.fillStyle = "#ff7a1a"; cx.beginPath(); cx.moveTo(-16 * s, -25 * s); cx.lineTo(16 * s, -25 * s); cx.lineTo(14.5 * s, -31 * s); cx.lineTo(-14 * s, -31 * s); cx.closePath(); cx.fill();
+    cx.fillStyle = "#ffd23f"; cx.fillRect(-3 * s, -31 * s, 6 * s, 6 * s);
+  }
   function resize() {
     if (!root) return;
     const rw = root.clientWidth, rh = root.clientHeight, d = Math.min(2, devicePixelRatio || 1);
@@ -306,7 +374,8 @@ const leaderboard = (() => {
     obstacles = []; pickups = []; tokens = []; particles = []; pops = []; x = W / 2; vel = 0; touchDir = 0; active = null; prevGap = Math.floor((lanes - 3) / 2);
     combo = 0; comboT = 0; mult = 1; maxMult = 1; found = []; slow = 0; tokenT = 5; evT = T.eventFirst; evKind = null; evPhase = ""; evClock = 0; renderCombo();
     stage = 0; banner = null; run = { waves: 0, nears: 0, shields: 0 }; newFound = []; misDoneRun = []; nextRound(); todayMis = missionsToday(); unlockBefore = unlockedIds();
-    root.classList.remove("dark"); paintStage(); hide(); setScore(0); beep(520, .06, "square", .04, 400);
+    root.classList.toggle("dark", pal(0).dark); root.classList.toggle("spooky", spooky()); paintStage(); hide(); setScore(0); beep(520, .06, "square", .04, 400);
+    if (spooky()) banner = { txt: "HAPPY HALLOWEEN", t: 0 };
   }
   const speedNow = () => T.speedStart + Math.min(T.speedMax, elapsed * T.speedGain);
   const intervalNow = () => Math.max(T.rowMin, T.rowStart - elapsed * T.rowGain);
@@ -410,7 +479,7 @@ const leaderboard = (() => {
     }
     inv = Math.max(0, inv - dt);
     const st = stageFor(score);
-    if (st !== stage) { stage = st; root.classList.toggle("dark", PALS[stage].dark); flash = .35; banner = { txt: stageName(st).toUpperCase(), t: 0 }; paintStage(); beep(523, .08, "square", .05); setTimeout(() => beep(659, .08, "square", .05), 90); setTimeout(() => beep(784, .14, "square", .05), 180); }
+    if (st !== stage) { stage = st; root.classList.toggle("dark", pal(stage).dark); flash = .35; banner = { txt: stageName(st).toUpperCase(), t: 0 }; paintStage(); beep(523, .08, "square", .05); setTimeout(() => beep(659, .08, "square", .05), 90); setTimeout(() => beep(784, .14, "square", .05), 180); }
     while (score >= nextMile) {
       const isStage = STAGES.some(z => z[2] === nextMile);
       if (!isStage) { pop(String(nextMile), W / 2, H * .3, 54); flash = .25; beep(660, .07, "square", .05); setTimeout(() => beep(880, .1, "square", .05), 80); }
@@ -465,7 +534,7 @@ const leaderboard = (() => {
     if (d > .4) { cx.strokeStyle = "#ffffff"; cx.lineWidth = 2 * s; for (const e of [-1, 1]) { cx.beginPath(); cx.moveTo(e * 8 * s - 3 * s, -9 * s); cx.lineTo(e * 8 * s + 3 * s, -3 * s); cx.moveTo(e * 8 * s + 3 * s, -9 * s); cx.lineTo(e * 8 * s - 3 * s, -3 * s); cx.stroke(); } }
     cx.restore();
     cx.lineWidth = 3 * s; cx.strokeStyle = P.dark ? "#ffffff" : HEAD_INK; cx.beginPath(); cx.ellipse(0, 0, 20 * s, 25 * s, 0, 0, 7); cx.stroke();
-    if (SK.hat) hatFront(SK, t, d);
+    if (SK.hat) hatFront(SK, t, d); else if (spooky()) witchHat();
     cx.restore();
     if (SK.fx === "party") partyFront(px, gy, bh, t);
     if (SK.fx === "sparkle" && !reduced) { cx.fillStyle = "#fff3c4"; for (let i = 0; i < 4; i++) { const a = t * 1.7 + i * 1.6, r = (26 + (i % 2) * 14) * s, k = .5 + .5 * Math.sin(t * 6 + i * 2); cx.globalAlpha = k; star(px + Math.cos(a) * r, gy - bh * .55 + Math.sin(a) * r * 1.4, 4.5 * s); } cx.globalAlpha = 1; }
@@ -556,14 +625,15 @@ const leaderboard = (() => {
     if (!banner) return; const D = 2.1, t = banner.t; if (t > D) { banner = null; return; }
     const ease = u => 1 - Math.pow(1 - u, 3), pin = ease(Math.min(1, t / .32)), pout = t > D - .32 ? ease((t - (D - .32)) / .32) : 0, off = (1 - pin) * W - pout * W;
     const yy = H * .34, hh = 70 * s, onBlue = P.acc === "#ffffff";
-    cx.fillStyle = onBlue ? "#ffffff" : "#1717ff"; cx.fillRect(off, yy - hh / 2, W, hh);
-    cx.fillStyle = onBlue ? "#1717ff" : "#ffffff"; cx.textAlign = "center"; cx.textBaseline = "middle";
+    cx.fillStyle = P.spooky ? "#ff7a1a" : onBlue ? "#ffffff" : "#1717ff"; cx.fillRect(off, yy - hh / 2, W, hh);
+    cx.fillStyle = P.spooky ? "#1b1030" : onBlue ? "#1717ff" : "#ffffff"; cx.textAlign = "center"; cx.textBaseline = "middle";
     cx.font = `800 ${50 * s}px ${FONT_D}`; cx.fillText(banner.txt, off + W / 2, yy + 3 * s);
-    cx.fillStyle = P.ink; cx.font = `700 ${12 * s}px ${FONT_B}`; cx.fillText(Lg(`PODIUM ${stage + 1} / ${STAGES.length}`, `STAGE ${stage + 1} / ${STAGES.length}`), off + W / 2, yy - hh / 2 - 12 * s);
+    cx.fillStyle = P.ink; cx.font = `700 ${12 * s}px ${FONT_B}`; cx.fillText(banner.txt === "HAPPY HALLOWEEN" ? "SPOOKY MODE" : Lg(`PODIUM ${stage + 1} / ${STAGES.length}`, `STAGE ${stage + 1} / ${STAGES.length}`), off + W / 2, yy - hh / 2 - 12 * s);
   }
   function draw() {
-    const P = PALS[stage] || PALS[0];
+    const P = pal(stage);
     cx.save(); cx.fillStyle = P.bg; cx.fillRect(0, 0, W, H);
+    if (P.spooky) spookyBack(P);
     if (shakeT > 0) cx.translate(rnd(-5, 5), rnd(-5, 5));
     if (P.beams) drawBeams(P);
     cx.strokeStyle = P.lane; cx.lineWidth = 2; const off = (clock * 120) % 60;
@@ -571,8 +641,11 @@ const leaderboard = (() => {
     cx.setLineDash([]);
     cx.fillStyle = P.floor; cx.fillRect(0, groundY + 12 * s, W, H); cx.fillStyle = P.ink; cx.fillRect(0, groundY + 9 * s, W, 3 * s);
     drawCrowd(P);
+    if (P.spooky) spookyFog(P);
     const spr = P.dark ? sprites[1] : sprites[0];
-    for (const o of obstacles) { cx.save(); cx.translate(o.x, o.y); cx.rotate(o.rot); cx.drawImage(spr, -o.size / 2, -o.size / 2, o.size, o.size); cx.restore(); }
+    for (const o of obstacles) {
+      if (P.spooky) { if (o.sp == null) o.sp = Math.random() < .68 ? 0 : 1; const sp = spookSprites[o.sp]; cx.save(); cx.translate(o.x, o.y); if (o.sp) cx.rotate(Math.sin(clock * 3 + o.x * .05) * .18); else cx.rotate(o.rot); cx.drawImage(sp, -o.size / 2, -o.size / 2, o.size, o.size); cx.restore(); continue; }
+      cx.save(); cx.translate(o.x, o.y); cx.rotate(o.rot); cx.drawImage(spr, -o.size / 2, -o.size / 2, o.size, o.size); cx.restore(); }
     const onBlue = P.acc === "#ffffff";
     for (const p of pickups) {
       const pulse = 1 + Math.sin(clock * 6 + p.x) * .06;
@@ -631,17 +704,18 @@ const leaderboard = (() => {
     const foot = allDone() ? `<div class="wg-mis-f">${Lg("Alle missies van vandaag gehaald. Morgen weer nieuwe!", "All of today's missions done. New ones tomorrow!")}</div>` : ns ? `<div class="wg-mis-f">${Lg("Volgende skin", "Next skin")}: <b>${Lg(ns.nl, ns.en)}</b> · ★ ${prof.stars || 0}/${ns.stars}</div>` : "";
     return `<div class="wg-mis"><div class="wg-mis-h"><span>${r ? Lg(`Bonusronde ${r}`, `Bonus round ${r}`) : Lg("Missies van vandaag", "Today's missions")}</span><b>★ ${dn}/3</b></div><ol>${mis.map((m, i) => `<li class="${prof.mis.done[i] ? "ok" : ""}${misDoneRun.includes(i) ? " wg-now" : ""}"><i>${prof.mis.done[i] ? "✓" : ""}</i><span>${esc(misText(m))}</span>${misDoneRun.includes(i) ? "<small>+★</small>" : ""}</li>`).join("")}</ol>${foot}</div>`; };
   function showStart() {
-    state = "start"; bestEl.textContent = "Record " + best; stage = 0; root.classList.remove("dark"); paintStage(); setScore(0);
+    state = "start"; bestEl.textContent = "Record " + best; stage = 0; root.classList.toggle("dark", pal(0).dark); root.classList.toggle("spooky", spooky()); paintStage(); setScore(0);
     const me = skinOf();
     show(`<div class="wg-head"><div><div class="wg-kick">Left of the Dial · ${Lg("het spel", "the game")}</div><h2>Wapper<br>man<em>.</em></h2></div><button class="wg-me" id="f" aria-label="${Lg("Jouw skin", "Your skin")}: ${Lg(me.nl, me.en)}"><canvas></canvas><b>${Lg(me.nl, me.en)}</b><small>${Lg("Wijzig", "Change")}</small></button></div>
       <p>${Lg("Wapper, ontwijk de logo's en verzamel onderweg bands van het festival.", "Flap, dodge the logos and collect festival bands along the way.")}</p>
       <div class="wg-stats"><div class="hl"><b>${best}</b><small>Record</small></div><div><b>${prof.crate.length}</b><small>${Lg("Platen", "Records")}</small></div><div><b>★${prof.stars || 0}</b><small>${Lg("Sterren", "Stars")}</small></div><div><b>${streakNow()}</b><small>${Lg("Dagen op rij", "Day streak")}</small></div></div>
+      ${spookyAvail() ? `<button class="wg-spook${spooky() ? " on" : ""}" id="sp" aria-pressed="${spooky()}"><svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><path d="M15 4c1-2 3-3 5-2l-2 5h-3z" fill="#3d7a1e"/><ellipse cx="9" cy="18" rx="7" ry="10" fill="#e0620e"/><ellipse cx="23" cy="18" rx="7" ry="10" fill="#e0620e"/><ellipse cx="16" cy="18" rx="8" ry="11" fill="#ff8a24"/><path d="M9 15l3-3 1 4zM23 15l-3-3-1 4zM9 21q7 6 14 0l-2 1-1 2-2-2-2 2-2-2-2 2-1-2z" fill="#ffe14d"/></svg><span><b>Happy Halloween!</b><small>Spooky mode</small></span><em>${spooky() ? Lg("Aan", "On") : Lg("Uit", "Off")}</em></button>` : ""}
       <div class="wg-name"><label for="nm">${Lg("Voer je naam in", "Enter your name")}</label><span><input id="nm" maxlength="16" value="${esc(myName())}" placeholder="${Lg("Je naam", "Your name")}" autocomplete="off" enterkeyhint="done" aria-label="${Lg("Jouw naam", "Your name")}"><em id="nmok"></em></span></div>
       ${misHtml()}
       <button class="wg-btn wg-play" id="a">${Lg("Spelen", "Play")} →</button>
       <div class="wg-row"><button class="wg-btn alt" id="b">Top 10</button><button class="wg-btn alt" id="c">${Lg("Platenkast", "Crate")}</button><button class="wg-btn alt" id="d">Skins</button><button class="wg-btn alt" id="e">${Lg("Hoe werkt het?", "How to play")}</button></div>
       <button class="wg-home" id="hm"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>${Lg("Terug naar timetable, kaart en favorieten", "Back to timetable, map and favourites")}</button>`,
-      () => { on("#a", start); on("#b", () => showTop()); on("#c", showCrate); on("#d", showSkins); on("#e", showHow); on("#f", showSkins); on("#hm", goHome); animMe(ov.querySelector(".wg-me canvas"));
+      () => { on("#a", start); on("#b", () => showTop()); on("#c", showCrate); on("#d", showSkins); on("#e", showHow); on("#f", showSkins); on("#hm", goHome); on("#sp", () => { store.set("lotd-wapperman-spooky", spooky() ? "0" : "1"); showStart(); }); animMe(ov.querySelector(".wg-me canvas"));
         const nm = ov.querySelector("#nm"), ok = ov.querySelector("#nmok"); let tm = 0;
         const save = () => { const v = nm.value.trim().slice(0, 16); try { if (v) localStorage.setItem("lotd-wapperman-name", v); else localStorage.removeItem("lotd-wapperman-name"); } catch {} ok.textContent = v ? "✓" : ""; };
         nm.addEventListener("input", () => { ok.textContent = ""; clearTimeout(tm); tm = setTimeout(save, 500); });
