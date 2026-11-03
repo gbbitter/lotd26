@@ -275,7 +275,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
   const applyGeo = () => { Object.keys(geoStore.c).forEach(n => { if (!MANUAL[n]) coords[n] = geoStore.c[n]; }); };
   applyGeo();
   (function geoAll() {
-    if (!navigator.onLine) return;
+    if (!navigator.onLine || postFest()) return;
     const todo = Object.keys(ADDR).filter(n => !MANUAL[n] && (!geoStore.c[n] || geoStore.q && geoStore.q[n] !== geoQuery(n))); if (!todo.length) return;
     geoStore.q = geoStore.q || {}; let k = 0, got = 0;
     const next = () => {
@@ -447,7 +447,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     if (text && !postFest() && LS.get("lotd-notice-x", "") !== key) post("notice", { text: () => (lang === "en" && j.notice_en ? j.notice_en : j.notice), x: true, key }); else drop("notice");
   }
   let checking = false;
-  async function checkLineup() { if (checking || navigator.onLine === false) return; checking = true; try { const r = await fetch("lineup.json?x=" + Date.now(), { cache: "no-store" }); if (!r.ok) throw 0; const j = await r.json(); if (!Array.isArray(j.raw) || !j.raw.length) throw 0; handleLineup(j); } catch (e) {} checking = false; }
+  async function checkLineup() { if (checking || navigator.onLine === false || postFest()) return; checking = true; try { const r = await fetch("lineup.json?x=" + Date.now(), { cache: "no-store" }); if (!r.ok) throw 0; const j = await r.json(); if (!Array.isArray(j.raw) || !j.raw.length) throw 0; handleLineup(j); } catch (e) {} checking = false; }
   if (cached && Array.isArray(cached.raw) && cached.raw.length) { try { applyLineup(cached, true); } catch (e) { cached = null; } }
   if (cached && cached.notice && !postFest() && LS.get("lotd-notice-x", "") !== cached.notice) post("notice", { text: () => (lang === "en" && cached.notice_en ? cached.notice_en : cached.notice), x: true, key: cached.notice });
 
@@ -792,6 +792,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
   const hm2m = t => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
   const nowM = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
   async function loadWx(force) {
+    if (postFest()) return; /* na het festival: geen weer meer ophalen */
     if ((wxBusy && Date.now() - wxBusy < 25e3) || navigator.onLine === false) return; if (!force && wx && Date.now() - wx.t < 5 * 60e3) return;
     const my = wxBusy = Date.now(), out = { t: Date.now(), rain: null, src: "", om: null };
     /* nooit eindeloos wachten: een verzoek dat blijft hangen (zwak bereik, app in de achtergrond) breekt na 12 s af */
@@ -843,12 +844,12 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     }
     return `<button class="wx-bar" data-wx aria-expanded="${wxOpen}" aria-label="${L("Weer, tik voor details", "Weather, tap for details")}">${now}${rain}${stale ? `<span class="wx-stale">${upd}</span>` : ""}<i class="wx-chev" aria-hidden="true">${wxOpen ? "−" : "+"}</i></button>${det}`;
   }
-  function paintWx() { const el = document.getElementById("wx"); if (el) { el.innerHTML = wxHtml(); el.classList.toggle("open", wxOpen); } }
+  function paintWx() { const el = document.getElementById("wx"); if (el && postFest()) { el.style.display = "none"; return; } if (el) { el.innerHTML = wxHtml(); el.classList.toggle("open", wxOpen); } }
   const wxTick = () => { if (route().p === "map" && document.visibilityState === "visible") { paintWx(); loadWx(false); } };
   setInterval(wxTick, 60000);
   document.addEventListener("visibilitychange", () => setTimeout(wxTick, 300)); window.addEventListener("pageshow", () => setTimeout(wxTick, 300)); window.addEventListener("online", () => setTimeout(wxTick, 300));
 
-  const vMapView = () => `<h1 class="sr-only">${mapMode === "food" ? L("Eten tussen de bands door", "Food between the bands") : L("Alle locaties", "All venues")}</h1>`+ `<div class="map-tog" role="tablist" aria-label="${L("Kaartweergave", "Map view")}"><button class="${mapMode === "venues" ? "on" : ""}" data-mapmode="venues" role="tab" aria-selected="${mapMode === "venues"}">${L("Locaties", "Venues")}</button><button class="${mapMode === "food" ? "on" : ""}" data-mapmode="food" role="tab" aria-selected="${mapMode === "food"}">${L("Eten", "Food")}</button></div><div class="wx${wxOpen ? " open" : ""}" id="wx">${wxHtml()}</div><div class="mapwrap${mapMode === "food" ? " food" : ""}" id="mapwrap"><div id="lmap" aria-label="${L("Kaart met alle locaties", "Map of all venues")}"></div><div class="mapbtns"><button data-maploc aria-label="${L("Mijn locatie", "My location")}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2" fill="currentColor"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg></button><button data-mapfit aria-label="${L("Alles tonen", "Show all")}">${sv(SI.pin, 24)}</button></div><div class="mapnote" id="mapnote"></div></div>${mapMode === "food" ? foodPanel() : ""}<div class="venue-dir"${mapMode === "food" ? " hidden" : ""}>${mapGroups().sort((x, y) => x.name.localeCompare(y.name)).map(g => `<div class="vd-item"><button data-mapven="${g.name.replace(/"/g, "&quot;")}"><span class="vd-name">${g.name}</span><small>${addrOf(g.name) || "Rotterdam"}</small></button>${g.c ? `<a href="${routeUrl(g.c)}" target="_blank" rel="noopener" aria-label="${L("Looproute naar", "Walking route to")} ${g.name}">${L("Looproute", "Route")} ${sv(SI.ext, 14)}</a>` : ""}</div>`).join("")}</div>${updLine()}`;
+  const vMapView = () => `<h1 class="sr-only">${mapMode === "food" ? L("Eten tussen de bands door", "Food between the bands") : L("Alle locaties", "All venues")}</h1>`+ `<div class="map-tog" role="tablist" aria-label="${L("Kaartweergave", "Map view")}"><button class="${mapMode === "venues" ? "on" : ""}" data-mapmode="venues" role="tab" aria-selected="${mapMode === "venues"}">${L("Locaties", "Venues")}</button><button class="${mapMode === "food" ? "on" : ""}" data-mapmode="food" role="tab" aria-selected="${mapMode === "food"}">${L("Eten", "Food")}</button></div>${postFest() ? "" : `<div class="wx${wxOpen ? " open" : ""}" id="wx">${wxHtml()}</div>`}<div class="mapwrap${mapMode === "food" ? " food" : ""}" id="mapwrap"><div id="lmap" aria-label="${L("Kaart met alle locaties", "Map of all venues")}"></div><div class="mapbtns"><button data-maploc aria-label="${L("Mijn locatie", "My location")}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2" fill="currentColor"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg></button><button data-mapfit aria-label="${L("Alles tonen", "Show all")}">${sv(SI.pin, 24)}</button></div><div class="mapnote" id="mapnote"></div></div>${mapMode === "food" ? foodPanel() : ""}<div class="venue-dir"${mapMode === "food" ? " hidden" : ""}>${mapGroups().sort((x, y) => x.name.localeCompare(y.name)).map(g => `<div class="vd-item"><button data-mapven="${g.name.replace(/"/g, "&quot;")}"><span class="vd-name">${g.name}</span><small>${addrOf(g.name) || "Rotterdam"}</small></button>${g.c ? `<a href="${routeUrl(g.c)}" target="_blank" rel="noopener" aria-label="${L("Looproute naar", "Walking route to")} ${g.name}">${L("Looproute", "Route")} ${sv(SI.ext, 14)}</a>` : ""}</div>`).join("")}</div>${updLine()}`;
   const loadLeaflet = () => new Promise((ok, no) => {
     if (window.L && window.L.map) return ok();
     if (!document.getElementById("lf-css")) { const l = document.createElement("link"); l.id = "lf-css"; l.rel = "stylesheet"; l.href = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"; document.head.appendChild(l); }
@@ -963,7 +964,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     return list;
   }
   function geoTips() {
-    const geo = LS.get("lotd-foodgeo", {}) || {}, todo = foodTips.filter(tp => tp.addr && !geo[tp.name] && FOOD.some(f => f.id === "tip-" + tp.name)); if (!todo.length || navigator.onLine === false) return;
+    const geo = LS.get("lotd-foodgeo", {}) || {}, todo = foodTips.filter(tp => tp.addr && !geo[tp.name] && FOOD.some(f => f.id === "tip-" + tp.name)); if (!todo.length || navigator.onLine === false || postFest()) return;
     let k = 0; const next = () => { if (k >= todo.length) return; const tp = todo[k++];
       fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=nl&bounded=1&viewbox=4.38,51.98,4.58,51.86&q=" + encodeURIComponent(tp.addr), { headers: { Accept: "application/json" } }).then(r => r.json()).then(j => { if (j && j[0]) { geo[tp.name] = [+(+j[0].lat).toFixed(5), +(+j[0].lon).toFixed(5)]; LS.set("lotd-foodgeo", geo); const f = FOOD.find(x => x.id === "tip-" + tp.name); if (f) { f.c = geo[tp.name]; if (route().p === "map" && mapMode === "food") { drawFoodLayer(); paintFoodList(); } } } }).catch(() => {}).then(() => setTimeout(next, 1100)); };
     next();
@@ -981,7 +982,7 @@ Zilcho Hamblin|UK|alt-country,pop,rock,singer-songwriter,slowcore`;
     const snap = () => fetch("food.json", { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error("food.json " + r.status); return r.json(); }).then(j => take(j.elements, "food.json"));
     const urls = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter", "https://overpass.private.coffee/api/interpreter"];
     const live = i => fetch(urls[i], { method: "POST", body: "data=" + encodeURIComponent(FOOD_Q), headers: { "Content-Type": "application/x-www-form-urlencoded" } }).then(r => { if (!r.ok) throw new Error("Overpass " + r.status); return r.json(); }).then(j => take(j.elements, "Overpass")).catch(e => { if (i + 1 < urls.length) return live(i + 1); throw e; });
-    return snap().catch(() => live(0)).then(() => geoTips()).catch(e => { foodErr = String(e && e.message || e); if (!FOOD.length) { FOOD = mergeTips([]); } foodState = FOOD.some(f => !String(f.id).startsWith("tip-")) ? "ok" : "error"; geoTips(); });
+    return snap().catch(e => { if (postFest()) throw e; return live(0); }).then(() => geoTips()).catch(e => { foodErr = String(e && e.message || e); if (!FOOD.length) { FOOD = mergeTips([]); } foodState = FOOD.some(f => !String(f.id).startsWith("tip-")) ? "ok" : "error"; geoTips(); });
   }
   const nearestVenue = c => { let best = null; mapGroups().forEach(g => { if (!g.c) return; const d = distM(c, g.c); if (!best || d < best.d) best = { name: g.name, d }; }); return best; };
   const foodFiltered = () => { const q = fold(foodQ.trim()); return FOOD.filter(f => (foodCat === "all" || f.cat === foodCat) && (!foodVeg || f.veg) && (!q || fold([f.name, f.cuisine, catName(f.cat), f.addr].join(" ")).includes(q)) && (!foodOpenOnly || ohState(f.oh).open === true)); };
